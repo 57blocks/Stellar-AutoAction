@@ -2,10 +2,12 @@ package command
 
 import (
 	"fmt"
+	"log/slog"
+
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/constant"
-	"github.com/57blocks/auto-action/cli/internal/util"
-	"log/slog"
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -20,22 +22,24 @@ var (
 		Long: `A CLI tool: aution, which helps users to run their 
 method functions on Amazon Lambda quickly, together with the result
 of the execution.`,
-		Args:      cobra.OnlyValidArgs,
-		ValidArgs: []string{"configure", "login", "logout"},
+		Args:          cobra.OnlyValidArgs,
+		ValidArgs:     []string{"configure", "login", "logout"}, // TODO: upgrade in-needed
+		SilenceUsage:  true,
+		SilenceErrors: true,
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 			HiddenDefaultCmd:  true,
 		},
-		PreRun: util.PreRunBindFlags,
-		Run:    rootFunc,
+		PersistentPreRun: util.PreBindFlags,
+		RunE:             rootFunc,
 	}
-	version = "v0.0.1"
+	version = "v0.0.1" // TODO: add release workflow to sync version with the git tag
 )
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the Root.
 func Execute() {
-	cobra.CheckErr(Root.Execute())
+	errorx.CatchAndWrap(Root.Execute())
 }
 
 func init() {
@@ -75,7 +79,7 @@ func initConfig() {
 	slog.Info(fmt.Sprintf("using config path: %s", viper.ConfigFileUsed()))
 }
 
-func rootFunc(cmd *cobra.Command, args []string) {
+func rootFunc(cmd *cobra.Command, args []string) error {
 	// TODO: remove the testing code below
 	fmt.Println("Root Func:")
 	fmt.Println("----> viper settings:")
@@ -92,5 +96,5 @@ func rootFunc(cmd *cobra.Command, args []string) {
 		fmt.Printf("flag.Name: %v, flag.Value: %v\n", flag.Name, flag.Value)
 	})
 
-	cmd.Usage()
+	return cmd.Usage()
 }

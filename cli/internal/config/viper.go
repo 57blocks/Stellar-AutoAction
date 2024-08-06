@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/57blocks/auto-action/cli/internal/constant"
-	"github.com/57blocks/auto-action/cli/internal/util"
+	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

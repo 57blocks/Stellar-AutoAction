@@ -2,12 +2,13 @@ package config
 
 import (
 	"fmt"
-	"github.com/57blocks/auto-action/cli/internal/constant"
-	"github.com/57blocks/auto-action/cli/internal/util"
-	"github.com/spf13/cobra"
 	"os"
 
+	"github.com/57blocks/auto-action/cli/internal/constant"
+	"github.com/57blocks/auto-action/cli/internal/pkg/util"
+
 	"github.com/BurntSushi/toml"
+	"github.com/spf13/cobra"
 )
 
 type (
