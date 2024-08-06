@@ -2,6 +2,9 @@ package config
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
+	"github.com/spf13/viper"
+	"log/slog"
 	"os"
 
 	"github.com/57blocks/auto-action/cli/internal/constant"
@@ -13,9 +16,9 @@ import (
 
 type (
 	GlobalConfig struct {
-		Credential   string `toml:"credential"`
-		EnvVarPrefix string `toml:"env-var-prefix"`
-		LogLevel     string `toml:"log-level"`
+		Credential string `toml:"credential"`
+		EnvPrefix  string `toml:"env_prefix"`
+		LogLevel   string `toml:"log_level"`
 	}
 	GlobalCfgOpt func(sc *GlobalConfig)
 )
@@ -36,9 +39,9 @@ func WithLogLevel(logLevel string) GlobalCfgOpt {
 	}
 }
 
-func WithEnvVarPrefix(prefix string) GlobalCfgOpt {
+func WithEnvPrefix(prefix string) GlobalCfgOpt {
 	return func(sc *GlobalConfig) {
-		sc.EnvVarPrefix = prefix
+		sc.EnvPrefix = prefix
 	}
 }
 
@@ -62,7 +65,7 @@ func FindOrInit() (*GlobalConfig, string) {
 
 	cfg := Build(
 		WithCredential(util.DefaultCredPath()),
-		WithEnvVarPrefix(constant.EnvVarPrefix.ValStr()),
+		WithEnvPrefix(constant.EnvPrefix.ValStr()),
 		WithLogLevel(constant.GetLogLevel(constant.Info)),
 	)
 
@@ -107,4 +110,27 @@ func WriteConfig(cfg *GlobalConfig, path string) error {
 	}
 
 	return nil
+}
+
+func SyncConfig(path string) error {
+	cfg, err := ReadConfig(util.DefaultPath())
+	if err != nil {
+		return errors.New(fmt.Sprintf("reading configuration error: %s\n", err.Error()))
+	}
+
+	// Update fields if new values are provided
+	if newCred := viper.GetString(constant.FlagCredential.ValStr()); newCred != "" {
+		slog.Debug(fmt.Sprintf("newCred: %v\n", newCred))
+		cfg.Credential = newCred
+	}
+	if newEnvPrefix := viper.GetString(constant.FlagEnvPrefix.ValStr()); newEnvPrefix != "" {
+		slog.Debug(fmt.Sprintf("newLogLevel: %v\n", newEnvPrefix))
+		cfg.EnvPrefix = newEnvPrefix
+	}
+	if newLogLevel := viper.GetString(constant.FlagLogLevel.ValStr()); newLogLevel != "" {
+		slog.Debug(fmt.Sprintf("newLogLevel: %v\n", newLogLevel))
+		cfg.LogLevel = newLogLevel
+	}
+
+	return WriteConfig(cfg, path)
 }
