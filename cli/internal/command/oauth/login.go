@@ -8,9 +8,10 @@ import (
 	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/constant"
-	"github.com/57blocks/auto-action/cli/internal/util"
+	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/BurntSushi/toml"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -28,10 +29,7 @@ and set it to config, if it's the first time.
 And also, you could specify other credentials by **configure** command.`,
 	Args:      cobra.OnlyValidArgs,
 	ValidArgs: []string{"organization", "account", "environment", "credential"},
-	PreRun: func(cmd *cobra.Command, args []string) {
-		util.PreRunBindFlags(cmd, args)
-	},
-	Run: loginFunc,
+	RunE:      loginFunc,
 }
 
 func init() {
@@ -48,13 +46,16 @@ func init() {
 	}
 }
 
-func loginFunc(cmd *cobra.Command, args []string) {
-	fmt.Print("Password: ")
+func loginFunc(cmd *cobra.Command, args []string) error {
+	fmt.Println("Password: ")
+
 	passwordBytes, err := term.ReadPassword(syscall.Stdin)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "reading passowrd occurred an error: %s\n", err.Error())
-		os.Exit(1)
-		return
+		return errors.New(fmt.Sprintf("reading passowrd error: %s\n", err.Error()))
+	}
+
+	if len(passwordBytes) == 0 {
+		return errors.New("empty password error")
 	}
 
 	password := string(passwordBytes)
@@ -75,7 +76,7 @@ func loginFunc(cmd *cobra.Command, args []string) {
 		fmt.Printf("flag.Name: %v, flag.Value: %v\n", flag.Name, flag.Value)
 	})
 
-	cobra.CheckErr(syncCred)
+	return syncCred()
 }
 
 func syncCred() error {
@@ -100,23 +101,13 @@ func syncCred() error {
 
 	credToml, err := toml.Marshal(cred)
 	if err != nil {
-		_, e := fmt.Fprintf(
-			os.Stderr,
-			"marshaling credentials to TOML error: %s\n",
-			err.Error(),
-		)
-		return e
+		return errors.New(fmt.Sprintf("marshaling credentials error: %s\n", err.Error()))
 	}
 
 	// Write TOML to credential file
 	err = os.WriteFile(viper.GetString(constant.FlagCredential.ValStr()), credToml, 0666)
 	if err != nil {
-		_, e := fmt.Fprintf(
-			os.Stderr,
-			"writing credentials to file error: %s\n",
-			err.Error(),
-		)
-		return e
+		return errors.New(fmt.Sprintf("writing credentials error: %s\n", err.Error()))
 	}
 
 	// sync to configuration file
@@ -127,12 +118,7 @@ func syncCred() error {
 	)
 
 	if err := config.WriteConfig(cfg, util.DefaultPath()); err != nil {
-		_, e := fmt.Fprintf(
-			os.Stderr,
-			"writing configuration to TOML error: %s\n",
-			err.Error(),
-		)
-		return e
+		return errors.New(fmt.Sprintf("writing configuration error: %s\n", err.Error()))
 	}
 
 	return nil
