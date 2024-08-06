@@ -9,13 +9,13 @@ import (
 // logout represents the logout command
 var logout = &cobra.Command{
 	Use:   "logout",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely
-contains examples and usage of using your command. For example:
+	Short: "Logout the current session",
+	Long: `Logout the current session under the path of credential in
+the config.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+For other credentials, they are still alive. It's recommended that
+switching session by using **configure** command to set other 
+credentials to the config`,
 	Args: cobra.NoArgs,
 	RunE: logoutFunc,
 }

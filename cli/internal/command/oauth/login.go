@@ -20,9 +20,12 @@ import (
 // login represents the login command
 var login = &cobra.Command{
 	Use:   "login",
-	Short: "Login the Stellar auto-task.",
-	Long: `Login the Stellar auto-action and delete the credentials 
-from config.`,
+	Short: "Login to the Stellar auto-action.",
+	Long: `Login the Stellar auto-action based on credential path in
+the config. And will create a new credential under the path you just claimed
+and set it to config, if it's the first time.
+
+And also, you could specify other credentials by **configure** command.`,
 	Args:      cobra.OnlyValidArgs,
 	ValidArgs: []string{"organization", "account", "environment", "credential"},
 	PreRun: func(cmd *cobra.Command, args []string) {
@@ -34,8 +37,8 @@ from config.`,
 func init() {
 	command.Root.AddCommand(login)
 
-	login.Flags().StringP("account", "A", "", "Name of the account")
-	login.Flags().StringP("organization", "O", "", "Name of the organization")
+	login.Flags().StringP("account", "A", "", "name of the account")
+	login.Flags().StringP("organization", "O", "", "name of the organization")
 
 	if err := login.MarkFlagRequired("account"); err != nil {
 		return

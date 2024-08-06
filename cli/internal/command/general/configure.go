@@ -8,31 +8,28 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// configureCmd represents the configure command
-var configureCmd = &cobra.Command{
+// configure represents the configure command
+var configure = &cobra.Command{
 	Use:   "configure",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Configure the configuration file",
+	Long: `Configure the configuration file under the default path.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+The config path on Mac is $HOME/.auto-action`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("configure called")
 	},
 }
 
 func init() {
-	command.Root.AddCommand(configureCmd)
+	command.Root.AddCommand(configure)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// configureCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// configure.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// configureCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// configure.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
