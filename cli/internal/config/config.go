@@ -2,8 +2,6 @@ package config
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 	"log/slog"
 	"os"
 
@@ -11,7 +9,9 @@ import (
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/BurntSushi/toml"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 type (
