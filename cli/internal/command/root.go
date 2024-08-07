@@ -17,9 +17,9 @@ import (
 // Root represents the base command when called without any subcommands
 var (
 	Root = &cobra.Command{
-		Use:   "aution",
-		Short: "The CLI toll for auto-action: aution",
-		Long: `A CLI tool: aution, which helps users to run their 
+		Use:   "st3llar",
+		Short: "The CLI toll for auto-action: st3llar",
+		Long: `A CLI tool: st3llar, which helps users to run their 
 method functions on Amazon Lambda quickly, together with the result
 of the execution.`,
 		Args:          cobra.OnlyValidArgs,

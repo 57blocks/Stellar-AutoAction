@@ -9,10 +9,10 @@ type Config string
 
 const (
 	ConfigurationType Config = "toml"
-	ConfigName        Config = ".auto-action"
-	CredentialName    Config = ".auto-action-cred"
+	ConfigName        Config = ".st3llar"
+	CredentialName    Config = ".st3llar-cred"
 
-	EnvVarPrefix Config = "AA"
+	EnvPrefix Config = "ST3LLAR"
 )
 
 func (cc Config) ValStr() string {

@@ -8,8 +8,6 @@ import (
 	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/constant"
-	"github.com/57blocks/auto-action/cli/internal/pkg/util"
-
 	"github.com/BurntSushi/toml"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -88,7 +86,7 @@ func syncCred() error {
 	// TODO: put it to env
 	var endpoint = "http://st3llar-alb-365211.us-east-2.elb.amazonaws.com"
 	env := config.BuildCredEnv(
-		config.WithEnvName("Horizon"),
+		config.WithEnvName(viper.GetString(constant.FlagEnvironment.ValStr())),
 		config.WithEnvEndPoint(endpoint),
 	)
 
@@ -111,15 +109,5 @@ func syncCred() error {
 	}
 
 	// sync to configuration file
-	cfg := config.Build(
-		config.WithCredential(viper.GetString(constant.FlagCredential.ValStr())),
-		config.WithEnvVarPrefix(viper.GetString(constant.FlagEnvPrefix.ValStr())),
-		config.WithLogLevel(viper.GetString(constant.FlagLogLevel.ValStr())),
-	)
-
-	if err := config.WriteConfig(cfg, util.DefaultPath()); err != nil {
-		return errors.New(fmt.Sprintf("writing configuration error: %s\n", err.Error()))
-	}
-
-	return nil
+	return config.SyncConfig(viper.ConfigFileUsed())
 }
