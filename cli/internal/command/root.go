@@ -54,20 +54,6 @@ func init() {
 	})
 	Root.SetVersionTemplate(`Version: {{.Version}}`)
 	Root.Version = version
-
-	//flagCred := constant.FlagCredential.ValStr()
-	//Root.PersistentFlags().StringP(
-	//	flagCred,
-	//	"c",
-	//	viper.GetString(flagCred),
-	//	"the credential file for the command about to be executed")
-	//
-	//flagEnv := constant.FlagEnvironment.ValStr()
-	//Root.PersistentFlags().StringP(
-	//	flagEnv,
-	//	"e",
-	//	viper.GetString(flagEnv),
-	//	"the execution environment")
 }
 
 func initConfig() {
