@@ -103,6 +103,7 @@ func loginFunc(cmd *cobra.Command, args []string) error {
 }
 
 func syncCred() error {
+	// TODO: implement the generation logic
 	session := config.BuildCredSession(
 		config.WithSessionToken("JWT_TOKEN"),
 		config.WithSessionRefreshToken("JWT_REFRESH"),
