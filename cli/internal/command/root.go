@@ -5,7 +5,6 @@ import (
 	"log/slog"
 
 	"github.com/57blocks/auto-action/cli/internal/config"
-	"github.com/57blocks/auto-action/cli/internal/constant"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
@@ -55,20 +54,6 @@ func init() {
 	})
 	Root.SetVersionTemplate(`Version: {{.Version}}`)
 	Root.Version = version
-
-	flagCred := constant.FlagCredential.ValStr()
-	Root.PersistentFlags().StringP(
-		flagCred,
-		"c",
-		viper.GetString(flagCred),
-		"the credential file for the command about to be executed")
-
-	flagEnv := constant.FlagEnvironment.ValStr()
-	Root.PersistentFlags().StringP(
-		flagEnv,
-		"e",
-		viper.GetString(flagEnv),
-		"the execution environment")
 }
 
 func initConfig() {

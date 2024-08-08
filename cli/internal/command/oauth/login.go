@@ -8,6 +8,7 @@ import (
 	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/constant"
+
 	"github.com/BurntSushi/toml"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -33,13 +34,37 @@ And also, you could specify other credentials by **configure** command.`,
 func init() {
 	command.Root.AddCommand(login)
 
-	login.Flags().StringP("account", "A", "", "name of the account")
-	login.Flags().StringP("organization", "O", "", "name of the organization")
+	flagCred := constant.FlagCredential.ValStr()
+	login.Flags().StringP(
+		flagCred,
+		"c",
+		viper.GetString(flagCred),
+		"the credential file for the command about to be executed")
 
-	if err := login.MarkFlagRequired("account"); err != nil {
+	flagEnv := constant.FlagEnvironment.ValStr()
+	login.Flags().StringP(
+		flagEnv,
+		"e",
+		viper.GetString(flagEnv),
+		"the execution environment")
+
+	flagAcc := constant.FlagAccount.ValStr()
+	login.Flags().StringP(
+		flagAcc,
+		"a",
+		"",
+		"name of the account")
+
+	flagOrg := constant.FlagOrganization.ValStr()
+	login.Flags().StringP(flagOrg,
+		"o",
+		"",
+		"name of the organization")
+
+	if err := login.MarkFlagRequired(flagAcc); err != nil {
 		return
 	}
-	if err := login.MarkFlagRequired("organization"); err != nil {
+	if err := login.MarkFlagRequired(flagOrg); err != nil {
 		return
 	}
 }
