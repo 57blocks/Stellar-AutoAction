@@ -14,6 +14,7 @@ FROM alpine:latest AS final
 WORKDIR /root
 
 COPY --from=builder /builder/supplier .
+COPY --from=builder /builder/internal/config/*.toml ./internal/config/
 
 EXPOSE 8080
 

@@ -1,0 +1,59 @@
+{
+  "containerDefinitions": [
+    {
+      "name": "st3llar-autotask",
+      "image": "123340007534.dkr.ecr.us-east-2.amazonaws.com/57b/autotask:latest",
+      "cpu": 0,
+      "portMappings": [
+        {
+          "name": "supplier-8080-tcp-port",
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp",
+          "appProtocol": "http"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "ST3LLAR_LOG_LEVEL",
+          "value": "INFO"
+        },
+        {
+          "name": "ST3LLAR_ENVIRONMENT",
+          "value": "Horizon"
+        }
+      ],
+      "environmentFiles": [],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "ulimits": [],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/autotak-defs",
+          "awslogs-create-group": "true",
+          "awslogs-region": "us-east-2",
+          "awslogs-stream-prefix": "ecs"
+        },
+        "secretOptions": []
+      },
+      "systemControls": []
+    }
+  ],
+  "family": "autotak-defs",
+  "executionRoleArn": "arn:aws:iam::123340007534:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "volumes": [],
+  "placementConstraints": [],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "512",
+  "memory": "2048",
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "tags": []
+}
