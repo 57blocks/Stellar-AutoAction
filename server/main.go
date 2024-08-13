@@ -10,15 +10,24 @@ import (
 	"time"
 
 	"github.com/57blocks/auto-action/server/internal/api"
-	"github.com/57blocks/auto-action/server/internal/booter"
+	"github.com/57blocks/auto-action/server/internal/boot"
+	"github.com/57blocks/auto-action/server/internal/config"
+	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
+	"github.com/57blocks/auto-action/server/internal/third_party/aws"
 )
 
 var server *http.Server
 
 func main() {
-	if err := booter.Boot(); err != nil {
-		log.Fatal(err.Error())
+	if err := boot.Boots(
+		boot.Wrap(config.Setup),
+		boot.Wrap(pkgLog.Setup),
+		boot.Wrap(aws.Setup),
+	); err != nil {
+		log.Panicf("boots components occurred error: %s\n", err.Error())
 	}
+
+	pkgLog.Logger.INFO("boots: server")
 
 	server = &http.Server{
 		Addr:    ":8080",

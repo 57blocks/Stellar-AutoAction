@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 
+	"github.com/57blocks/auto-action/server/internal/api/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,24 +28,24 @@ func WithCustomRecovery() gin.OptionFunc {
 
 func WithCORS() gin.OptionFunc {
 	return func(g *gin.Engine) {
-		g.Use(CORS())
+		g.Use(middleware.CORS())
 	}
 }
 
 func WithReqHeader() gin.OptionFunc {
 	return func(g *gin.Engine) {
-		g.Use(Header())
+		g.Use(middleware.Header())
 	}
 }
 
 func WithResponse() gin.OptionFunc {
 	return func(g *gin.Engine) {
-		g.Use(Response())
+		g.Use(middleware.Response())
 	}
 }
 
 func WithError() gin.OptionFunc {
 	return func(g *gin.Engine) {
-		g.Use(Error())
+		g.Use(middleware.Error())
 	}
 }

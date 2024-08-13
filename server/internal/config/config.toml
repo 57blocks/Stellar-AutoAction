@@ -1,0 +1,15 @@
+mode = "development"
+
+[logger]
+level = "DEBUG"
+encoding = "json"
+
+[jwt]
+protocol = "RS256"
+private = "PRIVATE_KEY"
+public = "PUBLIC_KEy"
+
+[amazon]
+region = "us-east-2"
+access_key = "ACCESS_KEY"
+secret_key = "SECRET_KEY"
