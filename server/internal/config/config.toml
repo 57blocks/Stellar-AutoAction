@@ -6,8 +6,8 @@ encoding = "json"
 
 [jwt]
 protocol = "RS256"
-private = "PRIVATE_KEY"
-public = "PUBLIC_KEy"
+private_key = "PRIVATE_KEY"
+public_key = "PUBLIC_KEy"
 
 [amazon]
 region = "us-east-2"

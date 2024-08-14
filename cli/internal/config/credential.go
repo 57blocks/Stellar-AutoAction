@@ -2,26 +2,26 @@ package config
 
 type (
 	Credential struct {
-		Account      string `toml:"account"`
-		Organization string `toml:"organization"`
-		*Environment `toml:"environment"`
-		*Session     `toml:"session"`
+		Account      string `toml:"account" json:"account"`
+		Organization string `toml:"organization" json:"organization"`
+		*Environment `toml:"environment" json:"environment"`
+		*Tokens      `toml:"tokens" json:"tokens"`
 	}
 	CredOpt func(cred *Credential)
 
 	Environment struct {
 		_        struct{}
-		Name     string `toml:"name"`
-		EndPoint string `toml:"endpoint"`
+		Name     string `toml:"name" json:"name"`
+		EndPoint string `toml:"endpoint" json:"endpoint"`
 	}
 	CredEnvOpt func(env *Environment)
 
-	Session struct {
-		_            struct{}
-		Token        string `toml:"token"`
-		RefreshToken string `toml:"refresh_token"`
+	Tokens struct {
+		_       struct{}
+		Token   string `toml:"token" json:"token"`
+		Refresh string `toml:"refresh" json:"refresh"`
 	}
-	CredSessionOpt func(session *Session)
+	CredTokenOpt func(tokens *Tokens)
 )
 
 func BuildCred(opts ...CredOpt) *Credential {
@@ -52,9 +52,9 @@ func WithEnvironment(env *Environment) CredOpt {
 	}
 }
 
-func WithSession(session *Session) CredOpt {
+func WithSession(session *Tokens) CredOpt {
 	return func(cred *Credential) {
-		cred.Session = session
+		cred.Tokens = session
 	}
 }
 
@@ -82,8 +82,8 @@ func WithEnvEndPoint(endpoint string) CredEnvOpt {
 }
 
 // BuildCredSession build the credential's session pair
-func BuildCredSession(opts ...CredSessionOpt) *Session {
-	session := new(Session)
+func BuildCredSession(opts ...CredTokenOpt) *Tokens {
+	session := new(Tokens)
 
 	for _, opt := range opts {
 		opt(session)
@@ -92,14 +92,14 @@ func BuildCredSession(opts ...CredSessionOpt) *Session {
 	return session
 }
 
-func WithSessionToken(token string) CredSessionOpt {
-	return func(session *Session) {
-		session.Token = token
+func WithSessionToken(token string) CredTokenOpt {
+	return func(tokens *Tokens) {
+		tokens.Token = token
 	}
 }
 
-func WithSessionRefreshToken(refreshToken string) CredSessionOpt {
-	return func(session *Session) {
-		session.RefreshToken = refreshToken
+func WithSessionRefreshToken(refresh string) CredTokenOpt {
+	return func(tokens *Tokens) {
+		tokens.Refresh = refresh
 	}
 }

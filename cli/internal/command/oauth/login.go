@@ -1,19 +1,24 @@
 package oauth
 
 import (
+	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"syscall"
 
 	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/constant"
+	"github.com/57blocks/auto-action/cli/internal/pkg/util"
+	"github.com/57blocks/auto-action/cli/internal/third-party/req"
 
 	"github.com/BurntSushi/toml"
+	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/term"
 )
 
@@ -69,71 +74,92 @@ func init() {
 	}
 }
 
+type (
+	Req struct {
+		Account      string `json:"account"`
+		Organization string `json:"organization"`
+		Password     []byte `json:"password"`
+		Environment  string `json:"environment"`
+	}
+	Resp struct {
+		Token   string `json:"token"`
+		Refresh string `json:"refresh"`
+	}
+)
+
 func loginFunc(cmd *cobra.Command, args []string) error {
 	fmt.Println("Password: ")
 
-	passwordBytes, err := term.ReadPassword(syscall.Stdin)
+	pwdBytes, err := term.ReadPassword(syscall.Stdin)
 	if err != nil {
 		return errors.New(fmt.Sprintf("reading passowrd error: %s\n", err.Error()))
 	}
 
-	if len(passwordBytes) == 0 {
-		return errors.New("empty password error")
+	if len(pwdBytes) == 0 {
+		return errors.New("empty cryptPwd error")
 	}
 
-	password := string(passwordBytes)
-	fmt.Printf("input password: %v\n", password)
-
-	fmt.Println("Login Func:")
-	fmt.Println("----> viper settings:")
-	for k, v := range viper.AllSettings() {
-		fmt.Printf("%v: %v\n", k, v)
-	}
-	fmt.Println("----> args:")
-	for _, v := range args {
-		fmt.Printf("%v\n", v)
+	cryptPwdBytes, err := bcrypt.GenerateFromPassword(pwdBytes, bcrypt.DefaultCost)
+	if err != nil {
+		return errors.New(fmt.Sprintf("crypting pwd error: %s\n", err.Error()))
 	}
 
-	fmt.Println("----> flags:")
-	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-		fmt.Printf("flag.Name: %v, flag.Value: %v\n", flag.Name, flag.Value)
-	})
+	//cryptPwd := string(cryptPwdBytes)
+	//slog.Debug(fmt.Sprintf("crypt password: %v\n", cryptPwd))
+	//
+	//slog.Debug("---> viper:")
+	//for k, v := range viper.AllSettings() {
+	//	slog.Debug(fmt.Sprintf("%v: %v\n", k, v))
+	//}
+	//slog.Debug("---> args:")
+	//for _, v := range args {
+	//	slog.Debug(fmt.Sprintf("%v\n", v))
+	//}
+	//
+	//slog.Debug("---> flags:")
+	//cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+	//	slog.Debug(fmt.Sprintf("flag.Name: %v, flag.Value: %v\n", flag.Name, flag.Value))
+	//})
 
-	return syncCred()
+	response, err := req.Client.R().
+		EnableTrace().
+		SetBody(Req{
+			Account:      viper.GetString(constant.FlagAccount.ValStr()),
+			Organization: viper.GetString(constant.FlagOrganization.ValStr()),
+			Password:     cryptPwdBytes,
+			Environment:  viper.GetString(constant.FlagEnvironment.ValStr()),
+		}).
+		Post("http://localhost:8080" + "/oauth/login")
+	//Post(constant.Host.String() + "/oauth/login")
+	if err != nil {
+		return errors.New(fmt.Sprintf("endpoint request error: %s\n", err.Error()))
+	}
+
+	slog.Debug(fmt.Sprintf("response: %v\n", response))
+
+	if e := util.IsError(response); e != nil {
+		fmt.Println(e)
+		return errors.New(fmt.Sprintf("response error: %s\n", e))
+	}
+
+	return syncCred(response)
 }
 
-func syncCred() error {
-	// TODO: implement the generation logic
-	session := config.BuildCredSession(
-		config.WithSessionToken("JWT_TOKEN"),
-		config.WithSessionRefreshToken("JWT_REFRESH"),
-	)
-
-	// TODO: put it to env
-	var endpoint = "http://st3llar-alb-365211.us-east-2.elb.amazonaws.com"
-	env := config.BuildCredEnv(
-		config.WithEnvName(viper.GetString(constant.FlagEnvironment.ValStr())),
-		config.WithEnvEndPoint(endpoint),
-	)
-
-	cred := config.BuildCred(
-		config.WithAccount(viper.GetString(constant.FlagAccount.ValStr())),
-		config.WithOrganization(viper.GetString(constant.FlagOrganization.ValStr())),
-		config.WithEnvironment(env),
-		config.WithSession(session),
-	)
+func syncCred(response *resty.Response) error {
+	cred := new(config.Credential)
+	if err := json.Unmarshal(response.Body(), cred); err != nil {
+		return errors.New(fmt.Sprintf("unmarshaling json response error: %s\n", err.Error()))
+	}
 
 	credToml, err := toml.Marshal(cred)
 	if err != nil {
 		return errors.New(fmt.Sprintf("marshaling credentials error: %s\n", err.Error()))
 	}
 
-	// Write TOML to credential file
 	err = os.WriteFile(viper.GetString(constant.FlagCredential.ValStr()), credToml, 0666)
 	if err != nil {
 		return errors.New(fmt.Sprintf("writing credentials error: %s\n", err.Error()))
 	}
 
-	// sync to configuration file
 	return config.SyncConfig(viper.ConfigFileUsed())
 }

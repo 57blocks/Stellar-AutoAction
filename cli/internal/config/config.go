@@ -18,7 +18,7 @@ type (
 	GlobalConfig struct {
 		Credential string `toml:"credential"`
 		EnvPrefix  string `toml:"env_prefix"`
-		LogLevel   string `toml:"log_level"`
+		Log        string `toml:"log"`
 	}
 	GlobalCfgOpt func(sc *GlobalConfig)
 )
@@ -35,7 +35,7 @@ func Build(opts ...GlobalCfgOpt) *GlobalConfig {
 
 func WithLogLevel(logLevel string) GlobalCfgOpt {
 	return func(sc *GlobalConfig) {
-		sc.LogLevel = logLevel
+		sc.Log = logLevel
 	}
 }
 
@@ -120,16 +120,16 @@ func SyncConfig(path string) error {
 
 	// Update fields if new values are provided
 	if newCred := viper.GetString(constant.FlagCredential.ValStr()); newCred != "" {
-		slog.Debug(fmt.Sprintf("newCred: %v\n", newCred))
+		slog.Debug(fmt.Sprintf("newCredential: %v\n", newCred))
 		cfg.Credential = newCred
 	}
 	if newEnvPrefix := viper.GetString(constant.FlagEnvPrefix.ValStr()); newEnvPrefix != "" {
-		slog.Debug(fmt.Sprintf("newLogLevel: %v\n", newEnvPrefix))
+		slog.Debug(fmt.Sprintf("newEnvPrefix: %v\n", newEnvPrefix))
 		cfg.EnvPrefix = newEnvPrefix
 	}
-	if newLogLevel := viper.GetString(constant.FlagLogLevel.ValStr()); newLogLevel != "" {
+	if newLogLevel := viper.GetString(constant.FlagLog.ValStr()); newLogLevel != "" {
 		slog.Debug(fmt.Sprintf("newLogLevel: %v\n", newLogLevel))
-		cfg.LogLevel = newLogLevel
+		cfg.Log = newLogLevel
 	}
 
 	return WriteConfig(cfg, path)

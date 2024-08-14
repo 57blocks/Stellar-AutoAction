@@ -7,7 +7,7 @@ const (
 	FlagCredential   FlagName = "credential"
 	FlagEnvPrefix    FlagName = "env-prefix"
 	FlagEnvironment  FlagName = "environment"
-	FlagLogLevel     FlagName = "log-level"
+	FlagLog          FlagName = "log"
 	FlagOrganization FlagName = "organization"
 )
 

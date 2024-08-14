@@ -16,12 +16,16 @@
       "essential": true,
       "environment": [
         {
-          "name": "ST3LLAR_LOG_LEVEL",
-          "value": "INFO"
+          "name": "ST3LLAR_JWT_PROTOCOL",
+          "value": "ST3LLAR_JWT_PROTOCOL"
         },
         {
-          "name": "ST3LLAR_ENVIRONMENT",
-          "value": "Horizon"
+          "name": "ST3LLAR_JWT_PRIVATE",
+          "value": "ST3LLAR_JWT_PRIVATE"
+        },
+        {
+          "name": "ST3LLAR_JWT_PUBLIC",
+          "value": "ST3LLAR_JWT_PUBLIC"
         }
       ],
       "environmentFiles": [],
