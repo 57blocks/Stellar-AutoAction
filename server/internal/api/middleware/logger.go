@@ -45,8 +45,7 @@ type (
 
 func ZapLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Next()
-
 		pkgLog.Logger.DEBUG(NewFromCTX(c).Format())
+		c.Next()
 	}
 }

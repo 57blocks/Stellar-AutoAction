@@ -24,7 +24,7 @@ The configuration path on Mac is $HOME/.st3llar`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if !cmd.Flags().Changed(constant.FlagCredential.ValStr()) &&
 			!cmd.Flags().Changed(constant.FlagEnvPrefix.ValStr()) &&
-			!cmd.Flags().Changed(constant.FlagLogLevel.ValStr()) {
+			!cmd.Flags().Changed(constant.FlagLog.ValStr()) {
 			return errors.New("at least one of the flags must be set")
 		}
 
@@ -50,7 +50,7 @@ func init() {
 		viper.GetString(fEnvPrefix),
 		"configure the name prefix of the environment variables")
 
-	fLogLevel := constant.FlagLogLevel.ValStr()
+	fLogLevel := constant.FlagLog.ValStr()
 	configure.Flags().StringP(
 		fLogLevel,
 		"",

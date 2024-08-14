@@ -3,6 +3,7 @@ module github.com/57blocks/auto-action/server
 go 1.22.2
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.10.0
 	github.com/spf13/viper v1.19.0
 	go.uber.org/zap v1.21.0

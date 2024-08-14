@@ -9,7 +9,7 @@ import (
 func SetupLogger(cfg *GlobalConfig) *slog.Logger {
 	logger := slog.Default()
 
-	switch cfg.LogLevel {
+	switch cfg.Log {
 	case constant.GetLogLevel(constant.Debug):
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	case constant.GetLogLevel(constant.Warn):

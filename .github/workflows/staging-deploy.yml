@@ -75,6 +75,10 @@ jobs:
           task-definition: server/ecs/task-def.json
           container-name: ${{ vars.AWS_ECS_CONTAINER }}
           image: ${{ env.AWS_ECR_IMAGE_TAG }}
+          environment-variables: |
+            JWT_PROTOCOL=${{ vars.JWT_PROTOCOL }}
+            JWT_PRIVATE_KEY=${{ secrets.JWT_PRIVATE_KEY }}
+            JWT_PUBLIC_KEY=${{ secrets.JWT_PUBLIC_KEY }}
 
       - name: Deploy to Amazon ECS task definition
         id: deploy-task-def
