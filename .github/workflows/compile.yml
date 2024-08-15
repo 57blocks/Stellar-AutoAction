@@ -1,0 +1,74 @@
+name: Compile Cross-Platform CLI
+
+on:
+  push:
+    paths:
+      - "cli/**"
+    branches:
+      - staging
+#    tags:
+#      - "*"
+
+jobs:
+  compile:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        go-version:
+          - 1.22  # 根据需要选择 Go 版本
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        arch:
+          - amd64
+          - arm64
+        include:
+          - os: macos-latest
+            arch: arm64
+          - os: macos-latest
+            arch: amd64
+          - os: ubuntu-latest
+            arch: amd64
+          - os: windows-latest
+            arch: amd64
+
+    outputs:
+      ${{ matrix.os }}_${{ matrix.arch }}: ${{ steps.build.outputs.${{ matrix.os }}_${{ matrix.arch }} }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Build for ${{ matrix.os }} ${{ matrix.arch }}
+        run: |
+          GOOS=${{ matrix.os == 'ubuntu-latest' && 'linux' || (matrix.os == 'macos-latest' && 'darwin' || 'windows') }}
+          GOARCH=${{ matrix.arch }}
+          output_path=$HOME/output/$GOOS/$GOARCH
+          file_name=st3llar-$GOOS-$GOARCH${{ matrix.os == 'windows-latest' && '.exe' || '' }}
+          mkdir -p "$output_path"
+          go build -o "$output_path/$file_name"
+          echo "${{ matrix.os }}_${{ matrix.arch }}=$output_path/$file_name" >> $GITHUB_OUTPUT
+
+        env:
+          GO111MODULE: "on"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cross-platform binaries
+          path: ~/output/
+          overwrite: true # Optional. Default is 'false'
+          if-no-files-found: error # Optional. Default is 'warn'
+          retention-days: 1 # Optional. Defaults to repository settings.
+          # 0: No compression
+          # 1: Best speed
+          # 6: Default compression (same as GNU Gzip)
+          # 9: Best compression
+          compression-level: 0

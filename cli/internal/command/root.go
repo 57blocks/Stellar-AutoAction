@@ -9,7 +9,6 @@ import (
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -65,21 +64,5 @@ func initConfig() {
 }
 
 func rootFunc(cmd *cobra.Command, args []string) error {
-	// TODO: remove the testing code below
-	fmt.Println("Root Func:")
-	fmt.Println("----> viper settings:")
-	for k, v := range viper.AllSettings() {
-		fmt.Printf("%v: %v\n", k, v)
-	}
-	fmt.Println("----> args:")
-	for _, v := range args {
-		fmt.Printf("%v\n", v)
-	}
-
-	fmt.Println("----> flags:")
-	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-		fmt.Printf("flag.Name: %v, flag.Value: %v\n", flag.Name, flag.Value)
-	})
-
 	return cmd.Usage()
 }

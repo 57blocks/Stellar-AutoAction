@@ -104,23 +104,6 @@ func loginFunc(cmd *cobra.Command, args []string) error {
 		return errors.New(fmt.Sprintf("crypting pwd error: %s\n", err.Error()))
 	}
 
-	//cryptPwd := string(cryptPwdBytes)
-	//slog.Debug(fmt.Sprintf("crypt password: %v\n", cryptPwd))
-	//
-	//slog.Debug("---> viper:")
-	//for k, v := range viper.AllSettings() {
-	//	slog.Debug(fmt.Sprintf("%v: %v\n", k, v))
-	//}
-	//slog.Debug("---> args:")
-	//for _, v := range args {
-	//	slog.Debug(fmt.Sprintf("%v\n", v))
-	//}
-	//
-	//slog.Debug("---> flags:")
-	//cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-	//	slog.Debug(fmt.Sprintf("flag.Name: %v, flag.Value: %v\n", flag.Name, flag.Value))
-	//})
-
 	response, err := req.Client.R().
 		EnableTrace().
 		SetBody(Req{
@@ -129,8 +112,7 @@ func loginFunc(cmd *cobra.Command, args []string) error {
 			Password:     cryptPwdBytes,
 			Environment:  viper.GetString(constant.FlagEnvironment.ValStr()),
 		}).
-		Post("http://localhost:8080" + "/oauth/login")
-	//Post(constant.Host.String() + "/oauth/login")
+		Post(constant.Host.String() + "/oauth/login")
 	if err != nil {
 		return errors.New(fmt.Sprintf("endpoint request error: %s\n", err.Error()))
 	}

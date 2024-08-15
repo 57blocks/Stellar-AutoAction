@@ -2,9 +2,10 @@ name: Deploy to Amazon ECS
 
 #run-name: ${{ github.actor }}'s image build and push
 
-# TODO: Add trigger for different envs
 on:
   push:
+    paths:
+      - "server/**"
     branches:
       - staging
 
@@ -14,7 +15,7 @@ permissions:
 
 jobs:
   build-push:
-    name: Build&Push
+    name: ECR build and push
     runs-on: ubuntu-latest
 
     outputs:
@@ -50,8 +51,8 @@ jobs:
           docker push $AWS_ECR_IMAGE_TAG
           echo "aws_ecr_image_tag=$AWS_ECR_IMAGE_TAG" >> "$GITHUB_OUTPUT"
 
-  deploy:
-    name: Deploy
+  ecs-deploy:
+    name: ECS deployment
     needs: build-push
     runs-on: ubuntu-latest
     env:

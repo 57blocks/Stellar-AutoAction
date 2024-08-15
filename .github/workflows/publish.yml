@@ -3,9 +3,16 @@ name: HomeBrew/Chocolatey Publish
 #run-name: ${{ github.actor }}'s HomeBrew publish
 
 on:
-  push:
-    tags:
-      - "*"
+  workflow_run:
+    workflows:
+      - "Compile Cross-Platform CLI"
+    types:
+      - completed
+    outputs:
+      darwin_arm: ${{ jobs.compile.outputs.macos-latest_arm }}
+      darwin_amd: ${{ jobs.compile.outputs.macos-latest_amd }}
+      linux_amd: ${{ jobs.compile.outputs.ubuntu-latest_amd }}
+      windows_amd: ${{ jobs.compile.outputs.windows-latest_amd }}
 
 permissions:
   contents: write
@@ -13,51 +20,44 @@ permissions:
 jobs:
   homebrew:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
         with:
-          go-version: 1.22
+          name: cross-platform binaries
+          path: outputs/
 
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          workdir: ./st3llar
-          args: release --clean
-          # either 'goreleaser' (default) or 'goreleaser-pro'
-          distribution: goreleaser
-          # 'latest', 'nightly', or a semver
-          version: 'latest'
-        env:
-          GITHUB_TOKEN: ${{ secrets.HOMEBREW_PUBLISHER_TOKEN }}
+      - name: Publish to HomeBrew
+        run: |
+          echo "publishing to homebrew"
+          echo "darwin_arm: ${{ github.event.workflow_run.outputs.darwin_arm }}"
+          echo "darwin_arm: ${{ github.event.workflow_run.outputs.darwin_amd }}"
+          echo "darwin_arm: ${{ github.event.workflow_run.outputs.linux_amd }}"
+          echo "darwin_arm: ${{ github.event.workflow_run.outputs.windows_amd }}"
 
-  chocolatey:
-    # TODO: Add/Finish Chocolatey publisher
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: 1.22
-
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          workdir: ./st3llar
-          args: release --clean
-          # either 'goreleaser' (default) or 'goreleaser-pro'
-          distribution: goreleaser
-          # 'latest', 'nightly', or a semver
-          version: 'latest'
-        env:
-          GITHUB_TOKEN: ${{ secrets.CHOCOLATEY_PUBLISHER_TOKEN }}
+#  chocolatey:
+#    runs-on: ubuntu-latest
+#    needs: compile
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+#
+#      - name: Download artifacts
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: cross-platform binaries
+#          path: outputs/
+#
+#      - name: Publish to Chocolatey
+#        run: |
+#          # 你需要安装 Chocolatey 并使用 API 密钥来发布你的包
+#          # choco push <path-to-nupkg> -k <API-Key>
+#          # 确保安全地处理你的 API 密钥，不要在配置文件中硬编码

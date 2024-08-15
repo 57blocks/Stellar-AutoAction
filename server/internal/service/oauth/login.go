@@ -5,8 +5,8 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
-	"github.com/57blocks/auto-action/server/internal/third_party/jwtx"
 
 	"github.com/gin-gonic/gin"
 )
