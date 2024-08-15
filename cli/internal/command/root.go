@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"github.com/spf13/pflag"
 	"log/slog"
 
 	"github.com/57blocks/auto-action/cli/internal/config"
@@ -64,5 +65,14 @@ func initConfig() {
 }
 
 func rootFunc(cmd *cobra.Command, args []string) error {
+	slog.Debug("---> rootFunc")
+	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+		slog.Debug(fmt.Sprintf("flag.Name: %v, flag.Value: %v\n", flag.Name, flag.Value))
+	})
+
+	for _, v := range args {
+		slog.Debug(fmt.Sprintf("arguments: %v\n", v))
+	}
+
 	return cmd.Usage()
 }

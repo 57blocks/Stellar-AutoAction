@@ -4,38 +4,29 @@ on:
   push:
     paths:
       - "cli/**"
-    branches:
-      - staging
-#    tags:
-#      - "*"
+    tags:
+      - "*"
 
 jobs:
   compile:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
         go-version:
-          - 1.22  # 根据需要选择 Go 版本
+          - 1.22
         os:
-          - ubuntu-latest
-          - macos-latest
-          - windows-latest
+          - linux
+          - darwin
+          - windows
         arch:
           - amd64
           - arm64
-        include:
-          - os: macos-latest
+        exclude:
+          - os: windows
             arch: arm64
-          - os: macos-latest
-            arch: amd64
-          - os: ubuntu-latest
-            arch: amd64
-          - os: windows-latest
-            arch: amd64
-
-    outputs:
-      ${{ matrix.os }}_${{ matrix.arch }}: ${{ steps.build.outputs.${{ matrix.os }}_${{ matrix.arch }} }}
+          - os: linux
+            arch: arm64
 
     steps:
       - name: Checkout code
@@ -48,13 +39,13 @@ jobs:
 
       - name: Build for ${{ matrix.os }} ${{ matrix.arch }}
         run: |
-          GOOS=${{ matrix.os == 'ubuntu-latest' && 'linux' || (matrix.os == 'macos-latest' && 'darwin' || 'windows') }}
+          cd cli
+          GOOS=${{ matrix.os == 'linux' || (matrix.os == 'darwin' || 'windows') }}
           GOARCH=${{ matrix.arch }}
-          output_path=$HOME/output/$GOOS/$GOARCH
-          file_name=st3llar-$GOOS-$GOARCH${{ matrix.os == 'windows-latest' && '.exe' || '' }}
+          output_path=./output/
+          file_name=st3llar-$GOOS-$GOARCH${{ matrix.os == 'windows' && '.exe' || '' }}
           mkdir -p "$output_path"
           go build -o "$output_path/$file_name"
-          echo "${{ matrix.os }}_${{ matrix.arch }}=$output_path/$file_name" >> $GITHUB_OUTPUT
 
         env:
           GO111MODULE: "on"
@@ -63,7 +54,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cross-platform binaries
-          path: ~/output/
+          path: ./cli/output/
           overwrite: true # Optional. Default is 'false'
           if-no-files-found: error # Optional. Default is 'warn'
           retention-days: 1 # Optional. Defaults to repository settings.
