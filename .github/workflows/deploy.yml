@@ -1,7 +1,8 @@
-name: Deploy Staging/Developing to Amazon ECS
+name: Deploy to Amazon ECS
 
 #run-name: ${{ github.actor }}'s image build and push
 
+# TODO: Add trigger for different envs
 on:
   push:
     branches:
@@ -78,7 +79,7 @@ jobs:
           environment-variables: |
             JWT_PROTOCOL=${{ vars.JWT_PROTOCOL }}
             JWT_PRIVATE_KEY=${{ secrets.JWT_PRIVATE_KEY }}
-            JWT_PUBLIC_KEY=${{ secrets.JWT_PUBLIC_KEY }}
+            JWT_PUBLIC_KEY= ${{ secrets.JWT_PUBLIC_KEY }}
 
       - name: Deploy to Amazon ECS task definition
         id: deploy-task-def

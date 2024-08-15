@@ -1,6 +1,7 @@
 package jwtx
 
 import (
+	"encoding/base64"
 	"time"
 
 	"github.com/57blocks/auto-action/server/internal/config"
@@ -23,7 +24,7 @@ type (
 )
 
 func Assign() (*Tokens, error) {
-	claims := &Claims{
+	accessClaim := &Claims{
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "v3nooom",
 			IssuedAt:  time.Now().UTC().Unix(),
@@ -34,20 +35,49 @@ func Assign() (*Tokens, error) {
 		Organization: "Organization_sample",
 	}
 
-	signKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(config.Global.JWT.PrivateKey))
+	accessBytes, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
 	if err != nil {
 		return nil, err
 	}
 
-	jwtToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), claims)
+	accessKey, err := jwt.ParseRSAPrivateKeyFromPEM(accessBytes)
+	if err != nil {
+		return nil, err
+	}
 
-	token, err := jwtToken.SignedString(signKey)
+	accessToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), accessClaim)
+
+	access, err := accessToken.SignedString(accessKey)
+	if err != nil {
+		return nil, nil
+	}
+
+	refreshClaim := &jwt.StandardClaims{
+		Issuer:    "v3nooom",
+		IssuedAt:  time.Now().UTC().Unix(),
+		Subject:   "st3llar",
+		ExpiresAt: time.Now().UTC().AddDate(0, 3, 0).Unix(),
+	}
+
+	refreshBytes, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshKey, err := jwt.ParseRSAPrivateKeyFromPEM(refreshBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), refreshClaim)
+
+	refresh, err := refreshToken.SignedString(refreshKey)
 	if err != nil {
 		return nil, nil
 	}
 
 	return &Tokens{
-		Token:   token,
-		Refresh: "Refresh_sample",
+		Token:   access,
+		Refresh: refresh,
 	}, nil
 }
