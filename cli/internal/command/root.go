@@ -65,21 +65,14 @@ func initConfig() {
 }
 
 func rootFunc(cmd *cobra.Command, args []string) error {
-	// TODO: remove the testing code below
-	fmt.Println("Root Func:")
-	fmt.Println("----> viper settings:")
-	for k, v := range viper.AllSettings() {
-		fmt.Printf("%v: %v\n", k, v)
-	}
-	fmt.Println("----> args:")
-	for _, v := range args {
-		fmt.Printf("%v\n", v)
-	}
-
-	fmt.Println("----> flags:")
+	slog.Debug("---> rootFunc")
 	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-		fmt.Printf("flag.Name: %v, flag.Value: %v\n", flag.Name, flag.Value)
+		slog.Debug(fmt.Sprintf("flag.Name: %v, flag.Value: %v\n", flag.Name, flag.Value))
 	})
+
+	for _, v := range args {
+		slog.Debug(fmt.Sprintf("args: %v\n", v))
+	}
 
 	return cmd.Usage()
 }

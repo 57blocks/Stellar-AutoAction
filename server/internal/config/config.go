@@ -25,10 +25,10 @@ type (
 	}
 
 	JWT struct {
-		_        struct{}
-		Protocol string `mapstructure:"protocol"`
-		Private  string `mapstructure:"private"`
-		Public   string `mapstructure:"public"`
+		_          struct{}
+		Protocol   string `mapstructure:"protocol"`
+		PrivateKey string `mapstructure:"private_key"`
+		PublicKey  string `mapstructure:"public_key"`
 	}
 
 	Amazon struct {
@@ -41,22 +41,26 @@ type (
 
 func Setup() error {
 	cfgLogger := slog.Default()
-	slog.SetLogLoggerLevel(slog.LevelDebug) // TODO: put into env
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 
 	viper.NewWithOptions(
-		viper.EnvKeyReplacer(strings.NewReplacer(".", "_")),
+		//viper.EnvKeyReplacer(strings.NewReplacer(".", "_")),
 		viper.WithLogger(cfgLogger),
 	)
 
+	//viper.SetEnvPrefix("ST3LLAR")
 	viper.AddConfigPath("./internal/config/")
 	viper.SetConfigType("toml")
 	viper.SetConfigName("config")
 
-	viper.AutomaticEnv()
+	viper.SetEnvPrefix("")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	if err := viper.ReadInConfig(); err != nil {
 		return err
 	}
+
+	viper.AutomaticEnv()
 
 	Global = new(Configuration)
 

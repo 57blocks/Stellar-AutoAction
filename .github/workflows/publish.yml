@@ -1,0 +1,65 @@
+name: HomeBrew/Chocolatey Publish
+
+on:
+  workflow_run:
+    workflows:
+      - "Compile Cross-Platform CLI"
+    types:
+      - completed
+
+permissions:
+  contents: write
+
+jobs:
+  homebrew:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    strategy:
+      matrix:
+        os:
+          - linux
+          - darwin
+        arch:
+          - amd64
+          - arm64
+        exclude:
+          - os: linux
+            arch: arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: ${{ github.workspace }}/cli
+
+      - name: Download artifacts for ${{ matrix.os }} ${{ matrix.arch }}
+        uses: actions/download-artifact@v4
+        with:
+          name: st3llar-${{ matrix.os }}-${{ matrix.arch }}
+          path: ./homebrew/
+
+      - name: Publish to HomeBrew
+        run: |
+          echo "TODO: publishing to HomeBrew"
+          ls ./homebrew/st3llar-${{ matrix.os }}-${{ matrix.arch }}
+          ./homebrew/st3llar-${{ matrix.os }}-${{ matrix.arch }} -h
+
+  chocolatey:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: ${{ github.workspace }}/cli
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: st3llar-windows-amd64
+          path: ./chocolatey/
+
+      - name: Publish to Chocolatey
+        run: |
+          echo "TODO: Publish to Chocolatey"
+          ./chocolatey/st3llar-windows-amd64.exe -h

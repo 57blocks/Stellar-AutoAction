@@ -11,6 +11,6 @@ func CatchAndWrap(err error) {
 	}
 
 	// TODO: mapping error with more details and exit code
-	slog.Error("", "error-message", err.Error())
+	slog.Error("", "error", err.Error())
 	os.Exit(2)
 }

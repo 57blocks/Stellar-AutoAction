@@ -12,8 +12,8 @@ import (
 	"github.com/57blocks/auto-action/server/internal/api"
 	"github.com/57blocks/auto-action/server/internal/boot"
 	"github.com/57blocks/auto-action/server/internal/config"
+	"github.com/57blocks/auto-action/server/internal/pkg/aws"
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
-	"github.com/57blocks/auto-action/server/internal/third_party/aws"
 )
 
 var server *http.Server

@@ -1,0 +1,77 @@
+name: Compile Cross-Platform CLI
+
+on:
+  push:
+    paths:
+      - "cli/**"
+    tags:
+      - "*"
+
+jobs:
+  compile:
+    runs-on: ${{ matrix.os.runner }}
+
+    strategy:
+      matrix:
+        go:
+          - 1.22
+        os:
+          - name: linux
+            runner: ubuntu-latest
+          - name: darwin
+            runner: macos-latest
+          - name: windows
+            runner: windows-latest
+        arch:
+          - amd64
+          - arm64
+        exclude:
+          - os:
+              name: linux
+            arch: arm64
+          - os:
+              name: windows
+            arch: arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Build ${{ matrix.os.name }} ${{ matrix.arch }}
+        if: matrix.os.name != 'windows'
+        env:
+          GO111MODULE: "on"
+          GOOS: ${{ matrix.os.name }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          cd cli
+          go build -o "st3llar-${{ matrix.os.name }}-${{ matrix.arch }}"
+
+      - name: Build windows amd64
+        if: matrix.os.name == 'windows'
+        env:
+          GO111MODULE: "on"
+          GOOS: ${{ matrix.os.name }}
+          GOARCH: ${{ matrix.arch }}
+        run: |
+          cd cli
+          go build -o "st3llar-${{ matrix.os.name }}-${{ matrix.arch }}.exe"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: st3llar-${{ matrix.os.name }}-${{ matrix.arch }}
+          path: ./cli/st3llar-${{ matrix.os.name }}-${{ matrix.arch }}${{ matrix.os.name == 'windows' && '.exe' || '' }}
+          overwrite: true # Optional. Default is 'false'
+          if-no-files-found: error # Optional. Default is 'warn'
+          retention-days: 1 # Optional. Defaults to repository settings.
+          # 0: No compression
+          # 1: Best speed
+          # 6: Default compression (same as GNU Gzip)
+          # 9: Best compression
+          compression-level: 0
