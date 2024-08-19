@@ -50,7 +50,6 @@ func Setup() error {
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 
 	viper.NewWithOptions(
-		//viper.EnvKeyReplacer(strings.NewReplacer(".", "_")),
 		viper.WithLogger(cfgLogger),
 	)
 
@@ -74,14 +73,6 @@ func Setup() error {
 
 	cfgLogger.Debug(fmt.Sprintf("config path: %#v\n", viper.ConfigFileUsed()))
 	cfgLogger.Debug(fmt.Sprintf("config: %#v\n", Global))
-
-	//fmt.Printf("jwt.protocol: %s\n", viper.GetString("jwt.protocol"))
-	//fmt.Printf("jwt.private : %s\n", viper.GetString("jwt.private"))
-	//fmt.Printf("jwt.public  : %s\n", viper.GetString("jwt.public"))
-	//
-	//fmt.Printf("amazon.region: %s\n", viper.GetString("amazon.region"))
-	//fmt.Printf("amazon.access_key: %s\n", viper.GetString("amazon.access_key"))
-	//fmt.Printf("amazon.secret_key: %s\n", viper.GetString("amazon.secret_key"))
 
 	return nil
 }

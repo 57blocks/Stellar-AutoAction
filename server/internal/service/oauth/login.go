@@ -21,6 +21,7 @@ type (
 		Password     []byte `json:"password"`
 		Environment  string `json:"environment"`
 	}
+
 	RespLogin struct {
 		_            struct{}
 		Account      string `json:"account" toml:"account"`
