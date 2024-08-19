@@ -23,7 +23,8 @@ The configuration path on Mac is $HOME/.st3llar`,
 	Args: cobra.NoArgs,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if !cmd.Flags().Changed(constant.FlagCredential.ValStr()) &&
-			!cmd.Flags().Changed(constant.FlagEnvPrefix.ValStr()) &&
+			!cmd.Flags().Changed(constant.FlagEndPoint.ValStr()) &&
+			!cmd.Flags().Changed(constant.FlagPrefix.ValStr()) &&
 			!cmd.Flags().Changed(constant.FlagLog.ValStr()) {
 			return errors.New("at least one of the flags must be set")
 		}
@@ -43,7 +44,14 @@ func init() {
 		viper.GetString(fCred),
 		"configure the credential file path")
 
-	fEnvPrefix := constant.FlagEnvPrefix.ValStr()
+	fEndPoint := constant.FlagEndPoint.ValStr()
+	configure.Flags().StringP(
+		fEndPoint,
+		"",
+		viper.GetString(fEndPoint),
+		"configure the endpoint of the service")
+
+	fEnvPrefix := constant.FlagPrefix.ValStr()
 	configure.Flags().StringP(
 		fEnvPrefix,
 		"",
@@ -60,6 +68,7 @@ func init() {
 
 func configureFunc(_ *cobra.Command, _ []string) error {
 	err := config.SyncConfig(viper.ConfigFileUsed())
+
 	slog.Debug(fmt.Sprintf("synced configuration: %s\n", viper.ConfigFileUsed()))
 
 	return err

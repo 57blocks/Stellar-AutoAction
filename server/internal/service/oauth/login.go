@@ -2,6 +2,8 @@ package oauth
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/spf13/viper"
 	"io"
 	"net/http"
 
@@ -12,31 +14,33 @@ import (
 )
 
 type (
-	Req struct {
+	ReqLogin struct {
 		_            struct{}
 		Account      string `json:"account"`
 		Organization string `json:"organization"`
 		Password     []byte `json:"password"`
 		Environment  string `json:"environment"`
 	}
-	Resp struct {
+	RespLogin struct {
 		_            struct{}
 		Account      string `json:"account" toml:"account"`
 		Organization string `json:"organization" toml:"organization"`
 		*jwtx.Tokens `json:"tokens" toml:"tokens"`
-		*Environment `json:"environment" toml:"environment"`
+		*Bound       `json:"bound" toml:"bound"`
 	}
-	CredOpt func(cred *Resp)
+	RespLoginOpt func(cred *RespLogin)
 
-	Environment struct {
+	Bound struct {
 		_        struct{}
 		Name     string `json:"name" toml:"name"`
 		EndPoint string `json:"endpoint" toml:"endpoint"`
 	}
+	RespBoundOpt func(bound *Bound)
 )
 
 func Login(ctx *gin.Context) {
-	req := new(Req)
+	req := new(ReqLogin)
+
 	jsonData, err := io.ReadAll(ctx.Request.Body)
 	if err != nil {
 		ctx.AbortWithError(http.StatusInternalServerError, err)
@@ -60,15 +64,16 @@ func Login(ctx *gin.Context) {
 		return
 	}
 
-	resp := &Resp{
-		Account:      req.Account,
-		Organization: req.Organization,
-		Environment: &Environment{
-			Name:     req.Environment,
-			EndPoint: "http://st3llar-alb-365211.us-east-2.elb.amazonaws.com/",
-		},
-		Tokens: tokens,
-	}
+	resp := BuildResp(
+		WithAccount(req.Account),
+		WithOrganization(req.Organization),
+		WithBound(BuildBound(
+			WithBoundName(req.Environment),
+			WithBoundEndPoint(viper.GetString("bound.endpoint")),
+		)),
+		WithTokens(tokens),
+	)
+	fmt.Printf("%#v\n", resp)
 
 	ctx.JSON(http.StatusOK, resp)
 }

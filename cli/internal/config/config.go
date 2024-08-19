@@ -16,10 +16,18 @@ import (
 
 type (
 	GlobalConfig struct {
-		Credential string `toml:"credential"`
-		EnvPrefix  string `toml:"env_prefix"`
-		Log        string `toml:"log"`
+		General `toml:"general"`
+		Bound   `toml:"bound"`
 	}
+	General struct {
+		EnvPrefix string `toml:"env_prefix"`
+		Log       string `toml:"log"`
+	}
+	Bound struct {
+		Credential string `toml:"credential"`
+		EndPoint   string `toml:"endpoint"`
+	}
+
 	GlobalCfgOpt func(sc *GlobalConfig)
 )
 
@@ -51,6 +59,12 @@ func WithCredential(credential string) GlobalCfgOpt {
 	}
 }
 
+func WithEndPoint(endpoint string) GlobalCfgOpt {
+	return func(sc *GlobalConfig) {
+		sc.EndPoint = endpoint
+	}
+}
+
 // FindOrInit find or init the configuration file in the home directory
 // together with the default configuration
 func FindOrInit() (*GlobalConfig, string) {
@@ -65,6 +79,7 @@ func FindOrInit() (*GlobalConfig, string) {
 
 	cfg := Build(
 		WithCredential(util.DefaultCredPath()),
+		WithEndPoint(constant.Host.String()),
 		WithEnvPrefix(constant.EnvPrefix.ValStr()),
 		WithLogLevel(constant.GetLogLevel(constant.Info)),
 	)
@@ -123,7 +138,11 @@ func SyncConfig(path string) error {
 		slog.Debug(fmt.Sprintf("newCredential: %v\n", newCred))
 		cfg.Credential = newCred
 	}
-	if newEnvPrefix := viper.GetString(constant.FlagEnvPrefix.ValStr()); newEnvPrefix != "" {
+	if newEndPoint := viper.GetString(constant.FlagEndPoint.ValStr()); newEndPoint != "" {
+		slog.Debug(fmt.Sprintf("newEndPoint: %v\n", newEndPoint))
+		cfg.EndPoint = newEndPoint
+	}
+	if newEnvPrefix := viper.GetString(constant.FlagPrefix.ValStr()); newEnvPrefix != "" {
 		slog.Debug(fmt.Sprintf("newEnvPrefix: %v\n", newEnvPrefix))
 		cfg.EnvPrefix = newEnvPrefix
 	}

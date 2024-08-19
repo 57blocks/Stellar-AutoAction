@@ -13,12 +13,18 @@ var Global *Configuration
 type (
 	Configuration struct {
 		Mode   string `mapstructure:"mode"`
-		Logger `mapstructure:"logger"`
+		Bound  `mapstructure:"bound"`
+		Log    `mapstructure:"log"`
 		JWT    `mapstructure:"jwt"`
 		Amazon `mapstructure:"amazon"`
 	}
 
-	Logger struct {
+	Bound struct {
+		Name     string `mapstructure:"name"`
+		EndPoint string `mapstructure:"endpoint"`
+	}
+
+	Log struct {
 		_        struct{}
 		Level    string `mapstructure:"level"`
 		Encoding string `mapstructure:"encoding"`
@@ -48,12 +54,10 @@ func Setup() error {
 		viper.WithLogger(cfgLogger),
 	)
 
-	//viper.SetEnvPrefix("ST3LLAR")
 	viper.AddConfigPath("./internal/config/")
 	viper.SetConfigType("toml")
 	viper.SetConfigName("config")
-
-	viper.SetEnvPrefix("")
+	viper.SetEnvPrefix("ST3LLAR")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	if err := viper.ReadInConfig(); err != nil {

@@ -1,20 +1,20 @@
-package config
+package oauth
 
 type (
 	Credential struct {
 		Account      string `toml:"account" json:"account"`
 		Organization string `toml:"organization" json:"organization"`
-		*Environment `toml:"environment" json:"environment"`
+		*Bound       `toml:"bound" json:"bound"`
 		*Tokens      `toml:"tokens" json:"tokens"`
 	}
 	CredOpt func(cred *Credential)
 
-	Environment struct {
+	Bound struct {
 		_        struct{}
 		Name     string `toml:"name" json:"name"`
 		EndPoint string `toml:"endpoint" json:"endpoint"`
 	}
-	CredEnvOpt func(env *Environment)
+	CredBoundOpt func(env *Bound)
 
 	Tokens struct {
 		_       struct{}
@@ -24,6 +24,7 @@ type (
 	CredTokenOpt func(tokens *Tokens)
 )
 
+// BuildCred build the credential pair
 func BuildCred(opts ...CredOpt) *Credential {
 	cred := new(Credential)
 
@@ -46,21 +47,21 @@ func WithOrganization(organization string) CredOpt {
 	}
 }
 
-func WithEnvironment(env *Environment) CredOpt {
+func WithBoundEnv(env *Bound) CredOpt {
 	return func(cred *Credential) {
-		cred.Environment = env
+		cred.Bound = env
 	}
 }
 
-func WithSession(session *Tokens) CredOpt {
+func WithTokens(session *Tokens) CredOpt {
 	return func(cred *Credential) {
 		cred.Tokens = session
 	}
 }
 
-// BuildCredEnv build the credential's environment pair
-func BuildCredEnv(opts ...CredEnvOpt) *Environment {
-	env := new(Environment)
+// BuildBound build the bound environment
+func BuildBound(opts ...CredBoundOpt) *Bound {
+	env := new(Bound)
 
 	for _, opt := range opts {
 		opt(env)
@@ -69,20 +70,20 @@ func BuildCredEnv(opts ...CredEnvOpt) *Environment {
 	return env
 }
 
-func WithEnvName(name string) CredEnvOpt {
-	return func(env *Environment) {
+func WithBoundName(name string) CredBoundOpt {
+	return func(env *Bound) {
 		env.Name = name
 	}
 }
 
-func WithEnvEndPoint(endpoint string) CredEnvOpt {
-	return func(env *Environment) {
+func WithBoundEndPoint(endpoint string) CredBoundOpt {
+	return func(env *Bound) {
 		env.EndPoint = endpoint
 	}
 }
 
-// BuildCredSession build the credential's session pair
-func BuildCredSession(opts ...CredTokenOpt) *Tokens {
+// BuildTokens build the credential's session pair
+func BuildTokens(opts ...CredTokenOpt) *Tokens {
 	session := new(Tokens)
 
 	for _, opt := range opts {
@@ -92,13 +93,13 @@ func BuildCredSession(opts ...CredTokenOpt) *Tokens {
 	return session
 }
 
-func WithSessionToken(token string) CredTokenOpt {
+func WithAccessToken(token string) CredTokenOpt {
 	return func(tokens *Tokens) {
 		tokens.Token = token
 	}
 }
 
-func WithSessionRefreshToken(refresh string) CredTokenOpt {
+func WithRefreshToken(refresh string) CredTokenOpt {
 	return func(tokens *Tokens) {
 		tokens.Refresh = refresh
 	}

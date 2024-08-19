@@ -16,7 +16,7 @@ func (e Error) Error() string {
 	return e.Message
 }
 
-func IsError(resp *resty.Response) error {
+func HasError(resp *resty.Response) error {
 	var err Error
 	if err := json.Unmarshal(resp.Body(), &err); err != nil {
 		return err

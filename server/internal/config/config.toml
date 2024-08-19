@@ -1,15 +1,19 @@
 mode = "development"
 
-[logger]
+[bound]
+name = "NAME"
+endpoint = "ENDPOINT"
+
+[log]
 level = "DEBUG"
 encoding = "json"
 
 [jwt]
-protocol = "RS256"
+protocol = "PROTOCOL"
 private_key = "PRIVATE_KEY"
 public_key = "PUBLIC_KEy"
 
 [amazon]
-region = "us-east-2"
-access_key = "ACCESS_KEY"
-secret_key = "SECRET_KEY"
+region = "AMAZON_REGION"
+access_key = "AMAZON_ACCESS_KEY"
+secret_key = "AMAZON_SECRET_KEY"

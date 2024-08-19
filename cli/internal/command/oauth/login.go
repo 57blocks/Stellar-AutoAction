@@ -3,7 +3,6 @@ package oauth
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"os"
 
 	"golang.org/x/crypto/bcrypt"
@@ -44,14 +43,18 @@ func init() {
 		flagCred,
 		"c",
 		viper.GetString(flagCred),
-		"the credential file for the command about to be executed")
+		`
+The credential file for the command about to be bound.
+If it's the first time, or ignored, the default path will be used.'`)
 
 	flagEnv := constant.FlagEnvironment.ValStr()
 	login.Flags().StringP(
 		flagEnv,
 		"e",
 		viper.GetString(flagEnv),
-		"the execution environment")
+		`
+The execution environment about to be bound.
+If ignored, the default environment: Horizon will be used.'`)
 
 	flagAcc := constant.FlagAccount.ValStr()
 	login.Flags().StringP(
@@ -74,18 +77,12 @@ func init() {
 	}
 }
 
-type (
-	Req struct {
-		Account      string `json:"account"`
-		Organization string `json:"organization"`
-		Password     []byte `json:"password"`
-		Environment  string `json:"environment"`
-	}
-	Resp struct {
-		Token   string `json:"token"`
-		Refresh string `json:"refresh"`
-	}
-)
+type ReqLogin struct {
+	Account      string `json:"account"`
+	Organization string `json:"organization"`
+	Password     []byte `json:"password"`
+	Environment  string `json:"environment"`
+}
 
 func loginFunc(cmd *cobra.Command, args []string) error {
 	fmt.Println("Password: ")
@@ -104,31 +101,40 @@ func loginFunc(cmd *cobra.Command, args []string) error {
 		return errors.New(fmt.Sprintf("crypting pwd error: %s\n", err.Error()))
 	}
 
+	success, err := request2Supplier(cryptPwdBytes)
+	if err != nil {
+		return err
+	}
+
+	return syncCred(success)
+}
+
+func request2Supplier(cryptPwdBytes []byte) (*resty.Response, error) {
 	response, err := req.Client.R().
 		EnableTrace().
-		SetBody(Req{
+		SetBody(ReqLogin{
 			Account:      viper.GetString(constant.FlagAccount.ValStr()),
 			Organization: viper.GetString(constant.FlagOrganization.ValStr()),
 			Password:     cryptPwdBytes,
 			Environment:  viper.GetString(constant.FlagEnvironment.ValStr()),
 		}).
-		Post(constant.Host.String() + "/oauth/login")
+		Post(viper.GetString("bound.endpoint") + "/oauth/login")
 	if err != nil {
-		return errors.New(fmt.Sprintf("endpoint request error: %s\n", err.Error()))
+		return nil, errors.New(fmt.Sprintf("endpoint request error: %s\n", err.Error()))
 	}
 
-	slog.Debug(fmt.Sprintf("response: %v\n", response))
+	fmt.Printf("response: %v\n", response)
 
-	if e := util.IsError(response); e != nil {
-		fmt.Println(e)
-		return errors.New(fmt.Sprintf("response error: %s\n", e))
+	if e := util.HasError(response); e != nil {
+		fmt.Printf("supplier error: %#v\n", e)
+		return nil, errors.New(fmt.Sprintf("response error: %s\n", e))
 	}
 
-	return syncCred(response)
+	return response, nil
 }
 
 func syncCred(response *resty.Response) error {
-	cred := new(config.Credential)
+	cred := new(Credential)
 	if err := json.Unmarshal(response.Body(), cred); err != nil {
 		return errors.New(fmt.Sprintf("unmarshaling json response error: %s\n", err.Error()))
 	}

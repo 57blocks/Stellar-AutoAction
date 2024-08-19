@@ -2,12 +2,18 @@ package constant
 
 type FlagName string
 
+// Flags for the configure command
+const (
+	FlagPrefix     FlagName = "prefix"
+	FlagLog        FlagName = "log"
+	FlagCredential FlagName = "credential"
+	FlagEndPoint   FlagName = "endpoint"
+)
+
+// Flags for the login command
 const (
 	FlagAccount      FlagName = "account"
-	FlagCredential   FlagName = "credential"
-	FlagEnvPrefix    FlagName = "env-prefix"
 	FlagEnvironment  FlagName = "environment"
-	FlagLog          FlagName = "log"
 	FlagOrganization FlagName = "organization"
 )
 
