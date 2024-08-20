@@ -88,20 +88,37 @@ func migrateDB(db *sql.DB) error {
 		return nil
 	}
 
-	// TODO: remove the dirty version and re-run it
-	//dirtyErr := migrate.ErrDirty{}
-	//if errors.As(migErr, &dirtyErr) {
-	//	if err := mig.Migrate(uint(dirtyErr.Version)); err != nil {
-	//		errMsg := fmt.Sprintf("force migrate dirty version failed: %s\n", err.Error())
-	//		pkgLog.Logger.ERROR(errMsg)
-	//		return errors.New(errMsg)
-	//	}
-	//	pkgLog.Logger.DEBUG(fmt.Sprintf("force migrate dirty version: %v successfully\n", dirtyErr.Version))
-	//
-	//	return nil
-	//}
+	dirtyErr := migrate.ErrDirty{}
+	if errors.As(migErr, &dirtyErr) {
+		lastSuccess := dirtyErr.Version - 1
+		if err := mig.Force(lastSuccess); err != nil {
+			errMsg := fmt.Sprintf(
+				"force dirty version failed: %s\n",
+				err.Error(),
+			)
+			pkgLog.Logger.ERROR(errMsg)
+
+			return errors.New(errMsg)
+		}
+		if err := mig.Up(); err != nil {
+			errMsg := fmt.Sprintf(
+				"re-migrate dirty version failed: %s\n",
+				err.Error(),
+			)
+			pkgLog.Logger.ERROR(errMsg)
+
+			return errors.New(errMsg)
+		}
+		pkgLog.Logger.DEBUG(fmt.Sprintf(
+			"re-migrate dirty version: %v successfully\n",
+			dirtyErr.Version,
+		))
+
+		return nil
+	}
 
 	errMsg := fmt.Sprintf("migrate error: %s\n", migErr.Error())
 	pkgLog.Logger.ERROR(errMsg)
+
 	return errors.New(errMsg)
 }
