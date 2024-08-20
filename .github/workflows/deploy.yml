@@ -78,16 +78,22 @@ jobs:
           container-name: ${{ vars.AWS_ECS_CONTAINER }}
           image: ${{ env.AWS_ECR_IMAGE_TAG }}
           environment-variables: |
-            ST3LLAR_AMAZON_REGION=${{ vars.AWS_REGION }}
-            ST3LLAR_AMAZON_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
-            ST3LLAR_AMAZON_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
-            ST3LLAR_JWT_PROTOCOL=${{ vars.JWT_PROTOCOL }}
-            ST3LLAR_JWT_PRIVATE_KEY=${{ secrets.JWT_PRIVATE_KEY }}
-            ST3LLAR_JWT_PUBLIC_KEY=${{ secrets.JWT_PUBLIC_KEY }}
             ST3LLAR_BOUND_ENDPOINT=${{ vars.BOUND_ENDPOINT }}
             ST3LLAR_BOUND_NAME=${{ vars.BOUND_NAME }}
             ST3LLAR_LOG_ENCODING=${{ vars.LOG_ENCODING }}
             ST3LLAR_LOG_LEVEL=${{ vars.LOG_LEVEL }}
+            ST3LLAR_JWT_PROTOCOL=${{ vars.JWT_PROTOCOL }}
+            ST3LLAR_JWT_PRIVATE_KEY=${{ secrets.JWT_PRIVATE_KEY }}
+            ST3LLAR_JWT_PUBLIC_KEY=${{ secrets.JWT_PUBLIC_KEY }}
+            ST3LLAR_AMAZON_REGION=${{ vars.AWS_REGION }}
+            ST3LLAR_AMAZON_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}
+            ST3LLAR_AMAZON_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}
+            ST3LLAR_RDS_HOST=${{ vars.AWS_RDS_HOST }}
+            ST3LLAR_RDS_PORT=${{ vars.AWS_RDS_PORT }}
+            ST3LLAR_RDS_USER=${{ vars.AWS_RDS_USER }}
+            ST3LLAR_RDS_PASSWORD=${{ secrets.AWS_RDS_PASSWORD }}
+            ST3LLAR_RDS_DATABASE=${{ vars.AWS_RDS_DATABASE }}
+            ST3LLAR_RDS_SSLMODE=${{ vars.AWS_RDS_SSLMODE }}
 
       - name: Deploy to Amazon ECS task definition
         id: deploy-task-def
