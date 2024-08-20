@@ -2,45 +2,19 @@ package oauth
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/spf13/viper"
 	"io"
 	"net/http"
 
+	model "github.com/57blocks/auto-action/server/internal/dto/oauth"
 	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
 
 	"github.com/gin-gonic/gin"
-)
-
-type (
-	ReqLogin struct {
-		_            struct{}
-		Account      string `json:"account"`
-		Organization string `json:"organization"`
-		Password     []byte `json:"password"`
-		Environment  string `json:"environment"`
-	}
-
-	RespLogin struct {
-		_            struct{}
-		Account      string `json:"account" toml:"account"`
-		Organization string `json:"organization" toml:"organization"`
-		*jwtx.Tokens `json:"tokens" toml:"tokens"`
-		*Bound       `json:"bound" toml:"bound"`
-	}
-	RespLoginOpt func(cred *RespLogin)
-
-	Bound struct {
-		_        struct{}
-		Name     string `json:"name" toml:"name"`
-		EndPoint string `json:"endpoint" toml:"endpoint"`
-	}
-	RespBoundOpt func(bound *Bound)
+	"github.com/spf13/viper"
 )
 
 func Login(ctx *gin.Context) {
-	req := new(ReqLogin)
+	req := new(model.Request)
 
 	jsonData, err := io.ReadAll(ctx.Request.Body)
 	if err != nil {
@@ -65,16 +39,15 @@ func Login(ctx *gin.Context) {
 		return
 	}
 
-	resp := BuildResp(
-		WithAccount(req.Account),
-		WithOrganization(req.Organization),
-		WithBound(BuildBound(
-			WithBoundName(req.Environment),
-			WithBoundEndPoint(viper.GetString("bound.endpoint")),
+	resp := model.BuildResp(
+		model.WithAccount(req.Account),
+		model.WithOrganization(req.Organization),
+		model.WithBound(model.BuildBound(
+			model.WithBoundName(req.Environment),
+			model.WithBoundEndPoint(viper.GetString("bound.endpoint")),
 		)),
-		WithTokens(tokens),
+		model.WithTokens(tokens),
 	)
-	fmt.Printf("%#v\n", resp)
 
 	ctx.JSON(http.StatusOK, resp)
 }

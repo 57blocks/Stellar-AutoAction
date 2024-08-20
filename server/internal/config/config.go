@@ -17,6 +17,7 @@ type (
 		Log    `mapstructure:"log"`
 		JWT    `mapstructure:"jwt"`
 		Amazon `mapstructure:"amazon"`
+		RDS    `mapstructure:"rds"`
 	}
 
 	Bound struct {
@@ -42,6 +43,16 @@ type (
 		Region    string `mapstructure:"region"`
 		AccessKey string `mapstructure:"access_key"`
 		SecretKey string `mapstructure:"secret_key"`
+	}
+
+	RDS struct {
+		_        struct{}
+		Host     string `mapstructure:"host"`
+		Port     string `mapstructure:"port"`
+		User     string `mapstructure:"user"`
+		Password string `mapstructure:"password"`
+		Database string `mapstructure:"database"`
+		SSLMode  string `mapstructure:"sslmode"`
 	}
 )
 

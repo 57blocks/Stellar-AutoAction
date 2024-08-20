@@ -118,7 +118,7 @@ func request2Supplier(cryptPwdBytes []byte) (*resty.Response, error) {
 			Password:     cryptPwdBytes,
 			Environment:  viper.GetString(constant.FlagEnvironment.ValStr()),
 		}).
-		Post(viper.GetString("bound.endpoint") + "/oauth/login")
+		Post(viper.GetString("bound.endpoint") + "/subject/login")
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("endpoint request error: %s\n", err.Error()))
 	}

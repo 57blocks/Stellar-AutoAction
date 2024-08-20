@@ -73,7 +73,7 @@ func Setup() error {
 
 	Logger = &ZapLogger{zapLogger}
 	Logger.DEBUG(
-		"zap init success",
+		"zap logger init",
 		map[string]interface{}{"level": config.Global.Level, "encoding": config.Global.Encoding},
 	)
 

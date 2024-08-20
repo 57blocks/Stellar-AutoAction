@@ -17,3 +17,11 @@ public_key = "PUBLIC_KEy"
 region = "AMAZON_REGION"
 access_key = "AMAZON_ACCESS_KEY"
 secret_key = "AMAZON_SECRET_KEY"
+
+[rds]
+host = "RDS_HOST"
+port = "RDS_PORT"
+user = "RDS_USER"
+password = "RDS_PASSWORD"
+database = "RDS_DATABASE"
+sslmode = "disable"
