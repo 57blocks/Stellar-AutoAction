@@ -11,7 +11,7 @@ import (
 )
 
 func RegisterHandlers(g *gin.Engine) http.Handler {
-	oauth := g.Group("/oauth")
+	oauth := g.Group("/subject")
 	{
 		oauth.POST("/login", svcAuth.Login)
 

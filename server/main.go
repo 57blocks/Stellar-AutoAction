@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/57blocks/auto-action/server/internal/pkg/db"
 	"log"
 	"net/http"
 	"os"
@@ -12,7 +13,6 @@ import (
 	"github.com/57blocks/auto-action/server/internal/api"
 	"github.com/57blocks/auto-action/server/internal/boot"
 	"github.com/57blocks/auto-action/server/internal/config"
-	"github.com/57blocks/auto-action/server/internal/pkg/aws"
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
 )
 
@@ -22,7 +22,7 @@ func main() {
 	if err := boot.Boots(
 		boot.Wrap(config.Setup),
 		boot.Wrap(pkgLog.Setup),
-		boot.Wrap(aws.Setup),
+		boot.Wrap(db.Setup),
 	); err != nil {
 		log.Panicf("boots components occurred error: %s\n", err.Error())
 	}
