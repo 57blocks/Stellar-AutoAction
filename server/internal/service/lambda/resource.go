@@ -16,13 +16,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Register(ctx *gin.Context) {
+func Register(c *gin.Context) {
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(config.Global.Region),
 	})
 	if err != nil {
 		pkgLog.Logger.ERROR(fmt.Sprintf("failed to create AWS session: %s", err.Error()))
-		ctx.AbortWithError(
+		c.AbortWithError(
 			http.StatusInternalServerError,
 			err,
 		)
@@ -33,7 +33,7 @@ func Register(ctx *gin.Context) {
 	functionCode, err := os.ReadFile("path/to/your/lambda/function.zip")
 	if err != nil {
 		pkgLog.Logger.ERROR(fmt.Sprintf("failed to read Lambda function code: %s", err.Error()))
-		ctx.AbortWithError(
+		c.AbortWithError(
 			http.StatusInternalServerError,
 			err,
 		)
@@ -60,7 +60,7 @@ func Register(ctx *gin.Context) {
 	})
 	if err != nil {
 		pkgLog.Logger.ERROR(fmt.Sprintf("failed to create IAM role:: %s", err.Error()))
-		ctx.AbortWithError(
+		c.AbortWithError(
 			http.StatusInternalServerError,
 			err,
 		)
@@ -73,7 +73,7 @@ func Register(ctx *gin.Context) {
 	})
 	if err != nil {
 		pkgLog.Logger.ERROR(fmt.Sprintf("failed to attach policy to IAM role: %w", err.Error()))
-		ctx.AbortWithError(
+		c.AbortWithError(
 			http.StatusInternalServerError,
 			err,
 		)
@@ -93,7 +93,7 @@ func Register(ctx *gin.Context) {
 	})
 	if err != nil {
 		pkgLog.Logger.ERROR(fmt.Sprintf("failed to create Lambda function: %w", err.Error()))
-		ctx.AbortWithError(
+		c.AbortWithError(
 			http.StatusInternalServerError,
 			err,
 		)
@@ -102,5 +102,5 @@ func Register(ctx *gin.Context) {
 
 	log.Println("Successfully uploaded Lambda function")
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
+	c.JSON(http.StatusOK, gin.H{"message": "ok"})
 }

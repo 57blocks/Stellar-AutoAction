@@ -1,9 +1,11 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/57blocks/auto-action/server/internal/config"
 	migs "github.com/57blocks/auto-action/server/internal/pkg/db/migration"
@@ -15,16 +17,22 @@ import (
 	"github.com/golang-migrate/migrate/v4/source/httpfs"
 	_ "github.com/lib/pq"
 	"github.com/pkg/errors"
+	pgDriver "gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-var Conn *sql.DB
+var db *gorm.DB
+
+func Conn(c context.Context) *gorm.DB {
+	return db.WithContext(c)
+}
 
 func Setup() error {
 	if err := connect(); err != nil {
 		return err
 	}
 
-	return migrateDB(Conn)
+	return migrateDB(db)
 }
 
 func connect() error {
@@ -35,27 +43,48 @@ func connect() error {
 		rds.Host, rds.Port, rds.User, rds.Password, rds.Database, rds.SSLMode,
 	)
 
-	var err error
-	Conn, err = sql.Open("postgres", dsn)
+	sqlDB, err := sql.Open("postgres", dsn)
 	if err != nil {
 		pkgLog.Logger.ERROR(fmt.Sprintf("setup database error: %s\n", err.Error()))
 		return errors.New(fmt.Sprintf("setup database error: %s\n", err.Error()))
 	}
+	sqlDB.SetMaxIdleConns(4) // by default: 2
+	sqlDB.SetMaxOpenConns(10)
+	sqlDB.SetConnMaxLifetime(10 * time.Minute)
+	sqlDB.SetConnMaxIdleTime(1 * time.Minute)
 
-	err = Conn.Ping()
+	// db: *gorm.DB
+	// db.ConnPool: {gorm.ConnPool | *gorm.PreparedStmtDB}
+	db, err = gorm.Open(
+		pgDriver.Open(dsn),
+		&gorm.Config{
+			DisableAutomaticPing:   false,
+			SkipDefaultTransaction: true,
+			PrepareStmt:            true,
+			NowFunc: func() time.Time {
+				return time.Now().UTC()
+			},
+			ConnPool: sqlDB,
+		},
+	)
 	if err != nil {
 		pkgLog.Logger.ERROR(fmt.Sprintf("connecting to database error: %s\n", err.Error()))
 		return errors.New(fmt.Sprintf("connecting to database error: %s\n", err.Error()))
 	}
 
-	pkgLog.Logger.DEBUG("connected to database")
-
 	return nil
 }
 
-func migrateDB(db *sql.DB) error {
-	driver, err := postgres.WithInstance(db, &postgres.Config{
-		MigrationsTable: "schema_migrations",
+func migrateDB(db *gorm.DB) error {
+	instance, err := db.DB()
+	if err != nil {
+		errMsg := fmt.Sprintf("new DB instance error: %s\n", err.Error())
+		pkgLog.Logger.ERROR(errMsg)
+		return errors.New(errMsg)
+	}
+
+	driver, err := postgres.WithInstance(instance, &postgres.Config{
+		MigrationsTable: "migration_version",
 	})
 	if err != nil {
 		errMsg := fmt.Sprintf("new driver instance error: %s\n", err.Error())

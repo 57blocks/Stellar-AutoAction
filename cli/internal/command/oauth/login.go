@@ -3,9 +3,9 @@ package oauth
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 
-	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/57blocks/auto-action/cli/internal/command"
@@ -96,12 +96,7 @@ func loginFunc(cmd *cobra.Command, args []string) error {
 		return errors.New("empty cryptPwd error")
 	}
 
-	cryptPwdBytes, err := bcrypt.GenerateFromPassword(pwdBytes, bcrypt.DefaultCost)
-	if err != nil {
-		return errors.New(fmt.Sprintf("crypting pwd error: %s\n", err.Error()))
-	}
-
-	success, err := request2Supplier(cryptPwdBytes)
+	success, err := request2Supplier(pwdBytes)
 	if err != nil {
 		return err
 	}
@@ -118,16 +113,15 @@ func request2Supplier(cryptPwdBytes []byte) (*resty.Response, error) {
 			Password:     cryptPwdBytes,
 			Environment:  viper.GetString(constant.FlagEnvironment.ValStr()),
 		}).
-		Post(viper.GetString("bound.endpoint") + "/subject/login")
+		Post(viper.GetString("bound.endpoint") + "/oauth/login")
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("endpoint request error: %s\n", err.Error()))
 	}
 
-	fmt.Printf("response: %v\n", response)
+	slog.Debug(fmt.Sprintf("response: %v\n", response)) // TODO: remove
 
 	if e := util.HasError(response); e != nil {
-		fmt.Printf("supplier error: %#v\n", e)
-		return nil, errors.New(fmt.Sprintf("response error: %s\n", e))
+		return nil, errors.New(fmt.Sprintf("supplier error: %s\n", e))
 	}
 
 	return response, nil
