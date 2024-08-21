@@ -7,6 +7,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/config"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/pkg/errors"
 )
 
 type (
@@ -21,15 +22,18 @@ type (
 		Token   string `json:"token" toml:"token"`
 		Refresh string `json:"refresh" toml:"refresh"`
 	}
+
+	AccessExpire  func() time.Time
+	RefreshExpire func() time.Time
 )
 
-func Assign() (*Tokens, error) {
+func Assign(ae, re time.Time) (*Tokens, error) {
 	accessClaim := &Claims{
 		StandardClaims: jwt.StandardClaims{
 			Issuer:    "v3nooom",
 			IssuedAt:  time.Now().UTC().Unix(),
 			Subject:   "st3llar",
-			ExpiresAt: time.Now().UTC().AddDate(0, 1, 0).Unix(),
+			ExpiresAt: ae.Unix(),
 		},
 		Account:      "Account_sample",
 		Organization: "Organization_sample",
@@ -37,43 +41,43 @@ func Assign() (*Tokens, error) {
 
 	accessBytes, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(err.Error())
 	}
 
 	accessKey, err := jwt.ParseRSAPrivateKeyFromPEM(accessBytes)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(err.Error())
 	}
 
 	accessToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), accessClaim)
 
 	access, err := accessToken.SignedString(accessKey)
 	if err != nil {
-		return nil, nil
+		return nil, errors.New(err.Error())
 	}
 
 	refreshClaim := &jwt.StandardClaims{
 		Issuer:    "v3nooom",
 		IssuedAt:  time.Now().UTC().Unix(),
 		Subject:   "st3llar",
-		ExpiresAt: time.Now().UTC().AddDate(0, 3, 0).Unix(),
+		ExpiresAt: re.Unix(),
 	}
 
 	refreshBytes, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(err.Error())
 	}
 
 	refreshKey, err := jwt.ParseRSAPrivateKeyFromPEM(refreshBytes)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(err.Error())
 	}
 
 	refreshToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), refreshClaim)
 
 	refresh, err := refreshToken.SignedString(refreshKey)
 	if err != nil {
-		return nil, nil
+		return nil, errors.New(err.Error())
 	}
 
 	return &Tokens{
