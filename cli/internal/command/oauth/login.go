@@ -3,6 +3,7 @@ package oauth
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"golang.org/x/crypto/ssh/terminal"
@@ -117,7 +118,7 @@ func request2Supplier(cryptPwdBytes []byte) (*resty.Response, error) {
 		return nil, errors.New(fmt.Sprintf("endpoint request error: %s\n", err.Error()))
 	}
 
-	fmt.Printf("response: %v\n", response)
+	slog.Debug(fmt.Sprintf("response: %v\n", response)) // TODO: remove
 
 	if e := util.HasError(response); e != nil {
 		return nil, errors.New(fmt.Sprintf("supplier error: %s\n", e))

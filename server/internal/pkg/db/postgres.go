@@ -53,17 +53,12 @@ func connect() error {
 	sqlDB.SetConnMaxLifetime(10 * time.Minute)
 	sqlDB.SetConnMaxIdleTime(1 * time.Minute)
 
-	// gorm.Open() did the init ping
-	if err = sqlDB.Ping(); err != nil {
-		pkgLog.Logger.ERROR(fmt.Sprintf("connecting to database error: %s\n", err.Error()))
-		return errors.New(fmt.Sprintf("connecting to database error: %s\n", err.Error()))
-	}
-
 	// db: *gorm.DB
 	// db.ConnPool: {gorm.ConnPool | *gorm.PreparedStmtDB}
 	db, err = gorm.Open(
 		pgDriver.Open(dsn),
 		&gorm.Config{
+			DisableAutomaticPing:   false,
 			SkipDefaultTransaction: true,
 			PrepareStmt:            true,
 			NowFunc: func() time.Time {
@@ -72,6 +67,10 @@ func connect() error {
 			ConnPool: sqlDB,
 		},
 	)
+	if err != nil {
+		pkgLog.Logger.ERROR(fmt.Sprintf("connecting to database error: %s\n", err.Error()))
+		return errors.New(fmt.Sprintf("connecting to database error: %s\n", err.Error()))
+	}
 
 	return nil
 }
@@ -85,7 +84,7 @@ func migrateDB(db *gorm.DB) error {
 	}
 
 	driver, err := postgres.WithInstance(instance, &postgres.Config{
-		MigrationsTable: "schema_migrations",
+		MigrationsTable: "migration_version",
 	})
 	if err != nil {
 		errMsg := fmt.Sprintf("new driver instance error: %s\n", err.Error())
