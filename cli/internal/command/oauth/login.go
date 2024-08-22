@@ -12,7 +12,6 @@ import (
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
-	"github.com/BurntSushi/toml"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -132,14 +131,8 @@ func syncLogin(response *resty.Response) error {
 		return errors.New(fmt.Sprintf("unmarshaling json response error: %s\n", err.Error()))
 	}
 
-	credToml, err := toml.Marshal(cred)
-	if err != nil {
-		return errors.New(fmt.Sprintf("marshaling credentials error: %s\n", err.Error()))
-	}
-
-	err = os.WriteFile(viper.GetString(constant.FlagCredential.ValStr()), credToml, 0666)
-	if err != nil {
-		return errors.New(fmt.Sprintf("writing credentials error: %s\n", err.Error()))
+	if err := config.WriteCredential(viper.GetString(constant.FlagCredential.ValStr()), cred); err != nil {
+		return err
 	}
 
 	return config.SyncConfigByFlags()

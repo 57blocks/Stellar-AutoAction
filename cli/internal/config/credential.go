@@ -2,9 +2,10 @@ package config
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/BurntSushi/toml"
 	"github.com/pkg/errors"
-	"os"
 )
 
 type (
