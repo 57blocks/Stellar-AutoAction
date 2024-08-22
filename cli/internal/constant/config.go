@@ -10,7 +10,7 @@ type Config string
 const (
 	ConfigurationType Config = "toml"
 	ConfigName        Config = ".st3llar"
-	CredentialName    Config = ".st3llar-cred"
+	CredentialName    Config = ".st3llar-credential"
 
 	EnvPrefix Config = "ST3LLAR"
 )

@@ -67,9 +67,9 @@ func init() {
 }
 
 func configureFunc(_ *cobra.Command, _ []string) error {
-	err := config.SyncConfig(viper.ConfigFileUsed())
+	err := config.SyncConfigByFlags()
 
-	slog.Debug(fmt.Sprintf("synced configuration: %s\n", viper.ConfigFileUsed()))
+	slog.Debug(fmt.Sprintf("synced config: %s\n", viper.ConfigFileUsed()))
 
 	return err
 }

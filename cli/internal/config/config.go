@@ -16,22 +16,23 @@ import (
 
 type (
 	GlobalConfig struct {
-		General `toml:"general"`
-		Bound   `toml:"bound"`
+		General   `toml:"general"`
+		BoundWith `toml:"bound_with"`
 	}
+	GlobalConfigOpt func(sc *GlobalConfig)
+
 	General struct {
 		EnvPrefix string `toml:"env_prefix"`
 		Log       string `toml:"log"`
 	}
-	Bound struct {
+
+	BoundWith struct {
 		Credential string `toml:"credential"`
 		EndPoint   string `toml:"endpoint"`
 	}
-
-	GlobalCfgOpt func(sc *GlobalConfig)
 )
 
-func Build(opts ...GlobalCfgOpt) *GlobalConfig {
+func Build(opts ...GlobalConfigOpt) *GlobalConfig {
 	sc := new(GlobalConfig)
 
 	for _, opt := range opts {
@@ -41,25 +42,25 @@ func Build(opts ...GlobalCfgOpt) *GlobalConfig {
 	return sc
 }
 
-func WithLogLevel(logLevel string) GlobalCfgOpt {
+func WithLogLevel(logLevel string) GlobalConfigOpt {
 	return func(sc *GlobalConfig) {
 		sc.Log = logLevel
 	}
 }
 
-func WithEnvPrefix(prefix string) GlobalCfgOpt {
+func WithEnvPrefix(prefix string) GlobalConfigOpt {
 	return func(sc *GlobalConfig) {
 		sc.EnvPrefix = prefix
 	}
 }
 
-func WithCredential(credential string) GlobalCfgOpt {
+func WithCredential(credential string) GlobalConfigOpt {
 	return func(sc *GlobalConfig) {
 		sc.Credential = credential
 	}
 }
 
-func WithEndPoint(endpoint string) GlobalCfgOpt {
+func WithEndPoint(endpoint string) GlobalConfigOpt {
 	return func(sc *GlobalConfig) {
 		sc.EndPoint = endpoint
 	}
@@ -71,7 +72,7 @@ func FindOrInit() (*GlobalConfig, string) {
 	path := util.DefaultPath()
 
 	if util.IsExists(path) {
-		cfg, err := ReadConfig(path)
+		cfg, err := ReadConfig()
 		cobra.CheckErr(err)
 
 		return cfg, path
@@ -84,13 +85,13 @@ func FindOrInit() (*GlobalConfig, string) {
 		WithLogLevel(constant.GetLogLevel(constant.Info)),
 	)
 
-	cobra.CheckErr(WriteConfig(cfg, path))
+	cobra.CheckErr(WriteConfig(cfg))
 
 	return cfg, path
 }
 
-func ReadConfig(path string) (*GlobalConfig, error) {
-	data, err := os.ReadFile(path)
+func ReadConfig() (*GlobalConfig, error) {
+	data, err := os.ReadFile(util.DefaultPath())
 	if err != nil {
 		return nil, err
 	}
@@ -98,39 +99,29 @@ func ReadConfig(path string) (*GlobalConfig, error) {
 	cfg := new(GlobalConfig)
 
 	if _, err := toml.Decode(string(data), cfg); err != nil {
-		_, e := fmt.Fprintf(
-			os.Stderr,
-			"reading config error: %s\n",
-			err.Error(),
-		)
-		return nil, e
+		return nil, errors.New(fmt.Sprintf("reading config error: %s\n", err.Error()))
 	}
 
 	return cfg, nil
 }
 
-func WriteConfig(cfg *GlobalConfig, path string) error {
+func WriteConfig(cfg *GlobalConfig) error {
 	tomlBytes, err := toml.Marshal(cfg)
 	if err != nil {
 		return fmt.Errorf("marshalling config error: %w", err)
 	}
 
-	if err := os.WriteFile(path, tomlBytes, 0666); err != nil {
-		_, e := fmt.Fprintf(
-			os.Stderr,
-			"writing config error: %s\n",
-			err.Error(),
-		)
-		return e
+	if err := os.WriteFile(util.DefaultPath(), tomlBytes, 0666); err != nil {
+		return errors.New(fmt.Sprintf("writing config error: %s\n", err.Error()))
 	}
 
 	return nil
 }
 
-func SyncConfig(path string) error {
-	cfg, err := ReadConfig(util.DefaultPath())
+func SyncConfigByFlags() error {
+	cfg, err := ReadConfig()
 	if err != nil {
-		return errors.New(fmt.Sprintf("reading configuration error: %s\n", err.Error()))
+		return errors.New(fmt.Sprintf("reading config error: %s\n", err.Error()))
 	}
 
 	// Update fields if new values are provided
@@ -151,5 +142,16 @@ func SyncConfig(path string) error {
 		cfg.Log = newLogLevel
 	}
 
-	return WriteConfig(cfg, path)
+	return WriteConfig(cfg)
+}
+
+func ResetConfigCredential() error {
+	cfg, err := ReadConfig()
+	if err != nil {
+		return errors.New(fmt.Sprintf("reading config error: %s\n", err.Error()))
+	}
+
+	cfg.Credential = ""
+
+	return WriteConfig(cfg)
 }

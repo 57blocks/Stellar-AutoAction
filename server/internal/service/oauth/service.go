@@ -10,15 +10,15 @@ import (
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/oauth"
 
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type (
 	Service interface {
-		Login(c context.Context, request dto.Request) (*dto.Response, error)
-		Logout(c context.Context, req dto.Request)
+		Login(c context.Context, request dto.ReqLogin) (*dto.RespLogin, error)
+		Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogout, error)
 	}
 	ServiceConductor struct{}
 )
@@ -31,10 +31,9 @@ func init() {
 	}
 }
 
-func (sc *ServiceConductor) Login(c context.Context, req dto.Request) (*dto.Response, error) {
+func (sc *ServiceConductor) Login(c context.Context, req dto.ReqLogin) (*dto.RespLogin, error) {
 	user := new(model.User)
 	if err := db.Conn(c).Table(user.TableNameWithAbbr()).
-		//Select("*").
 		Joins("LEFT JOIN principal_organization AS po ON pu.organization_id = po.id").
 		Where(map[string]interface{}{
 			"pu.account": req.Account,
@@ -61,14 +60,11 @@ func (sc *ServiceConductor) Login(c context.Context, req dto.Request) (*dto.Resp
 		return nil, err
 	}
 
-	resp := dto.BuildResp(
+	resp := dto.BuildRespLogin(
 		dto.WithAccount(req.Account),
 		dto.WithOrganization(req.Organization),
-		dto.WithBound(dto.BuildBound(
-			dto.WithBoundName(req.Environment),
-			dto.WithBoundEndPoint(viper.GetString("bound.endpoint")),
-		)),
-		dto.WithTokens(tokens),
+		dto.WithEnvironment(req.Environment),
+		dto.WithTokenPair(tokens),
 	)
 
 	// save tokens association
@@ -79,13 +75,27 @@ func (sc *ServiceConductor) Login(c context.Context, req dto.Request) (*dto.Resp
 		AccessExpires:  tokenExp,
 		RefreshExpires: refreshExp,
 	}
-	if err := db.Conn(c).Create(token).Error; err != nil {
+	if err := db.Conn(c).
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "user_id"}},
+			UpdateAll: true,
+		}).
+		Create(token).
+		Error; err != nil {
 		return nil, errors.New(err.Error())
 	}
 
 	return resp, nil
 }
 
-func (sc *ServiceConductor) Logout(c context.Context, req dto.Request) {
+func (sc *ServiceConductor) Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogout, error) {
+	if err := db.Conn(c).
+		Where(map[string]interface{}{
+			"access": req.Token,
+		}).
+		Delete(&model.Token{}).Error; err != nil {
+		return nil, errors.New(err.Error())
+	}
 
+	return new(dto.RespLogout), nil
 }
