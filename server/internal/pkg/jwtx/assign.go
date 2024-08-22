@@ -2,8 +2,6 @@ package jwtx
 
 import (
 	"encoding/base64"
-	"time"
-
 	"github.com/57blocks/auto-action/server/internal/config"
 
 	"github.com/dgrijalva/jwt-go"
@@ -11,7 +9,7 @@ import (
 )
 
 type (
-	Claims struct {
+	TokenClaims struct {
 		jwt.StandardClaims
 		Account      string `json:"account"`
 		Organization string `json:"organization"`
@@ -23,22 +21,13 @@ type (
 		Refresh string `json:"refresh" toml:"refresh"`
 	}
 
-	AccessExpire  func() time.Time
-	RefreshExpire func() time.Time
+	ClaimPair struct {
+		Token   TokenClaims
+		Refresh jwt.StandardClaims
+	}
 )
 
-func Assign(ae, re time.Time) (*Tokens, error) {
-	accessClaim := &Claims{
-		StandardClaims: jwt.StandardClaims{
-			Issuer:    "v3nooom",
-			IssuedAt:  time.Now().UTC().Unix(),
-			Subject:   "st3llar",
-			ExpiresAt: ae.Unix(),
-		},
-		Account:      "Account_sample",
-		Organization: "Organization_sample",
-	}
-
+func Assign(cPair ClaimPair) (*Tokens, error) {
 	accessBytes, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
 	if err != nil {
 		return nil, errors.New(err.Error())
@@ -49,18 +38,11 @@ func Assign(ae, re time.Time) (*Tokens, error) {
 		return nil, errors.New(err.Error())
 	}
 
-	accessToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), accessClaim)
+	accessToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), cPair.Token)
 
 	access, err := accessToken.SignedString(accessKey)
 	if err != nil {
 		return nil, errors.New(err.Error())
-	}
-
-	refreshClaim := &jwt.StandardClaims{
-		Issuer:    "v3nooom",
-		IssuedAt:  time.Now().UTC().Unix(),
-		Subject:   "st3llar",
-		ExpiresAt: re.Unix(),
 	}
 
 	refreshBytes, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
@@ -73,7 +55,7 @@ func Assign(ae, re time.Time) (*Tokens, error) {
 		return nil, errors.New(err.Error())
 	}
 
-	refreshToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), refreshClaim)
+	refreshToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), cPair.Refresh)
 
 	refresh, err := refreshToken.SignedString(refreshKey)
 	if err != nil {
@@ -84,4 +66,20 @@ func Assign(ae, re time.Time) (*Tokens, error) {
 		Token:   access,
 		Refresh: refresh,
 	}, nil
+}
+
+func Parse(token string) (*jwt.Token, error) {
+	accessBytes, err := base64.StdEncoding.DecodeString(config.Global.JWT.PublicKey)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	accessKey, err := jwt.ParseRSAPublicKeyFromPEM(accessBytes)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	return jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
+		return accessKey, nil
+	})
 }

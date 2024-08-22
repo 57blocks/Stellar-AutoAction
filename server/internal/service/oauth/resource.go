@@ -55,5 +55,22 @@ func Logout(c *gin.Context) {
 }
 
 func Refresh(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+	req := new(dto.ReqRefresh)
+
+	if err := c.BindJSON(req); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	pkgLog.Logger.DEBUG("logout", map[string]interface{}{
+		"refresh": req.Refresh,
+	})
+
+	resp, err := Conductor.Refresh(c, *req)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
