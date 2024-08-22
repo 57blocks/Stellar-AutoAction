@@ -72,7 +72,7 @@ func FindOrInit() (*GlobalConfig, string) {
 	path := util.DefaultPath()
 
 	if util.IsExists(path) {
-		cfg, err := ReadConfig(path)
+		cfg, err := ReadConfig()
 		cobra.CheckErr(err)
 
 		return cfg, path
@@ -85,13 +85,13 @@ func FindOrInit() (*GlobalConfig, string) {
 		WithLogLevel(constant.GetLogLevel(constant.Info)),
 	)
 
-	cobra.CheckErr(WriteConfig(cfg, path))
+	cobra.CheckErr(WriteConfig(cfg))
 
 	return cfg, path
 }
 
-func ReadConfig(path string) (*GlobalConfig, error) {
-	data, err := os.ReadFile(path)
+func ReadConfig() (*GlobalConfig, error) {
+	data, err := os.ReadFile(util.DefaultPath())
 	if err != nil {
 		return nil, err
 	}
@@ -99,39 +99,29 @@ func ReadConfig(path string) (*GlobalConfig, error) {
 	cfg := new(GlobalConfig)
 
 	if _, err := toml.Decode(string(data), cfg); err != nil {
-		_, e := fmt.Fprintf(
-			os.Stderr,
-			"reading config error: %s\n",
-			err.Error(),
-		)
-		return nil, e
+		return nil, errors.New(fmt.Sprintf("reading config error: %s\n", err.Error()))
 	}
 
 	return cfg, nil
 }
 
-func WriteConfig(cfg *GlobalConfig, path string) error {
+func WriteConfig(cfg *GlobalConfig) error {
 	tomlBytes, err := toml.Marshal(cfg)
 	if err != nil {
 		return fmt.Errorf("marshalling config error: %w", err)
 	}
 
-	if err := os.WriteFile(path, tomlBytes, 0666); err != nil {
-		_, e := fmt.Fprintf(
-			os.Stderr,
-			"writing config error: %s\n",
-			err.Error(),
-		)
-		return e
+	if err := os.WriteFile(util.DefaultPath(), tomlBytes, 0666); err != nil {
+		return errors.New(fmt.Sprintf("writing config error: %s\n", err.Error()))
 	}
 
 	return nil
 }
 
-func SyncConfigByFlags(path string) error {
-	cfg, err := ReadConfig(util.DefaultPath())
+func SyncConfigByFlags() error {
+	cfg, err := ReadConfig()
 	if err != nil {
-		return errors.New(fmt.Sprintf("reading configuration error: %s\n", err.Error()))
+		return errors.New(fmt.Sprintf("reading config error: %s\n", err.Error()))
 	}
 
 	// Update fields if new values are provided
@@ -152,5 +142,16 @@ func SyncConfigByFlags(path string) error {
 		cfg.Log = newLogLevel
 	}
 
-	return WriteConfig(cfg, path)
+	return WriteConfig(cfg)
+}
+
+func ResetConfigCredential() error {
+	cfg, err := ReadConfig()
+	if err != nil {
+		return errors.New(fmt.Sprintf("reading config error: %s\n", err.Error()))
+	}
+
+	cfg.Credential = ""
+
+	return WriteConfig(cfg)
 }

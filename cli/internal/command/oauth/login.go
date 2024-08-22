@@ -112,9 +112,9 @@ func supplierLogin(cryptPwdBytes []byte) (*resty.Response, error) {
 			Password:     cryptPwdBytes,
 			Environment:  viper.GetString(constant.FlagEnvironment.ValStr()),
 		}).
-		Post(viper.GetString("bound.endpoint") + "/oauth/login")
+		Post(viper.GetString("bound_with.endpoint") + "/oauth/login")
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("resty request error: %s\n", err.Error()))
+		return nil, errors.New(fmt.Sprintf("resty error: %s\n", err.Error()))
 	}
 
 	slog.Debug(fmt.Sprintf("response: %v\n", response)) // TODO: remove
@@ -142,5 +142,5 @@ func syncLogin(response *resty.Response) error {
 		return errors.New(fmt.Sprintf("writing credentials error: %s\n", err.Error()))
 	}
 
-	return config.SyncConfigByFlags(viper.ConfigFileUsed())
+	return config.SyncConfigByFlags()
 }

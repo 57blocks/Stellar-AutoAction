@@ -14,7 +14,7 @@ func RegisterHandlers(g *gin.Engine) http.Handler {
 	oauthGroup := g.Group("/oauth")
 	{
 		oauthGroup.POST("/login", oauth.Login)
-		oauthGroup.POST("/logout", oauth.Logout)
+		oauthGroup.DELETE("/logout", oauth.Logout)
 		oauthGroup.POST("/refresh", oauth.Refresh)
 	}
 

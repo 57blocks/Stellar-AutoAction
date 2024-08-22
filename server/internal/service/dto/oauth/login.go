@@ -1,9 +1,11 @@
 package oauth
 
-import "github.com/57blocks/auto-action/server/internal/pkg/jwtx"
+import (
+	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
+)
 
 type (
-	Request struct {
+	ReqLogin struct {
 		_            struct{}
 		Account      string `json:"account"`
 		Organization string `json:"organization"`
@@ -11,26 +13,19 @@ type (
 		Environment  string `json:"environment"`
 	}
 
-	Response struct {
+	RespLogin struct {
 		_            struct{}
 		Account      string `json:"account" toml:"account"`
 		Organization string `json:"organization" toml:"organization"`
+		Environment  string `toml:"environment" json:"environment"`
 		*jwtx.Tokens `json:"tokens" toml:"tokens"`
-		*Bound       `json:"bound" toml:"bound"`
 	}
-	ResponseOpt func(cred *Response)
-
-	Bound struct {
-		_        struct{}
-		Name     string `json:"name" toml:"name"`
-		EndPoint string `json:"endpoint" toml:"endpoint"`
-	}
-	BoundOpt func(bound *Bound)
+	RespOpt func(cred *RespLogin)
 )
 
-// BuildResp build the Response
-func BuildResp(opts ...ResponseOpt) *Response {
-	cred := new(Response)
+// BuildRespLogin build the RespLogin of Login
+func BuildRespLogin(opts ...RespOpt) *RespLogin {
+	cred := new(RespLogin)
 
 	for _, opt := range opts {
 		opt(cred)
@@ -39,49 +34,26 @@ func BuildResp(opts ...ResponseOpt) *Response {
 	return cred
 }
 
-func WithAccount(account string) ResponseOpt {
-	return func(resp *Response) {
+func WithAccount(account string) RespOpt {
+	return func(resp *RespLogin) {
 		resp.Account = account
 	}
 }
 
-func WithOrganization(organization string) ResponseOpt {
-	return func(resp *Response) {
+func WithOrganization(organization string) RespOpt {
+	return func(resp *RespLogin) {
 		resp.Organization = organization
 	}
 }
 
-func WithBound(bound *Bound) ResponseOpt {
-	return func(resp *Response) {
-		resp.Bound = bound
+func WithEnvironment(environment string) RespOpt {
+	return func(resp *RespLogin) {
+		resp.Environment = environment
 	}
 }
 
-func WithTokens(tokens *jwtx.Tokens) ResponseOpt {
-	return func(resp *Response) {
+func WithTokenPair(tokens *jwtx.Tokens) RespOpt {
+	return func(resp *RespLogin) {
 		resp.Tokens = tokens
-	}
-}
-
-// BuildBound build the bound environment
-func BuildBound(opts ...BoundOpt) *Bound {
-	bound := new(Bound)
-
-	for _, opt := range opts {
-		opt(bound)
-	}
-
-	return bound
-}
-
-func WithBoundName(name string) BoundOpt {
-	return func(env *Bound) {
-		env.Name = name
-	}
-}
-
-func WithBoundEndPoint(endpoint string) BoundOpt {
-	return func(env *Bound) {
-		env.EndPoint = endpoint
 	}
 }

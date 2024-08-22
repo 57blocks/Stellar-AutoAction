@@ -15,7 +15,7 @@ CREATE TABLE "principal_user" (
 
 CREATE INDEX ON "principal_user" ("account");
 
-CREATE INDEX "id_account_idx" ON "principal_user" ("id", "account");
+CREATE INDEX "principal_user_id_account_idx" ON "principal_user" ("id", "account");
 
 -- organization
 DROP TABLE IF EXISTS "principal_organization";
@@ -28,7 +28,7 @@ CREATE TABLE "principal_organization" (
     "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL
 );
 
-CREATE INDEX "id_name_idx" ON "principal_organization" ("id", "name");
+CREATE INDEX "principal_organization_id_name_idx" ON "principal_organization" ("id", "name");
 
 -- token
 DROP TABLE IF EXISTS "principal_token";
@@ -46,6 +46,6 @@ CREATE TABLE "principal_token" (
 
 CREATE INDEX ON "principal_token" ("user_id");
 CREATE INDEX ON "principal_token" ("access");
-CREATE INDEX "user_access_idx" ON "principal_token" ("user_id", "access");
+CREATE INDEX "principal_token_user_access_idx" ON "principal_token" ("user_id", "access");
 
 COMMIT;

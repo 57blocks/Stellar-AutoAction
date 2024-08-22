@@ -1,8 +1,6 @@
 package oauth
 
 import (
-	"encoding/json"
-	"io"
 	"net/http"
 
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
@@ -12,15 +10,10 @@ import (
 )
 
 func Login(c *gin.Context) {
-	req := dto.Request{}
+	req := new(dto.ReqLogin)
 
-	jsonData, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-	if err := json.Unmarshal(jsonData, &req); err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+	if err := c.BindJSON(req); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 
@@ -31,7 +24,7 @@ func Login(c *gin.Context) {
 		"password":     string(req.Password),
 	})
 
-	resp, err := Conductor.Login(c, req)
+	resp, err := Conductor.Login(c, *req)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -41,7 +34,24 @@ func Login(c *gin.Context) {
 }
 
 func Logout(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+	req := new(dto.ReqLogout)
+
+	if err := c.BindJSON(req); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	pkgLog.Logger.DEBUG("logout", map[string]interface{}{
+		"token": req.Token,
+	})
+
+	resp, err := Conductor.Logout(c, *req)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
 
 func Refresh(c *gin.Context) {

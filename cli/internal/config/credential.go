@@ -1,7 +1,15 @@
 package config
 
+import (
+	"fmt"
+	"github.com/BurntSushi/toml"
+	"github.com/pkg/errors"
+	"os"
+)
+
 type (
 	Credential struct {
+		_            struct{}
 		Account      string `toml:"account" json:"account"`
 		Organization string `toml:"organization" json:"organization"`
 		Environment  string `toml:"environment" json:"environment"`
@@ -58,11 +66,37 @@ func WithRefresh(refresh string) CredOpt {
 }
 
 func ReadCredential(path string) (*Credential, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	cred := new(Credential)
+
+	if _, err := toml.Decode(string(data), cred); err != nil {
+		return nil, errors.New(fmt.Sprintf("reading credential error: %s\n", err.Error()))
+	}
+
+	return cred, nil
 }
 
 func WriteCredential(path string, cred *Credential) error {
+	tomlBytes, err := toml.Marshal(cred)
+	if err != nil {
+		return fmt.Errorf("marshalling credential error: %w", err)
+	}
+
+	if err := os.WriteFile(path, tomlBytes, 0666); err != nil {
+		return errors.New(fmt.Sprintf("writing credential error: %s\n", err.Error()))
+	}
+
+	return nil
+}
+
+func RemoveCredential(path string) error {
+	if err := os.Remove(path); err != nil {
+		return errors.New(fmt.Sprintf("removing credential error: %s\n", err.Error()))
+	}
 
 	return nil
 }
