@@ -6,19 +6,18 @@ import (
 	"log/slog"
 	"os"
 
-	"golang.org/x/crypto/ssh/terminal"
-
 	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/constant"
+	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
-	"github.com/57blocks/auto-action/cli/internal/third-party/req"
 
 	"github.com/BurntSushi/toml"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // login represents the login command
@@ -96,16 +95,16 @@ func loginFunc(cmd *cobra.Command, args []string) error {
 		return errors.New("empty cryptPwd error")
 	}
 
-	success, err := request2Supplier(pwdBytes)
+	success, err := supplierLogin(pwdBytes)
 	if err != nil {
 		return err
 	}
 
-	return syncCred(success)
+	return syncLogin(success)
 }
 
-func request2Supplier(cryptPwdBytes []byte) (*resty.Response, error) {
-	response, err := req.Client.R().
+func supplierLogin(cryptPwdBytes []byte) (*resty.Response, error) {
+	response, err := restyx.Client.R().
 		EnableTrace().
 		SetBody(ReqLogin{
 			Account:      viper.GetString(constant.FlagAccount.ValStr()),
@@ -115,7 +114,7 @@ func request2Supplier(cryptPwdBytes []byte) (*resty.Response, error) {
 		}).
 		Post(viper.GetString("bound.endpoint") + "/oauth/login")
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("endpoint request error: %s\n", err.Error()))
+		return nil, errors.New(fmt.Sprintf("resty request error: %s\n", err.Error()))
 	}
 
 	slog.Debug(fmt.Sprintf("response: %v\n", response)) // TODO: remove
@@ -127,8 +126,8 @@ func request2Supplier(cryptPwdBytes []byte) (*resty.Response, error) {
 	return response, nil
 }
 
-func syncCred(response *resty.Response) error {
-	cred := new(Credential)
+func syncLogin(response *resty.Response) error {
+	cred := new(config.Credential)
 	if err := json.Unmarshal(response.Body(), cred); err != nil {
 		return errors.New(fmt.Sprintf("unmarshaling json response error: %s\n", err.Error()))
 	}
@@ -143,5 +142,5 @@ func syncCred(response *resty.Response) error {
 		return errors.New(fmt.Sprintf("writing credentials error: %s\n", err.Error()))
 	}
 
-	return config.SyncConfig(viper.ConfigFileUsed())
+	return config.SyncConfigByFlags(viper.ConfigFileUsed())
 }

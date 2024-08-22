@@ -16,22 +16,23 @@ import (
 
 type (
 	GlobalConfig struct {
-		General `toml:"general"`
-		Bound   `toml:"bound"`
+		General   `toml:"general"`
+		BoundWith `toml:"bound_with"`
 	}
+	GlobalConfigOpt func(sc *GlobalConfig)
+
 	General struct {
 		EnvPrefix string `toml:"env_prefix"`
 		Log       string `toml:"log"`
 	}
-	Bound struct {
+
+	BoundWith struct {
 		Credential string `toml:"credential"`
 		EndPoint   string `toml:"endpoint"`
 	}
-
-	GlobalCfgOpt func(sc *GlobalConfig)
 )
 
-func Build(opts ...GlobalCfgOpt) *GlobalConfig {
+func Build(opts ...GlobalConfigOpt) *GlobalConfig {
 	sc := new(GlobalConfig)
 
 	for _, opt := range opts {
@@ -41,25 +42,25 @@ func Build(opts ...GlobalCfgOpt) *GlobalConfig {
 	return sc
 }
 
-func WithLogLevel(logLevel string) GlobalCfgOpt {
+func WithLogLevel(logLevel string) GlobalConfigOpt {
 	return func(sc *GlobalConfig) {
 		sc.Log = logLevel
 	}
 }
 
-func WithEnvPrefix(prefix string) GlobalCfgOpt {
+func WithEnvPrefix(prefix string) GlobalConfigOpt {
 	return func(sc *GlobalConfig) {
 		sc.EnvPrefix = prefix
 	}
 }
 
-func WithCredential(credential string) GlobalCfgOpt {
+func WithCredential(credential string) GlobalConfigOpt {
 	return func(sc *GlobalConfig) {
 		sc.Credential = credential
 	}
 }
 
-func WithEndPoint(endpoint string) GlobalCfgOpt {
+func WithEndPoint(endpoint string) GlobalConfigOpt {
 	return func(sc *GlobalConfig) {
 		sc.EndPoint = endpoint
 	}
@@ -127,7 +128,7 @@ func WriteConfig(cfg *GlobalConfig, path string) error {
 	return nil
 }
 
-func SyncConfig(path string) error {
+func SyncConfigByFlags(path string) error {
 	cfg, err := ReadConfig(util.DefaultPath())
 	if err != nil {
 		return errors.New(fmt.Sprintf("reading configuration error: %s\n", err.Error()))
