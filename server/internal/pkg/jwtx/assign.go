@@ -2,19 +2,21 @@ package jwtx
 
 import (
 	"encoding/base64"
-	"time"
+	"fmt"
 
 	"github.com/57blocks/auto-action/server/internal/config"
+	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 )
 
 type (
-	Claims struct {
+	AccessClaims struct {
 		jwt.StandardClaims
 		Account      string `json:"account"`
 		Organization string `json:"organization"`
+		Environment  string `json:"environment"`
 	}
 
 	Tokens struct {
@@ -23,65 +25,86 @@ type (
 		Refresh string `json:"refresh" toml:"refresh"`
 	}
 
-	AccessExpire  func() time.Time
-	RefreshExpire func() time.Time
+	ClaimPair struct {
+		Token   AccessClaims
+		Refresh jwt.StandardClaims
+	}
 )
 
-func Assign(ae, re time.Time) (*Tokens, error) {
-	accessClaim := &Claims{
-		StandardClaims: jwt.StandardClaims{
-			Issuer:    "v3nooom",
-			IssuedAt:  time.Now().UTC().Unix(),
-			Subject:   "st3llar",
-			ExpiresAt: ae.Unix(),
-		},
-		Account:      "Account_sample",
-		Organization: "Organization_sample",
+func AssignAccess(accClaim AccessClaims) (string, error) {
+	priPEM, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
+	if err != nil {
+		return "", errors.New(err.Error())
 	}
 
-	accessBytes, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
+	priKey, err := jwt.ParseRSAPrivateKeyFromPEM(priPEM)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	accToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), accClaim)
+
+	access, err := accToken.SignedString(priKey)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	return access, nil
+}
+
+func AssignRefresh(refClaim jwt.StandardClaims) (string, error) {
+	priPEM, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	priKey, err := jwt.ParseRSAPrivateKeyFromPEM(priPEM)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	refToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), refClaim)
+
+	refresh, err := refToken.SignedString(priKey)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	return refresh, nil
+}
+
+func ParseToken(tokenStr string) (*jwt.Token, error) {
+	pubPEM, err := base64.StdEncoding.DecodeString(config.Global.JWT.PublicKey)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
 
-	accessKey, err := jwt.ParseRSAPrivateKeyFromPEM(accessBytes)
+	pubKey, err := jwt.ParseRSAPublicKeyFromPEM(pubPEM)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
 
-	accessToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), accessClaim)
+	return jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return pubKey, nil
+	})
+}
 
-	access, err := accessToken.SignedString(accessKey)
-	if err != nil {
-		return nil, errors.New(err.Error())
+// GetStrClaim extracts a string claim from jwt.MapClaims
+func GetStrClaim(claims jwt.MapClaims, key string) (string, error) {
+	value, ok := claims[key]
+	if !ok {
+		pkgLog.Logger.ERROR("claim not found", map[string]interface{}{"claim_key": key})
+		return "", errors.New(fmt.Sprintf("claim not found by: %v\n", key))
 	}
 
-	refreshClaim := &jwt.StandardClaims{
-		Issuer:    "v3nooom",
-		IssuedAt:  time.Now().UTC().Unix(),
-		Subject:   "st3llar",
-		ExpiresAt: re.Unix(),
+	strValue, ok := value.(string)
+	if !ok {
+		pkgLog.Logger.ERROR(
+			"claim value conversion error",
+			map[string]interface{}{"claim_key": key, "value": value},
+		)
+		return "", errors.New(fmt.Sprintf("claim value: %v, conversion error", value))
 	}
 
-	refreshBytes, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
-
-	refreshKey, err := jwt.ParseRSAPrivateKeyFromPEM(refreshBytes)
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
-
-	refreshToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), refreshClaim)
-
-	refresh, err := refreshToken.SignedString(refreshKey)
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
-
-	return &Tokens{
-		Token:   access,
-		Refresh: refresh,
-	}, nil
+	return strValue, nil
 }

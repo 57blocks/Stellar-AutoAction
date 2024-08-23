@@ -13,19 +13,19 @@ type (
 		Environment  string `json:"environment"`
 	}
 
-	RespLogin struct {
+	RespCredential struct {
 		_            struct{}
 		Account      string `json:"account" toml:"account"`
 		Organization string `json:"organization" toml:"organization"`
 		Environment  string `toml:"environment" json:"environment"`
-		*jwtx.Tokens `json:"tokens" toml:"tokens"`
+		jwtx.Tokens  `json:"tokens" toml:"tokens"`
 	}
-	RespOpt func(cred *RespLogin)
+	RespCredOpt func(cred *RespCredential)
 )
 
-// BuildRespLogin build the RespLogin of Login
-func BuildRespLogin(opts ...RespOpt) *RespLogin {
-	cred := new(RespLogin)
+// BuildRespCred build the RespCredential of Login
+func BuildRespCred(opts ...RespCredOpt) *RespCredential {
+	cred := new(RespCredential)
 
 	for _, opt := range opts {
 		opt(cred)
@@ -34,26 +34,26 @@ func BuildRespLogin(opts ...RespOpt) *RespLogin {
 	return cred
 }
 
-func WithAccount(account string) RespOpt {
-	return func(resp *RespLogin) {
+func WithAccount(account string) RespCredOpt {
+	return func(resp *RespCredential) {
 		resp.Account = account
 	}
 }
 
-func WithOrganization(organization string) RespOpt {
-	return func(resp *RespLogin) {
+func WithOrganization(organization string) RespCredOpt {
+	return func(resp *RespCredential) {
 		resp.Organization = organization
 	}
 }
 
-func WithEnvironment(environment string) RespOpt {
-	return func(resp *RespLogin) {
+func WithEnvironment(environment string) RespCredOpt {
+	return func(resp *RespCredential) {
 		resp.Environment = environment
 	}
 }
 
-func WithTokenPair(tokens *jwtx.Tokens) RespOpt {
-	return func(resp *RespLogin) {
+func WithTokenPair(tokens jwtx.Tokens) RespCredOpt {
+	return func(resp *RespCredential) {
 		resp.Tokens = tokens
 	}
 }

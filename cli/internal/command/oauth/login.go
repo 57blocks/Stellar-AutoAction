@@ -125,9 +125,9 @@ func supplierLogin(cryptPwdBytes []byte) (*resty.Response, error) {
 	return response, nil
 }
 
-func syncLogin(response *resty.Response) error {
+func syncLogin(resp *resty.Response) error {
 	cred := new(config.Credential)
-	if err := json.Unmarshal(response.Body(), cred); err != nil {
+	if err := json.Unmarshal(resp.Body(), cred); err != nil {
 		return errors.New(fmt.Sprintf("unmarshaling json response error: %s\n", err.Error()))
 	}
 

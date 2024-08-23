@@ -17,13 +17,6 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	pkgLog.Logger.DEBUG("login", map[string]interface{}{
-		"account":      req.Account,
-		"organization": req.Organization,
-		"environment":  req.Environment,
-		"password":     string(req.Password),
-	})
-
 	resp, err := Conductor.Login(c, *req)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
@@ -42,7 +35,7 @@ func Logout(c *gin.Context) {
 	}
 
 	pkgLog.Logger.DEBUG("logout", map[string]interface{}{
-		"token": req.Token,
+		"logout_token": req.Token,
 	})
 
 	resp, err := Conductor.Logout(c, *req)
@@ -55,5 +48,22 @@ func Logout(c *gin.Context) {
 }
 
 func Refresh(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "ok"})
+	req := new(dto.ReqRefresh)
+
+	if err := c.BindJSON(req); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	pkgLog.Logger.DEBUG("refresh", map[string]interface{}{
+		"refresh_token": req.Refresh,
+	})
+
+	resp, err := Conductor.Refresh(c, *req)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }
