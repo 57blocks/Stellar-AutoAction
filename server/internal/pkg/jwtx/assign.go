@@ -3,6 +3,7 @@ package jwtx
 import (
 	"encoding/base64"
 	"fmt"
+
 	"github.com/57blocks/auto-action/server/internal/config"
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
 
