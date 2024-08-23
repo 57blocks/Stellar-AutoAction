@@ -2,17 +2,20 @@ package jwtx
 
 import (
 	"encoding/base64"
+	"fmt"
 	"github.com/57blocks/auto-action/server/internal/config"
+	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 )
 
 type (
-	TokenClaims struct {
+	AccessClaims struct {
 		jwt.StandardClaims
 		Account      string `json:"account"`
 		Organization string `json:"organization"`
+		Environment  string `json:"environment"`
 	}
 
 	Tokens struct {
@@ -22,64 +25,85 @@ type (
 	}
 
 	ClaimPair struct {
-		Token   TokenClaims
+		Token   AccessClaims
 		Refresh jwt.StandardClaims
 	}
 )
 
-func Assign(cPair ClaimPair) (*Tokens, error) {
-	accessBytes, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
+func AssignAccess(accClaim AccessClaims) (string, error) {
+	priPEM, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return "", errors.New(err.Error())
 	}
 
-	accessKey, err := jwt.ParseRSAPrivateKeyFromPEM(accessBytes)
+	priKey, err := jwt.ParseRSAPrivateKeyFromPEM(priPEM)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return "", errors.New(err.Error())
 	}
 
-	accessToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), cPair.Token)
+	accToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), accClaim)
 
-	access, err := accessToken.SignedString(accessKey)
+	access, err := accToken.SignedString(priKey)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return "", errors.New(err.Error())
 	}
 
-	refreshBytes, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
-
-	refreshKey, err := jwt.ParseRSAPrivateKeyFromPEM(refreshBytes)
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
-
-	refreshToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), cPair.Refresh)
-
-	refresh, err := refreshToken.SignedString(refreshKey)
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
-
-	return &Tokens{
-		Token:   access,
-		Refresh: refresh,
-	}, nil
+	return access, nil
 }
 
-func Parse(token string) (*jwt.Token, error) {
-	accessBytes, err := base64.StdEncoding.DecodeString(config.Global.JWT.PublicKey)
+func AssignRefresh(refClaim jwt.StandardClaims) (string, error) {
+	priPEM, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	priKey, err := jwt.ParseRSAPrivateKeyFromPEM(priPEM)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	refToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), refClaim)
+
+	refresh, err := refToken.SignedString(priKey)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	return refresh, nil
+}
+
+func ParseToken(tokenStr string) (*jwt.Token, error) {
+	pubPEM, err := base64.StdEncoding.DecodeString(config.Global.JWT.PublicKey)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
 
-	accessKey, err := jwt.ParseRSAPublicKeyFromPEM(accessBytes)
+	pubKey, err := jwt.ParseRSAPublicKeyFromPEM(pubPEM)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
 
-	return jwt.Parse(token, func(token *jwt.Token) (interface{}, error) {
-		return accessKey, nil
+	return jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return pubKey, nil
 	})
+}
+
+// GetStrClaim extracts a string claim from jwt.MapClaims
+func GetStrClaim(claims jwt.MapClaims, key string) (string, error) {
+	value, ok := claims[key]
+	if !ok {
+		pkgLog.Logger.ERROR("claim not found", map[string]interface{}{"claim_key": key})
+		return "", errors.New(fmt.Sprintf("claim not found by: %v\n", key))
+	}
+
+	strValue, ok := value.(string)
+	if !ok {
+		pkgLog.Logger.ERROR(
+			"claim value conversion error",
+			map[string]interface{}{"claim_key": key, "value": value},
+		)
+		return "", errors.New(fmt.Sprintf("claim value: %v, conversion error", value))
+	}
+
+	return strValue, nil
 }

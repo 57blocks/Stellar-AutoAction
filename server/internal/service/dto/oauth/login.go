@@ -18,7 +18,7 @@ type (
 		Account      string `json:"account" toml:"account"`
 		Organization string `json:"organization" toml:"organization"`
 		Environment  string `toml:"environment" json:"environment"`
-		*jwtx.Tokens `json:"tokens" toml:"tokens"`
+		jwtx.Tokens  `json:"tokens" toml:"tokens"`
 	}
 	RespCredOpt func(cred *RespCredential)
 )
@@ -52,7 +52,7 @@ func WithEnvironment(environment string) RespCredOpt {
 	}
 }
 
-func WithTokenPair(tokens *jwtx.Tokens) RespCredOpt {
+func WithTokenPair(tokens jwtx.Tokens) RespCredOpt {
 	return func(resp *RespCredential) {
 		resp.Tokens = tokens
 	}
