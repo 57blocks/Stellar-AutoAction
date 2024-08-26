@@ -28,9 +28,8 @@ the config. And will create a new credential under the path you just claimed
 and set it to config, if it's the first time.
 
 And also, you could specify other credentials by **configure** command.`,
-	Args:      cobra.OnlyValidArgs,
-	ValidArgs: []string{"organization", "account", "environment", "credential"},
-	RunE:      loginFunc,
+	Args: cobra.NoArgs,
+	RunE: loginFunc,
 }
 
 func init() {

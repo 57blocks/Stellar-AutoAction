@@ -93,13 +93,17 @@ func FindOrInit() (*GlobalConfig, string) {
 func ReadConfig() (*GlobalConfig, error) {
 	data, err := os.ReadFile(util.DefaultPath())
 	if err != nil {
-		return nil, err
+		errMsg := fmt.Sprintf("read config error: %s\n", err.Error())
+		slog.Error(errMsg)
+		return nil, errors.New(errMsg)
 	}
 
 	cfg := new(GlobalConfig)
 
 	if _, err := toml.Decode(string(data), cfg); err != nil {
-		return nil, errors.New(fmt.Sprintf("reading config error: %s\n", err.Error()))
+		errMsg := fmt.Sprintf("decode config error: %s\n", err.Error())
+		slog.Error(errMsg)
+		return nil, errors.New(errMsg)
 	}
 
 	return cfg, nil
@@ -108,11 +112,15 @@ func ReadConfig() (*GlobalConfig, error) {
 func WriteConfig(cfg *GlobalConfig) error {
 	tomlBytes, err := toml.Marshal(cfg)
 	if err != nil {
-		return fmt.Errorf("marshalling config error: %w", err)
+		errMsg := fmt.Sprintf("marshal config error: %s\n", err)
+		slog.Error(errMsg)
+		return errors.New(errMsg)
 	}
 
 	if err := os.WriteFile(util.DefaultPath(), tomlBytes, 0666); err != nil {
-		return errors.New(fmt.Sprintf("writing config error: %s\n", err.Error()))
+		errMsg := fmt.Sprintf("write config error: %s\n", err.Error())
+		slog.Error(errMsg)
+		return errors.New(errMsg)
 	}
 
 	return nil
@@ -121,7 +129,9 @@ func WriteConfig(cfg *GlobalConfig) error {
 func SyncConfigByFlags() error {
 	cfg, err := ReadConfig()
 	if err != nil {
-		return errors.New(fmt.Sprintf("reading config error: %s\n", err.Error()))
+		errMsg := fmt.Sprintf("read config error: %s\n", err.Error())
+		slog.Error(errMsg)
+		return errors.New(errMsg)
 	}
 
 	// Update fields if new values are provided
@@ -148,7 +158,9 @@ func SyncConfigByFlags() error {
 func ResetConfigCredential() error {
 	cfg, err := ReadConfig()
 	if err != nil {
-		return errors.New(fmt.Sprintf("reading config error: %s\n", err.Error()))
+		errMsg := fmt.Sprintf("read config error: %s\n", err.Error())
+		slog.Error(errMsg)
+		return errors.New(errMsg)
 	}
 
 	cfg.Credential = ""

@@ -3,17 +3,21 @@ package middleware
 import (
 	"net/http"
 
+	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
+
 	"github.com/gin-gonic/gin"
 )
 
 func Authentication() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		pkgLog.Logger.DEBUG("authentications success")
 		c.Next()
 	}
 }
 
 func Authorization() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		pkgLog.Logger.DEBUG("authorization success")
 		c.Next()
 	}
 }
@@ -51,9 +55,8 @@ func Error() gin.HandlerFunc {
 				// TODO: update the status code of error
 				http.StatusInternalServerError,
 				gin.H{
-					"status":  http.StatusInternalServerError,
+					//"status":  http.StatusInternalServerError,
 					"message": c.Errors.Last().Error(),
-					"notes":   "internal error",
 				},
 			)
 

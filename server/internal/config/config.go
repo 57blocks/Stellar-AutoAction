@@ -16,7 +16,7 @@ type (
 		Bound  `mapstructure:"bound"`
 		Log    `mapstructure:"log"`
 		JWT    `mapstructure:"jwt"`
-		Amazon `mapstructure:"amazon"`
+		Amazon `mapstructure:"aws"`
 		RDS    `mapstructure:"rds"`
 	}
 
@@ -39,10 +39,10 @@ type (
 	}
 
 	Amazon struct {
-		_         struct{}
-		Region    string `mapstructure:"region"`
-		AccessKey string `mapstructure:"access_key"`
-		SecretKey string `mapstructure:"secret_key"`
+		_               struct{}
+		Region          string `mapstructure:"region"`
+		AccessKeyID     string `mapstructure:"access_key_id"`
+		SecretAccessKey string `mapstructure:"secret_access_key"`
 	}
 
 	RDS struct {
@@ -53,6 +53,11 @@ type (
 		Password string `mapstructure:"password"`
 		Database string `mapstructure:"database"`
 		SSLMode  string `mapstructure:"sslmode"`
+	}
+
+	Lambda struct {
+		_    struct{}
+		Role string `mapstructure:"role"`
 	}
 )
 
@@ -67,7 +72,6 @@ func Setup() error {
 	viper.AddConfigPath("./internal/config/")
 	viper.SetConfigType("toml")
 	viper.SetConfigName("config")
-	viper.SetEnvPrefix("ST3LLAR")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
 	if err := viper.ReadInConfig(); err != nil {
