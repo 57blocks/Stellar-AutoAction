@@ -23,7 +23,10 @@ var register = &cobra.Command{
 recurring/scheduled rule. 
 
 Rules:
-1. 
+1. If no flags puts in, which means the handler/handlers will be triggered manually.
+2. By Corn
+3. By fixed interval
+4. By calendar rule? 
 
 And if not, the handler/handlers will be triggered manually in further future.
 Finally, returns the lambda ARN`,
