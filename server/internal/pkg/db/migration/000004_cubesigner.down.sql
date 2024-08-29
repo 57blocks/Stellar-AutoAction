@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS "principal_org_key_pairs";

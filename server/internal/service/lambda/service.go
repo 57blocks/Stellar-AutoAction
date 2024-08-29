@@ -10,14 +10,16 @@ import (
 	"os"
 	"strings"
 
-	"github.com/57blocks/auto-action/server/internal/config"
+	configx "github.com/57blocks/auto-action/server/internal/config"
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/lambda"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	awsConfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
-	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	lambTypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/aws/aws-sdk-go-v2/service/scheduler"
+	scheTypes "github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/pkg/errors"
 )
 
@@ -28,7 +30,13 @@ type (
 	ServiceConductor struct{}
 )
 
-var Conductor Service
+var (
+	Conductor Service
+
+	// TODO: init them for once
+	awsConfig    aws.Config
+	lambdaClient *lambda.Client
+)
 
 func init() {
 	if Conductor == nil {
@@ -40,27 +48,23 @@ const (
 	TempZip = "handler.zip"
 )
 
-var (
-	cfg       aws.Config
-	awsLambda *lambda.Client
-)
-
 func (sc *ServiceConductor) Register(c context.Context, r *http.Request) (*dto.RespRegister, error) {
 	var err error
 
-	cfg, err = awsConfig.LoadDefaultConfig(
+	fileHeaders := r.MultipartForm.File
+	expression := r.Form.Get("expression")
+
+	awsConfig, err = config.LoadDefaultConfig(
 		c,
-		awsConfig.WithRegion(config.Global.Region),
-		awsConfig.WithSharedConfigProfile("iamp3ngf3i"), // TODO: only for local
+		config.WithRegion(configx.Global.Region),
+		config.WithSharedConfigProfile("iamp3ngf3i"), // TODO: only for local
 	)
 	if err != nil {
 		pkgLog.Logger.ERROR(fmt.Sprintf("failed to load AWS config: %s", err.Error()))
 		return nil, errors.New(err.Error())
 	}
 
-	awsLambda = lambda.NewFromConfig(cfg)
-
-	resp := make([]*lambda.CreateFunctionOutput, 0)
+	resp := make([]*lambda.CreateFunctionOutput, 0, len(fileHeaders))
 
 	for _, fhs := range r.MultipartForm.File {
 		fh := fhs[0]
@@ -70,6 +74,16 @@ func (sc *ServiceConductor) Register(c context.Context, r *http.Request) (*dto.R
 			return nil, err
 		}
 		resp = append(resp, cfo)
+
+		if strings.TrimSpace(expression) != "" {
+			pkgLog.Logger.DEBUG(fmt.Sprintf("scheduler expression found: %s", expression))
+			cso, err := boundScheduler(c, cfo, expression)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		pkgLog.Logger.DEBUG("no expression found, will be triggered manually")
 	}
 
 	return &dto.RespRegister{
@@ -77,6 +91,109 @@ func (sc *ServiceConductor) Register(c context.Context, r *http.Request) (*dto.R
 	}, nil
 }
 
+func registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.CreateFunctionOutput, error) {
+	err := zipFile(fh, TempZip)
+	if err != nil {
+		return nil, err
+	}
+	bs, _ := os.ReadFile(TempZip)
+	defer os.Remove(TempZip)
+
+	splits := strings.Split(fh.Filename, ".")
+
+	lambdaClient = lambda.NewFromConfig(awsConfig)
+
+	// register lambda
+	lambdaFun, err := lambdaClient.CreateFunction(
+		c,
+		&lambda.CreateFunctionInput{
+			Code: &lambTypes.FunctionCode{
+				ZipFile: bs,
+			},
+			FunctionName:         aws.String(splits[0]),
+			Role:                 aws.String("arn:aws:iam::123340007534:role/service-role/autoaction-role-wl50ldot"),
+			Runtime:              lambTypes.RuntimeNodejs20x,
+			Architectures:        nil,
+			CodeSigningConfigArn: nil,
+			DeadLetterConfig:     nil,
+			Description:          nil,
+			//Environment:          &lambTypes.Environment{Variables: map[string]string{"AWS_REGION": "us-east-2"}},
+			EphemeralStorage:  nil,
+			FileSystemConfigs: nil,
+			Handler:           aws.String("handler"),
+			ImageConfig:       nil,
+			KMSKeyArn:         nil,
+			Layers:            nil,
+			LoggingConfig:     nil,
+			MemorySize:        nil,
+			PackageType:       "",
+			Publish:           false,
+			SnapStart:         nil,
+			Tags:              nil,
+			Timeout:           nil,
+			TracingConfig:     nil,
+			VpcConfig: &lambTypes.VpcConfig{ // TODO: put into env in ECS
+				Ipv6AllowedForDualStack: aws.Bool(false),
+				SecurityGroupIds:        []string{"sg-063f43919a7309669"},
+				SubnetIds: []string{
+					"subnet-05e584ba2ffb30d2d",
+					"subnet-0ce2404213f76db94",
+					"subnet-0ecc12c551120284b",
+				},
+			},
+		},
+		func(opt *lambda.Options) {},
+	)
+	if err != nil {
+		errMsg := fmt.Sprintf("failed to register lambda: %s, err: %s\n", fh.Filename, err.Error())
+		pkgLog.Logger.ERROR(errMsg)
+		return nil, errors.New(errMsg)
+	}
+
+	return lambdaFun, nil
+}
+
+func boundScheduler(c context.Context, lambdaFun *lambda.CreateFunctionOutput, expression string) (*scheduler.CreateScheduleOutput, error) {
+	schClient := scheduler.NewFromConfig(awsConfig)
+
+	lambScheduler, err := schClient.CreateSchedule(c, &scheduler.CreateScheduleInput{
+		FlexibleTimeWindow: &scheTypes.FlexibleTimeWindow{
+			Mode: scheTypes.FlexibleTimeWindowModeOff,
+		},
+		Name:               aws.String(fmt.Sprintf("Scheduler-%s", *lambdaFun.FunctionName)),
+		ScheduleExpression: aws.String("rate(1 minutes)"),
+		Target: &scheTypes.Target{
+			Arn:                         lambdaFun.FunctionArn,
+			RoleArn:                     aws.String("arn:aws:iam::123340007534:role/service-role/Amazon_EventBridge_Scheduler_LAMBDA_25a70bed22"),
+			DeadLetterConfig:            nil,
+			EcsParameters:               nil,
+			EventBridgeParameters:       nil,
+			Input:                       nil,
+			KinesisParameters:           nil,
+			RetryPolicy:                 nil,
+			SageMakerPipelineParameters: nil,
+			SqsParameters:               nil,
+		},
+		ActionAfterCompletion:      scheTypes.ActionAfterCompletionNone,
+		ClientToken:                nil,
+		Description:                nil,
+		EndDate:                    nil,
+		GroupName:                  nil,
+		KmsKeyArn:                  nil,
+		ScheduleExpressionTimezone: aws.String("UTC"),
+		StartDate:                  nil,
+		State:                      scheTypes.ScheduleStateEnabled,
+	})
+	if err != nil {
+		errMsg := fmt.Sprintf("failed to bound lambda with scheduler: %s\n", err.Error())
+		pkgLog.Logger.ERROR(errMsg)
+		return nil, errors.New(errMsg)
+	}
+
+	return lambScheduler, nil
+}
+
+// TODO: remove the zip file function when the input file is a zip file already
 func zipFile(fh *multipart.FileHeader, target string) error {
 	// Open the uploaded file
 	file, err := fh.Open()
@@ -109,62 +226,4 @@ func zipFile(fh *multipart.FileHeader, target string) error {
 	}
 
 	return nil
-}
-
-func registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.CreateFunctionOutput, error) {
-	err := zipFile(fh, TempZip)
-	if err != nil {
-		return nil, err
-	}
-	bs, _ := os.ReadFile(TempZip)
-	defer os.Remove(TempZip)
-
-	strs := strings.Split(fh.Filename, ".")
-
-	// create
-	function, err := awsLambda.CreateFunction(
-		c,
-		&lambda.CreateFunctionInput{
-			Code: &types.FunctionCode{
-				ZipFile: bs,
-			},
-			FunctionName:         aws.String(strs[0]),
-			Role:                 aws.String("arn:aws:iam::123340007534:role/service-role/autoaction-role-wl50ldot"),
-			Runtime:              types.RuntimeNodejs20x,
-			Architectures:        nil,
-			CodeSigningConfigArn: nil,
-			DeadLetterConfig:     nil,
-			Description:          nil,
-			//Environment:          &types.Environment{Variables: map[string]string{"AWS_REGION": "us-east-2"}},
-			EphemeralStorage:  nil,
-			FileSystemConfigs: nil,
-			Handler:           aws.String("handler"),
-			ImageConfig:       nil,
-			KMSKeyArn:         nil,
-			Layers:            nil,
-			LoggingConfig:     nil,
-			MemorySize:        nil,
-			PackageType:       "",
-			Publish:           false,
-			SnapStart:         nil,
-			Tags:              nil,
-			Timeout:           nil,
-			TracingConfig:     nil,
-			VpcConfig: &types.VpcConfig{
-				Ipv6AllowedForDualStack: aws.Bool(false),
-				SecurityGroupIds:        []string{"sg-063f43919a7309669"},
-				SubnetIds: []string{
-					"subnet-05e584ba2ffb30d2d",
-					"subnet-0ce2404213f76db94",
-					"subnet-0ecc12c551120284b"},
-			},
-		},
-		func(opt *lambda.Options) {},
-	)
-	if err != nil {
-		pkgLog.Logger.ERROR(fmt.Sprintf("s3 upload failed: %s, err: %s\n", fh.Filename, err.Error()))
-		return nil, err
-	}
-
-	return function, nil
 }
