@@ -16,11 +16,11 @@ type Lambda struct {
 }
 
 func (l *Lambda) TableName() string {
-	return "object_lambda"
+	return "lambda"
 }
 
 func (l *Lambda) TableNameWithAbbr() string {
-	return "object_lambda AS ol"
+	return "lambda AS l"
 }
 
 type LambdaVPC struct {
@@ -39,9 +39,9 @@ type LambdaVPC struct {
 }
 
 func (lv *LambdaVPC) TableName() string {
-	return "object_lambda_vpc"
+	return "lambda_vpc"
 }
 
 func (lv *LambdaVPC) TableNameWithAbbr() string {
-	return "object_lambda_vpc AS olv"
+	return "lambda_vpc AS lv"
 }

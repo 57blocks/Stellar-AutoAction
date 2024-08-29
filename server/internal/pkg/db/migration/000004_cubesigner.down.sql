@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS "principal_org_key_pairs";
+DROP TABLE IF EXISTS "organization_key_pairs";

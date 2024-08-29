@@ -14,9 +14,9 @@ type Token struct {
 }
 
 func (t *Token) TableName() string {
-	return "principal_token"
+	return "token"
 }
 
 func (t *Token) TableNameWithAbbr() string {
-	return "principal_token AS pt"
+	return "token AS t"
 }

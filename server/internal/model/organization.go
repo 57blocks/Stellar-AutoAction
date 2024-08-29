@@ -7,24 +7,24 @@ type Organization struct {
 }
 
 func (o *Organization) TableName() string {
-	return "principal_organization"
+	return "organization"
 }
 
 func (o *Organization) TableNameWithAbbr() string {
-	return "principal_organization AS po"
+	return "organization AS o"
 }
 
-type OrgKeyPairs struct {
+type OrganizationKeyPairs struct {
 	ICU
 	OrganizationID string `json:"organization_id"`
 	PublicKey      string `json:"public_key"`
 	PrivateKey     string `json:"private_key"`
 }
 
-func (o *OrgKeyPairs) TableName() string {
+func (o *OrganizationKeyPairs) TableName() string {
 	return "principal_org_key_pairs"
 }
 
-func (o *OrgKeyPairs) TableNameWithAbbr() string {
-	return "principal_org_key_pairs AS pokp"
+func (o *OrganizationKeyPairs) TableNameWithAbbr() string {
+	return "organization_key_pairs AS okp"
 }

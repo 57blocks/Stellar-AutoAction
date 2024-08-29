@@ -1,2 +1,2 @@
-DROP TABLE IF EXISTS "object_lambda";
-DROP TABLE IF EXISTS "object_lambda_vpc";
+DROP TABLE IF EXISTS "lambda";
+DROP TABLE IF EXISTS "lambda_vpc";

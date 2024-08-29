@@ -81,6 +81,7 @@ func (sc *ServiceConductor) Register(c context.Context, r *http.Request) (*dto.R
 			if err != nil {
 				return nil, err
 			}
+			pkgLog.Logger.DEBUG(fmt.Sprintf("scheduler created: %s", *cso.ScheduleArn))
 		}
 
 		pkgLog.Logger.DEBUG("no expression found, will be triggered manually")

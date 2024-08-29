@@ -1,7 +1,7 @@
 -- lambda info
-DROP TABLE IF EXISTS "object_lambda";
+DROP TABLE IF EXISTS "lambda";
 
-CREATE TABLE "object_lambda" (
+CREATE TABLE "lambda" (
     "id" serial PRIMARY KEY,
     "function_name" varchar NOT NULL,
     "function_arn" varchar UNIQUE NOT NULL,
@@ -18,15 +18,15 @@ CREATE TABLE "object_lambda" (
     "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL
 );
 
-CREATE INDEX ON "subject_lambda" ("function_arn");
-CREATE INDEX ON "subject_lambda" ("code_sha256");
+CREATE INDEX ON "lambda" ("function_arn");
+CREATE INDEX ON "lambda" ("code_sha256");
 
-CREATE INDEX "subject_lambda_id_name_arn_idx" ON "object_lambda" ("id", "function_name", "function_arn");
+CREATE INDEX "lambda_id_name_arn_idx" ON "lambda" ("id", "function_name", "function_arn");
 
 -- vpc info which is the lambda function bound to
-DROP TABLE IF EXISTS "subject_lambda_vpc";
+DROP TABLE IF EXISTS "lambda_vpc";
 
-CREATE TABLE "object_lambda_vpc" (
+CREATE TABLE "lambda_vpc" (
     "id" serial PRIMARY KEY,
     "vpc_id" varchar UNIQUE NOT NULL,
     "subnet_ids" varchar[] NOT NULL,
@@ -35,5 +35,5 @@ CREATE TABLE "object_lambda_vpc" (
     "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL
 );
 
-CREATE INDEX ON "object_lambda_vpc" ("vpc_id");
+CREATE INDEX ON "lambda_vpc" ("vpc_id");
 
