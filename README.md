@@ -1,5 +1,11 @@
 # AutoAction
 
+## AWS preparation
+Terraform
+1. VPC init with pub/pir subnets, and get the subnet ids.
+2. Security group init for ALB, Application and public access.
+3. 
+
 ## DB migration
 There is an initial version: `000000_init`, which aims at:
 1. Solve the problem of the dirty version at the version at the beginning. [Issue Ref](https://github.com/golang-migrate/migrate/issues/282#issuecomment-660760237)
