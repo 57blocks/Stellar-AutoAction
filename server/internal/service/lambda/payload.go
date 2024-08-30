@@ -2,10 +2,10 @@ package lambda
 
 import (
 	"context"
-	"github.com/57blocks/auto-action/server/internal/config"
-	dtoOrg "github.com/57blocks/auto-action/server/internal/service/dto/organization"
 
+	"github.com/57blocks/auto-action/server/internal/config"
 	dtoLam "github.com/57blocks/auto-action/server/internal/service/dto/lambda"
+	dtoOrg "github.com/57blocks/auto-action/server/internal/service/dto/organization"
 	svcOrg "github.com/57blocks/auto-action/server/internal/service/organization"
 
 	"github.com/gin-gonic/gin"
