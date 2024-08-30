@@ -1,4 +1,5 @@
--- cubesigner information table
+-- CubeSigner information table
+-- Might be added with more details about the key pairs
 DROP TABLE IF EXISTS "organization_key_pairs";
 
 CREATE TABLE "organization_key_pairs" (
@@ -11,4 +12,4 @@ CREATE TABLE "organization_key_pairs" (
 );
 
 CREATE INDEX ON "organization_key_pairs" ("organization_id");
-CREATE INDEX "organization_key_pairs_pub_pri_idx" ON "principal_org_key_pairs" ("public_key", "private_key");
+CREATE INDEX "organization_key_pairs_pub_pri_idx" ON "organization_key_pairs" ("public_key", "private_key");

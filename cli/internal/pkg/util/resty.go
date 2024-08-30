@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/json"
+	"github.com/pkg/errors"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -19,10 +20,10 @@ func (e Error) Error() string {
 func HasError(resp *resty.Response) error {
 	var err Error
 	if err := json.Unmarshal(resp.Body(), &err); err != nil {
-		return err
+		return errors.New(err.Error())
 	}
 
-	if err.Status == 0 || (err.Status > 199 && err.Status < 300) {
+	if err.Status == 0 || (resp.StatusCode() > 199 && resp.StatusCode() < 300) {
 		return nil
 	}
 

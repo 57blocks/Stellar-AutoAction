@@ -95,7 +95,7 @@ func ReadConfig() (*GlobalConfig, error) {
 	if err != nil {
 		errMsg := fmt.Sprintf("read config error: %s\n", err.Error())
 		slog.Error(errMsg)
-		return nil, errors.New(errMsg)
+		return nil, errors.Wrap(err, errMsg)
 	}
 
 	cfg := new(GlobalConfig)
@@ -103,7 +103,7 @@ func ReadConfig() (*GlobalConfig, error) {
 	if _, err := toml.Decode(string(data), cfg); err != nil {
 		errMsg := fmt.Sprintf("decode config error: %s\n", err.Error())
 		slog.Error(errMsg)
-		return nil, errors.New(errMsg)
+		return nil, errors.Wrap(err, errMsg)
 	}
 
 	return cfg, nil
@@ -114,13 +114,13 @@ func WriteConfig(cfg *GlobalConfig) error {
 	if err != nil {
 		errMsg := fmt.Sprintf("marshal config error: %s\n", err)
 		slog.Error(errMsg)
-		return errors.New(errMsg)
+		return errors.Wrap(err, errMsg)
 	}
 
 	if err := os.WriteFile(util.DefaultPath(), tomlBytes, 0666); err != nil {
 		errMsg := fmt.Sprintf("write config error: %s\n", err.Error())
 		slog.Error(errMsg)
-		return errors.New(errMsg)
+		return errors.Wrap(err, errMsg)
 	}
 
 	return nil

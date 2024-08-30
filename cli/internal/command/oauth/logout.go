@@ -40,7 +40,7 @@ type ReqLogout struct {
 func logoutFunc(_ *cobra.Command, _ []string) error {
 	cfg, err := config.ReadConfig()
 	if err != nil {
-		return errors.New(fmt.Sprintf("reading config error: %s\n", err.Error()))
+		return errors.Wrap(err, fmt.Sprintf("reading config error: %s\n", err.Error()))
 	}
 
 	// logout already

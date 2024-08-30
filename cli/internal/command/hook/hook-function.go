@@ -1,4 +1,4 @@
-package util
+package hook
 
 import (
 	"log/slog"
@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-func PreBindFlags(cmd *cobra.Command, _ []string) {
-	slog.Debug("PreBindFlags")
+func PreRunFunc(cmd *cobra.Command, _ []string) {
+	slog.Debug("Root commandPreRunFunc")
 
 	if cmd.PersistentFlags().NFlag() > 0 {
 		cmd.PersistentFlags().VisitAll(func(flag *pflag.Flag) {

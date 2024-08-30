@@ -72,7 +72,7 @@ func ReadCredential(path string) (*Credential, error) {
 	if err != nil {
 		errMsg := fmt.Sprintf("read credential error: %s\n", err.Error())
 		slog.Error(errMsg)
-		return nil, errors.New(errMsg)
+		return nil, errors.Wrap(err, errMsg)
 	}
 
 	cred := new(Credential)
@@ -80,7 +80,7 @@ func ReadCredential(path string) (*Credential, error) {
 	if _, err := toml.Decode(string(data), cred); err != nil {
 		errMsg := fmt.Sprintf("decode credential error: %s\n", err.Error())
 		slog.Error(errMsg)
-		return nil, errors.New(errMsg)
+		return nil, errors.Wrap(err, errMsg)
 	}
 
 	return cred, nil
@@ -91,13 +91,13 @@ func WriteCredential(path string, cred *Credential) error {
 	if err != nil {
 		errMsg := fmt.Sprintf("marshal credential error: %s\n", err)
 		slog.Error(errMsg)
-		return errors.New(errMsg)
+		return errors.Wrap(err, errMsg)
 	}
 
 	if err := os.WriteFile(path, tomlBytes, 0666); err != nil {
 		errMsg := fmt.Sprintf("write credential error: %s\n", err.Error())
 		slog.Error(errMsg)
-		return errors.New(errMsg)
+		return errors.Wrap(err, errMsg)
 	}
 
 	return nil
@@ -107,7 +107,7 @@ func RemoveCredential(path string) error {
 	if err := os.Remove(path); err != nil {
 		errMsg := fmt.Sprintf("remove credential error: %s\n", err.Error())
 		slog.Error(errMsg)
-		return errors.New(errMsg)
+		return errors.Wrap(err, errMsg)
 	}
 
 	return nil

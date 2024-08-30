@@ -64,7 +64,6 @@ func Setup() error {
 		EncoderConfig:     zap.NewProductionEncoderConfig(),
 		OutputPaths:       []string{"stderr"},
 		ErrorOutputPaths:  []string{"stderr"},
-		// TODO: add some additional fields here
 		//InitialFields:     map[string]interface{}{"metadata": "metadata_sample"},
 	}.Build()
 	if err != nil {

@@ -21,6 +21,7 @@ const (
 const (
 	FlagCron FlagName = "cron"
 	FlagRate FlagName = "rate"
+	FlagAt   FlagName = "at"
 )
 
 // FlagPayload Flags for Lambda invoke command

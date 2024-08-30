@@ -34,19 +34,19 @@ type (
 func AssignAccess(accClaim AccessClaims) (string, error) {
 	priPEM, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
 	if err != nil {
-		return "", errors.New(err.Error())
+		return "", errors.Wrap(err, "decode private key failed")
 	}
 
 	priKey, err := jwt.ParseRSAPrivateKeyFromPEM(priPEM)
 	if err != nil {
-		return "", errors.New(err.Error())
+		return "", errors.Wrap(err, "parse private key failed")
 	}
 
 	accToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), accClaim)
 
 	access, err := accToken.SignedString(priKey)
 	if err != nil {
-		return "", errors.New(err.Error())
+		return "", errors.Wrap(err, "sign access token failed")
 	}
 
 	return access, nil
@@ -55,19 +55,19 @@ func AssignAccess(accClaim AccessClaims) (string, error) {
 func AssignRefresh(refClaim jwt.StandardClaims) (string, error) {
 	priPEM, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
 	if err != nil {
-		return "", errors.New(err.Error())
+		return "", errors.Wrap(err, "decode private key failed")
 	}
 
 	priKey, err := jwt.ParseRSAPrivateKeyFromPEM(priPEM)
 	if err != nil {
-		return "", errors.New(err.Error())
+		return "", errors.Wrap(err, "parse private key failed")
 	}
 
 	refToken := jwt.NewWithClaims(jwt.GetSigningMethod(string(AlgRS256)), refClaim)
 
 	refresh, err := refToken.SignedString(priKey)
 	if err != nil {
-		return "", errors.New(err.Error())
+		return "", errors.Wrap(err, "sign refresh token failed")
 	}
 
 	return refresh, nil
@@ -76,17 +76,26 @@ func AssignRefresh(refClaim jwt.StandardClaims) (string, error) {
 func ParseToken(tokenStr string) (*jwt.Token, error) {
 	pubPEM, err := base64.StdEncoding.DecodeString(config.Global.JWT.PublicKey)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, errors.Wrap(err, "decode public key failed")
 	}
 
 	pubKey, err := jwt.ParseRSAPublicKeyFromPEM(pubPEM)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, errors.Wrap(err, "parse public key failed")
 	}
 
-	return jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		return pubKey, nil
 	})
+	if err != nil {
+		return nil, errors.Wrap(err, "parse token failed")
+	}
+
+	if !token.Valid || token.Claims.Valid() != nil {
+		return nil, errors.New("invalid token")
+	}
+
+	return token, nil
 }
 
 // GetStrClaim extracts a string claim from jwt.MapClaims

@@ -13,5 +13,5 @@ func (u *User) TableName() string {
 }
 
 func (u *User) TableNameWithAbbr() string {
-	return "user AS u"
+	return "\"user\" AS u"
 }

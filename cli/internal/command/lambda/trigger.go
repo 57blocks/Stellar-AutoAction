@@ -30,9 +30,10 @@ func init() {
 		flagPayload,
 		"",
 		viper.GetString(flagPayload),
-		`
-The input event payload of the Lambda function. It should be a valid JSON string.
-And also, should be suitable for your handler.'`)
+		`The input event payload of the Lambda function. It should be a 
+well-formed JSON string.
+
+Meanwhile, it should be suitable/executable/valid in your handler to use.'`)
 }
 
 func triggerFunc(cmd *cobra.Command, args []string) error {

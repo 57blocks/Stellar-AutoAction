@@ -49,16 +49,27 @@ func init() {
 		flagCron,
 		"",
 		viper.GetString(flagCron),
-		`The cron expression for the lambda function. Which is used in the Event Scheduler.
-For more info: https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html`)
+		`The cron execution expression for the Event Bridge Scheduler.
+For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#rate-based
+`)
 
 	flagRate := constant.FlagRate.ValStr()
 	register.Flags().StringP(
 		flagRate,
 		"",
 		viper.GetString(flagRate),
-		`The cron expression for the lambda function. Which is used in the Event Scheduler.
-For more info: https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html`)
+		`The rate execution expression for the Event Bridge Scheduler.
+For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#cron-based
+`)
+
+	flagAt := constant.FlagAt.ValStr()
+	register.Flags().StringP(
+		flagAt,
+		"",
+		viper.GetString(flagAt),
+		`The one-time execution expression for the Event Bridge Scheduler.
+For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#one-time
+`)
 }
 
 func registerFunc(cmd *cobra.Command, args []string) error {
@@ -106,11 +117,11 @@ func supplierRegister(args []string) (*resty.Response, error) {
 
 	resp, err := request.Post(viper.GetString("bound_with.endpoint") + "/lambda/register")
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("resty error: %s\n", err.Error()))
+		return nil, errors.Wrap(err, fmt.Sprintf("resty error: %s\n", err.Error()))
 	}
 
 	if e := util.HasError(resp); e != nil {
-		return nil, errors.New(fmt.Sprintf("supplier error: %s\n", e))
+		return nil, errors.Wrap(err, fmt.Sprintf("supplier error: %s\n", e))
 	}
 
 	return resp, nil

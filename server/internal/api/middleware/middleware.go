@@ -3,14 +3,46 @@ package middleware
 import (
 	"net/http"
 
+	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
 func Authentication() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		pkgLog.Logger.DEBUG("authentications success")
+		token := c.GetHeader("Authorization")
+		if token == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
+			return
+		}
+
+		jwtToken, err := jwtx.ParseToken(token)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "invalid token"})
+			return
+		}
+
+		claimMap, ok := jwtToken.Claims.(jwt.MapClaims) // TODO: remove the type conversion after testing
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "invalid token"})
+			return
+		}
+
+		// TODO: make the keys into constant type
+		// TODO: confirm that if all standard claims should be included
+		c.Set("jwt_raw", jwtToken.Raw)
+		//c.Set("jwt_sub", claimMap["sub"])
+		//c.Set("jwt_iat", claimMap["iat"])
+		//c.Set("jwt_iss", claimMap["iss"])
+		c.Set("jwt_exp", claimMap["exp"])
+		c.Set("jwt_account", claimMap["account"])
+		c.Set("jwt_organization", claimMap["organization"])
+		c.Set("jwt_environment", claimMap["environment"])
+
+		pkgLog.Logger.DEBUG("authentication success")
+
 		c.Next()
 	}
 }
@@ -18,6 +50,7 @@ func Authentication() gin.HandlerFunc {
 func Authorization() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		pkgLog.Logger.DEBUG("authorization success")
+
 		c.Next()
 	}
 }
@@ -42,25 +75,25 @@ func Response() gin.HandlerFunc {
 }
 
 func Error() gin.HandlerFunc {
+	// TODO: finish the general error handler in middleware
 	return func(c *gin.Context) {
-		// Process request
 		c.Next()
 
-		// Check if any error occurred
 		if len(c.Errors) > 0 {
 			c.Header("Content-Type", "application/json")
-			// Log or handle the errors here as needed
-			// For example, return a JSON response with the error
+			lastError := c.Errors.Last()
+
+			status := http.StatusInternalServerError // 默认状态码
+			if err, ok := lastError.Err.(interface{ Status() int }); ok {
+				status = err.Status()
+			}
 			c.JSON(
-				// TODO: update the status code of error
-				http.StatusInternalServerError,
+				status,
 				gin.H{
-					//"status":  http.StatusInternalServerError,
-					"message": c.Errors.Last().Error(),
+					"message": lastError.Error(),
 				},
 			)
 
-			// Prevent calling any subsequent handlers
 			c.Abort()
 		}
 	}

@@ -1,3 +1,5 @@
+BEGIN;
+
 -- lambda info
 DROP TABLE IF EXISTS "lambda";
 
@@ -37,3 +39,4 @@ CREATE TABLE "lambda_vpc" (
 
 CREATE INDEX ON "lambda_vpc" ("vpc_id");
 
+COMMIT;

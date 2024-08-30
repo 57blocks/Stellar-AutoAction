@@ -16,13 +16,13 @@ func (o *Organization) TableNameWithAbbr() string {
 
 type OrganizationKeyPairs struct {
 	ICU
-	OrganizationID string `json:"organization_id"`
+	OrganizationID uint64 `json:"organization_id"`
 	PublicKey      string `json:"public_key"`
 	PrivateKey     string `json:"private_key"`
 }
 
 func (o *OrganizationKeyPairs) TableName() string {
-	return "principal_org_key_pairs"
+	return "organization_key_pairs"
 }
 
 func (o *OrganizationKeyPairs) TableNameWithAbbr() string {

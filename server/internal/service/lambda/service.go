@@ -1,13 +1,12 @@
 package lambda
 
 import (
-	"archive/zip"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
-	"os"
 	"strings"
 
 	configx "github.com/57blocks/auto-action/server/internal/config"
@@ -27,7 +26,7 @@ type (
 	Service interface {
 		Register(c context.Context, r *http.Request) (*dto.RespRegister, error)
 	}
-	ServiceConductor struct{}
+	conductor struct{}
 )
 
 var (
@@ -40,15 +39,11 @@ var (
 
 func init() {
 	if Conductor == nil {
-		Conductor = &ServiceConductor{}
+		Conductor = &conductor{}
 	}
 }
 
-const (
-	TempZip = "handler.zip"
-)
-
-func (sc *ServiceConductor) Register(c context.Context, r *http.Request) (*dto.RespRegister, error) {
+func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegister, error) {
 	var err error
 
 	fileHeaders := r.MultipartForm.File
@@ -82,9 +77,10 @@ func (sc *ServiceConductor) Register(c context.Context, r *http.Request) (*dto.R
 				return nil, err
 			}
 			pkgLog.Logger.DEBUG(fmt.Sprintf("scheduler created: %s", *cso.ScheduleArn))
+		} else {
+			pkgLog.Logger.DEBUG("no expression found, will be triggered manually")
 		}
 
-		pkgLog.Logger.DEBUG("no expression found, will be triggered manually")
 	}
 
 	return &dto.RespRegister{
@@ -93,12 +89,16 @@ func (sc *ServiceConductor) Register(c context.Context, r *http.Request) (*dto.R
 }
 
 func registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.CreateFunctionOutput, error) {
-	err := zipFile(fh, TempZip)
+	file, err := fh.Open()
 	if err != nil {
 		return nil, err
 	}
-	bs, _ := os.ReadFile(TempZip)
-	defer os.Remove(TempZip)
+	defer file.Close()
+
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read zip handler file")
+	}
 
 	splits := strings.Split(fh.Filename, ".")
 
@@ -109,33 +109,22 @@ func registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.Create
 		c,
 		&lambda.CreateFunctionInput{
 			Code: &lambTypes.FunctionCode{
-				ZipFile: bs,
+				ZipFile: fileBytes,
 			},
-			FunctionName:         aws.String(splits[0]),
-			Role:                 aws.String("arn:aws:iam::123340007534:role/service-role/autoaction-role-wl50ldot"),
-			Runtime:              lambTypes.RuntimeNodejs20x,
-			Architectures:        nil,
-			CodeSigningConfigArn: nil,
-			DeadLetterConfig:     nil,
-			Description:          nil,
-			//Environment:          &lambTypes.Environment{Variables: map[string]string{"AWS_REGION": "us-east-2"}},
-			EphemeralStorage:  nil,
-			FileSystemConfigs: nil,
-			Handler:           aws.String("handler"),
-			ImageConfig:       nil,
-			KMSKeyArn:         nil,
-			Layers:            nil,
-			LoggingConfig:     nil,
-			MemorySize:        nil,
-			PackageType:       "",
-			Publish:           false,
-			SnapStart:         nil,
-			Tags:              nil,
-			Timeout:           nil,
-			TracingConfig:     nil,
-			VpcConfig: &lambTypes.VpcConfig{ // TODO: put into env in ECS
+			FunctionName: aws.String(splits[0]),
+			// TODO: put into env when the infrastructure is ready, the same as `VpcConfig` below.
+			Environment: &lambTypes.Environment{Variables: map[string]string{"ENV_REGION": "us-east-2"}},
+			// This execution role has full access of CloudWatch and Lambda execution access.
+			Role:        aws.String("arn:aws:iam::123340007534:role/LambdaExecutionRole"),
+			Runtime:     lambTypes.RuntimeNodejs20x,
+			Description: nil,
+			Handler:     aws.String(fmt.Sprintf("%s.handler", splits[0])),
+			PackageType: lambTypes.PackageTypeZip,
+			Publish:     false,
+			VpcConfig: &lambTypes.VpcConfig{
 				Ipv6AllowedForDualStack: aws.Bool(false),
-				SecurityGroupIds:        []string{"sg-063f43919a7309669"},
+				SecurityGroupIds:        []string{"sg-0b77e2d29b5bca26a"}, // default SG of the VPC
+				// now below all are public subnets
 				SubnetIds: []string{
 					"subnet-05e584ba2ffb30d2d",
 					"subnet-0ce2404213f76db94",
@@ -148,41 +137,43 @@ func registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.Create
 	if err != nil {
 		errMsg := fmt.Sprintf("failed to register lambda: %s, err: %s\n", fh.Filename, err.Error())
 		pkgLog.Logger.ERROR(errMsg)
-		return nil, errors.New(errMsg)
+		return nil, errors.Wrap(err, errMsg)
 	}
 
 	return lambdaFun, nil
 }
 
-func boundScheduler(c context.Context, lambdaFun *lambda.CreateFunctionOutput, expression string) (*scheduler.CreateScheduleOutput, error) {
+func boundScheduler(
+	c context.Context,
+	lambdaFun *lambda.CreateFunctionOutput,
+	expression string,
+) (*scheduler.CreateScheduleOutput, error) {
 	schClient := scheduler.NewFromConfig(awsConfig)
+
+	event, err := buildLambdaEvent(c)
+	if err != nil {
+		return nil, err
+	}
+	eventJSON, err := json.Marshal(event)
+	if err != nil {
+		return nil, err
+	}
 
 	lambScheduler, err := schClient.CreateSchedule(c, &scheduler.CreateScheduleInput{
 		FlexibleTimeWindow: &scheTypes.FlexibleTimeWindow{
 			Mode: scheTypes.FlexibleTimeWindowModeOff,
 		},
-		Name:               aws.String(fmt.Sprintf("Scheduler-%s", *lambdaFun.FunctionName)),
-		ScheduleExpression: aws.String("rate(1 minutes)"),
+		Name:               aws.String(fmt.Sprintf("scheduler-%s", *lambdaFun.FunctionName)),
+		ScheduleExpression: aws.String(expression), // rate(1 minutes)/cron(...)
 		Target: &scheTypes.Target{
-			Arn:                         lambdaFun.FunctionArn,
-			RoleArn:                     aws.String("arn:aws:iam::123340007534:role/service-role/Amazon_EventBridge_Scheduler_LAMBDA_25a70bed22"),
-			DeadLetterConfig:            nil,
-			EcsParameters:               nil,
-			EventBridgeParameters:       nil,
-			Input:                       nil,
-			KinesisParameters:           nil,
-			RetryPolicy:                 nil,
-			SageMakerPipelineParameters: nil,
-			SqsParameters:               nil,
+			Arn: lambdaFun.FunctionArn,
+			// This role has the Lambda invoke access to all Lambda functions in current AWS account.
+			RoleArn: aws.String("arn:aws:iam::123340007534:role/service-role/Amazon_EventBridge_Scheduler_LAMBDA_25a70bed22"),
+			Input:   aws.String(string(eventJSON)),
 		},
 		ActionAfterCompletion:      scheTypes.ActionAfterCompletionNone,
-		ClientToken:                nil,
 		Description:                nil,
-		EndDate:                    nil,
-		GroupName:                  nil,
-		KmsKeyArn:                  nil,
 		ScheduleExpressionTimezone: aws.String("UTC"),
-		StartDate:                  nil,
 		State:                      scheTypes.ScheduleStateEnabled,
 	})
 	if err != nil {
@@ -194,37 +185,40 @@ func boundScheduler(c context.Context, lambdaFun *lambda.CreateFunctionOutput, e
 	return lambScheduler, nil
 }
 
-// TODO: remove the zip file function when the input file is a zip file already
-func zipFile(fh *multipart.FileHeader, target string) error {
-	// Open the uploaded file
-	file, err := fh.Open()
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	// Create the ZIP file
-	zipFile, err := os.Create(target)
-	if err != nil {
-		return err
-	}
-	defer zipFile.Close()
-
-	// Create a new ZIP writer
-	zipWriter := zip.NewWriter(zipFile)
-	defer zipWriter.Close()
-
-	// Create a file entry in the ZIP archive
-	zipEntryWriter, err := zipWriter.Create(fh.Filename)
-	if err != nil {
-		return err
-	}
-
-	// Copy the content of the uploaded file into the ZIP archive
-	_, err = io.Copy(zipEntryWriter, file)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
+//// TODO: remove the zip file function when the input file is a zip file already
+//const (
+//	TempZip = "handler.zip"
+//)
+//func zipFile(fh *multipart.FileHeader, target string) error {
+//	// Open the uploaded file
+//	file, err := fh.Open()
+//	if err != nil {
+//		return err
+//	}
+//	defer file.Close()
+//
+//	// Create the ZIP file
+//	zipFile, err := os.Create(target)
+//	if err != nil {
+//		return err
+//	}
+//	defer zipFile.Close()
+//
+//	// Create a new ZIP writer
+//	zipWriter := zip.NewWriter(zipFile)
+//	defer zipWriter.Close()
+//
+//	// Create a file entry in the ZIP archive
+//	zipEntryWriter, err := zipWriter.Create(fh.Filename)
+//	if err != nil {
+//		return err
+//	}
+//
+//	// Copy the content of the uploaded file into the ZIP archive
+//	_, err = io.Copy(zipEntryWriter, file)
+//	if err != nil {
+//		return err
+//	}
+//
+//	return nil
+//}
