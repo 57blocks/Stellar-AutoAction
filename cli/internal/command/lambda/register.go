@@ -26,10 +26,11 @@ recurring/scheduled rule.
 
 Rules:
 1. Manually, if no flags puts in, which means the handler/handlers will be triggered manually.
-2. By corn
-3. By rate, only three unit supported: minute, hour, day. For example: rate(1 minute).
+2. By corn. 
+3. By rate, only three units supported: minutes, hours, days. For example: rate(1 minutes).
+4. By at, only one-time execution, for a specific time in the future. For example: at(yyyy-mm-ddThh:mm:ss).
 
-Only cron/rate would create an event scheduler to trigger the lambda function.`,
+Only cron/rate/at would create an Event Bridge Scheduler to trigger the lambda function.`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if cmd.Flags().Changed(constant.FlagCron.ValStr()) &&
 			cmd.Flags().Changed(constant.FlagRate.ValStr()) {
