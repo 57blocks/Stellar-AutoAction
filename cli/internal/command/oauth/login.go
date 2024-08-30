@@ -28,9 +28,8 @@ the config. And will create a new credential under the path you just claimed
 and set it to config, if it's the first time.
 
 And also, you could specify other credentials by **configure** command.`,
-	Args:      cobra.OnlyValidArgs,
-	ValidArgs: []string{"organization", "account", "environment", "credential"},
-	RunE:      loginFunc,
+	Args: cobra.NoArgs,
+	RunE: loginFunc,
 }
 
 func init() {
@@ -87,7 +86,7 @@ func loginFunc(cmd *cobra.Command, args []string) error {
 
 	pwdBytes, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
-		return errors.New(fmt.Sprintf("reading passowrd error: %s\n", err.Error()))
+		return errors.Wrap(err, fmt.Sprintf("reading passowrd error: %s\n", err.Error()))
 	}
 
 	if len(pwdBytes) == 0 {
@@ -113,13 +112,13 @@ func supplierLogin(cryptPwdBytes []byte) (*resty.Response, error) {
 		}).
 		Post(viper.GetString("bound_with.endpoint") + "/oauth/login")
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("resty error: %s\n", err.Error()))
+		return nil, errors.Wrap(err, fmt.Sprintf("resty error: %s\n", err.Error()))
 	}
 
-	slog.Debug(fmt.Sprintf("response: %v\n", response)) // TODO: remove
+	slog.Debug(fmt.Sprintf("%v\n", response)) // TODO: remove
 
 	if e := util.HasError(response); e != nil {
-		return nil, errors.New(fmt.Sprintf("supplier error: %s\n", e))
+		return nil, errors.Wrap(e, fmt.Sprintf("supplier error: %s\n", e))
 	}
 
 	return response, nil
@@ -128,7 +127,7 @@ func supplierLogin(cryptPwdBytes []byte) (*resty.Response, error) {
 func syncLogin(resp *resty.Response) error {
 	cred := new(config.Credential)
 	if err := json.Unmarshal(resp.Body(), cred); err != nil {
-		return errors.New(fmt.Sprintf("unmarshaling json response error: %s\n", err.Error()))
+		return errors.Wrap(err, fmt.Sprintf("unmarshaling json response error: %s\n", err.Error()))
 	}
 
 	if err := config.WriteCredential(viper.GetString(constant.FlagCredential.ValStr()), cred); err != nil {

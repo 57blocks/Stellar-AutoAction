@@ -17,6 +17,18 @@ const (
 	FlagOrganization FlagName = "organization"
 )
 
+// Flags for Lambda register command
+const (
+	FlagCron FlagName = "cron"
+	FlagRate FlagName = "rate"
+	FlagAt   FlagName = "at"
+)
+
+// FlagPayload Flags for Lambda invoke command
+const (
+	FlagPayload FlagName = "payload"
+)
+
 func (f FlagName) ValStr() string {
 	return string(f)
 }

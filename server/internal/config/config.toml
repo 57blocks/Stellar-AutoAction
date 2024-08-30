@@ -13,10 +13,10 @@ protocol = "PROTOCOL"
 private_key = "PRIVATE_KEY"
 public_key = "PUBLIC_KEy"
 
-[amazon]
-region = "AMAZON_REGION"
-access_key = "AMAZON_ACCESS_KEY"
-secret_key = "AMAZON_SECRET_KEY"
+[aws]
+region = "AWS_REGION"
+access_key_id = "AWS_ACCESS_KEY_ID"
+secret_access_key = "AWS_SECRET_ACCESS_KEY"
 
 [rds]
 host = "RDS_HOST"

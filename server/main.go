@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/57blocks/auto-action/server/internal/pkg/db"
 	"log"
 	"net/http"
 	"os"
@@ -13,6 +12,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/api"
 	"github.com/57blocks/auto-action/server/internal/boot"
 	"github.com/57blocks/auto-action/server/internal/config"
+	"github.com/57blocks/auto-action/server/internal/pkg/db"
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
 )
 
@@ -23,6 +23,7 @@ func main() {
 		boot.Wrap(config.Setup),
 		boot.Wrap(pkgLog.Setup),
 		boot.Wrap(db.Setup),
+		boot.Wrap(api.Setup),
 	); err != nil {
 		log.Panicf("boots components occurred error: %s\n", err.Error())
 	}
@@ -31,7 +32,7 @@ func main() {
 
 	server = &http.Server{
 		Addr:    ":8080",
-		Handler: api.Boot(),
+		Handler: api.GinEngine,
 	}
 
 	go server.ListenAndServe()

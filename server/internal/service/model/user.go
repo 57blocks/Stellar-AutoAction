@@ -9,9 +9,9 @@ type User struct {
 }
 
 func (u *User) TableName() string {
-	return "principal_user"
+	return "user"
 }
 
 func (u *User) TableNameWithAbbr() string {
-	return "principal_user AS pu"
+	return "\"user\" AS u"
 }

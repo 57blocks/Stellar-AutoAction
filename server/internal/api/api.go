@@ -8,21 +8,26 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Boot() *gin.Engine {
-	g := gin.New(
+var GinEngine *gin.Engine
+
+func Setup() error {
+	GinEngine = gin.New(
 		WithCustomRecovery(),
 		WithReqHeader(),
 		WithError(),
 		WithResponse(),
 	)
 
-	g.Use(middleware.ZapLogger())
+	GinEngine.Use(
+		middleware.ZapLogger(),
+		middleware.Header(),
+	)
 
-	g.GET("/up", func(ctx *gin.Context) {
+	GinEngine.GET("/up", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"message": "ok"})
 	})
 
-	RegisterHandlers(g)
+	RegisterHandlers(GinEngine)
 
-	return g
+	return nil
 }

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/57blocks/auto-action/cli/internal/command/hook"
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
-	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -29,7 +29,7 @@ of the execution.`,
 			DisableDefaultCmd: true,
 			HiddenDefaultCmd:  true,
 		},
-		PersistentPreRun: util.PreBindFlags,
+		PersistentPreRun: hook.PreRunFunc,
 		RunE:             rootFunc,
 	}
 	version = "v0.0.1" // TODO: add release workflow to sync version with the git tag

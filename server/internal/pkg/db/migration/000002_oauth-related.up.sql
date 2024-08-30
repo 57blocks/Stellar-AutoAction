@@ -1,9 +1,9 @@
 BEGIN;
 
 -- user
-DROP TABLE IF EXISTS "principal_user";
+DROP TABLE IF EXISTS "user";
 
-CREATE TABLE "principal_user" (
+CREATE TABLE "user" (
     "id" serial PRIMARY KEY,
     "account" varchar UNIQUE NOT NULL,
     "password" text NOT NULL,
@@ -13,14 +13,14 @@ CREATE TABLE "principal_user" (
     "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL
 );
 
-CREATE INDEX ON "principal_user" ("account");
+CREATE INDEX ON "user" ("account");
 
-CREATE INDEX "principal_user_id_account_idx" ON "principal_user" ("id", "account");
+CREATE INDEX "user_id_account_idx" ON "user" ("id", "account");
 
 -- organization
-DROP TABLE IF EXISTS "principal_organization";
+DROP TABLE IF EXISTS "organization";
 
-CREATE TABLE "principal_organization" (
+CREATE TABLE "organization" (
     "id" serial PRIMARY KEY,
     "name" varchar UNIQUE NOT NULL,
     "description" text,
@@ -28,12 +28,12 @@ CREATE TABLE "principal_organization" (
     "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL
 );
 
-CREATE INDEX "principal_organization_id_name_idx" ON "principal_organization" ("id", "name");
+CREATE INDEX "organization_id_name_idx" ON "organization" ("id", "name");
 
 -- token
-DROP TABLE IF EXISTS "principal_token";
+DROP TABLE IF EXISTS "token";
 
-CREATE TABLE "principal_token" (
+CREATE TABLE "token" (
     "id" serial PRIMARY KEY,
     "access" varchar UNIQUE NOT NULL,
     "refresh" varchar UNIQUE NOT NULL,
@@ -44,8 +44,8 @@ CREATE TABLE "principal_token" (
     "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL
 );
 
-CREATE INDEX ON "principal_token" ("user_id");
-CREATE INDEX ON "principal_token" ("access");
-CREATE INDEX "principal_token_user_access_idx" ON "principal_token" ("user_id", "access");
+CREATE INDEX ON "token" ("user_id");
+CREATE INDEX ON "token" ("access");
+CREATE INDEX "token_user_access_idx" ON "token" ("user_id", "access");
 
 COMMIT;
