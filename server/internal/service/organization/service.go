@@ -3,9 +3,9 @@ package organization
 import (
 	"context"
 
-	"github.com/57blocks/auto-action/server/internal/pkg/db"
+	"github.com/57blocks/auto-action/server/internal/db"
+	"github.com/57blocks/auto-action/server/internal/model"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/organization"
-	"github.com/57blocks/auto-action/server/internal/service/model"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"

@@ -4,13 +4,13 @@ import (
 	"net/http"
 
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
-	dto "github.com/57blocks/auto-action/server/internal/service/dto/oauth"
+	oauth2 "github.com/57blocks/auto-action/server/internal/service/dto/oauth"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Login(c *gin.Context) {
-	req := new(dto.ReqLogin)
+	req := new(oauth2.ReqLogin)
 
 	if err := c.BindJSON(req); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
@@ -27,7 +27,7 @@ func Login(c *gin.Context) {
 }
 
 func Logout(c *gin.Context) {
-	req := new(dto.ReqLogout)
+	req := new(oauth2.ReqLogout)
 
 	if err := c.BindJSON(req); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
@@ -48,7 +48,7 @@ func Logout(c *gin.Context) {
 }
 
 func Refresh(c *gin.Context) {
-	req := new(dto.ReqRefresh)
+	req := new(oauth2.ReqRefresh)
 
 	if err := c.BindJSON(req); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
