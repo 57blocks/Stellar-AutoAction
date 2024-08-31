@@ -10,8 +10,11 @@ import (
 	"strings"
 
 	configx "github.com/57blocks/auto-action/server/internal/config"
+	"github.com/57blocks/auto-action/server/internal/db"
+	"github.com/57blocks/auto-action/server/internal/model"
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/lambda"
+	svcOrg "github.com/57blocks/auto-action/server/internal/service/organization"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -20,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	scheTypes "github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 type (
@@ -43,6 +47,11 @@ func init() {
 	}
 }
 
+type toPersistPair struct {
+	Lambda    *model.Lambda
+	Scheduler *model.LambdaScheduler
+}
+
 func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegister, error) {
 	var err error
 
@@ -59,32 +68,65 @@ func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegi
 		return nil, errors.New(err.Error())
 	}
 
-	resp := make([]*lambda.CreateFunctionOutput, 0, len(fileHeaders))
+	// db persistence
+	toPersists := make([]toPersistPair, 0, len(fileHeaders))
+
+	// brief response
+	lsBrief := make([]dto.RespLamBrief, 0, len(fileHeaders))
+	ssBrief := make([]dto.RespSchBrief, 0, len(fileHeaders))
 
 	for _, fhs := range r.MultipartForm.File {
 		fh := fhs[0]
 
-		cfo, err := registerLambda(c, fh)
+		newLamResp, err := registerLambda(c, fh)
 		if err != nil {
 			return nil, err
 		}
-		resp = append(resp, cfo)
+		lsBrief = append(lsBrief, dto.RespLamBrief{
+			Name:    *newLamResp.FunctionName,
+			Arn:     *newLamResp.FunctionArn,
+			Runtime: string(newLamResp.Runtime),
+			Handler: *newLamResp.Handler,
+			Version: *newLamResp.Version,
+		})
+
+		vpc, err := svcOrg.Conductor.CurrentVpc(c)
+		if err != nil {
+			return nil, err
+		}
+		tpp := toPersistPair{
+			Lambda: model.BuildLambda(
+				model.WithVpcID(vpc.ID),
+				model.WithLambdaResp(newLamResp),
+			),
+		}
 
 		if strings.TrimSpace(expression) != "" {
-			pkgLog.Logger.DEBUG(fmt.Sprintf("scheduler expression found: %s", expression))
-			cso, err := boundScheduler(c, cfo, expression)
+			newSchResp, err := boundScheduler(c, newLamResp, expression)
 			if err != nil {
 				return nil, err
 			}
-			pkgLog.Logger.DEBUG(fmt.Sprintf("scheduler created: %s", *cso.ScheduleArn))
+
+			ssBrief = append(ssBrief, dto.RespSchBrief{
+				Arn:            *newLamResp.FunctionArn,
+				BoundLambdaArn: *newSchResp.ScheduleArn,
+			})
+			tpp.Scheduler = model.BuildScheduler(
+				model.WithExpression(expression),
+				model.WithSchArn(*newSchResp.ScheduleArn),
+			)
 		} else {
 			pkgLog.Logger.DEBUG("no expression found, will be triggered manually")
 		}
 
+		toPersists = append(toPersists, tpp)
 	}
 
+	go persist(c, toPersists)
+
 	return &dto.RespRegister{
-		CFOs: resp,
+		Lambdas:    lsBrief,
+		Schedulers: ssBrief,
 	}, nil
 }
 
@@ -148,6 +190,8 @@ func boundScheduler(
 	lambdaFun *lambda.CreateFunctionOutput,
 	expression string,
 ) (*scheduler.CreateScheduleOutput, error) {
+	pkgLog.Logger.DEBUG(fmt.Sprintf("scheduler expression found: %s", expression))
+
 	schClient := scheduler.NewFromConfig(awsConfig)
 
 	event, err := buildLambdaEvent(c)
@@ -159,7 +203,7 @@ func boundScheduler(
 		return nil, err
 	}
 
-	lambScheduler, err := schClient.CreateSchedule(c, &scheduler.CreateScheduleInput{
+	newSchResp, err := schClient.CreateSchedule(c, &scheduler.CreateScheduleInput{
 		FlexibleTimeWindow: &scheTypes.FlexibleTimeWindow{
 			Mode: scheTypes.FlexibleTimeWindowModeOff,
 		},
@@ -182,43 +226,35 @@ func boundScheduler(
 		return nil, errors.New(errMsg)
 	}
 
-	return lambScheduler, nil
+	pkgLog.Logger.DEBUG(fmt.Sprintf("scheduler created: %s", *newSchResp.ScheduleArn))
+
+	return newSchResp, nil
 }
 
-//// TODO: remove the zip file function when the input file is a zip file already
-//const (
-//	TempZip = "handler.zip"
-//)
-//func zipFile(fh *multipart.FileHeader, target string) error {
-//	// Open the uploaded file
-//	file, err := fh.Open()
-//	if err != nil {
-//		return err
-//	}
-//	defer file.Close()
-//
-//	// Create the ZIP file
-//	zipFile, err := os.Create(target)
-//	if err != nil {
-//		return err
-//	}
-//	defer zipFile.Close()
-//
-//	// Create a new ZIP writer
-//	zipWriter := zip.NewWriter(zipFile)
-//	defer zipWriter.Close()
-//
-//	// Create a file entry in the ZIP archive
-//	zipEntryWriter, err := zipWriter.Create(fh.Filename)
-//	if err != nil {
-//		return err
-//	}
-//
-//	// Copy the content of the uploaded file into the ZIP archive
-//	_, err = io.Copy(zipEntryWriter, file)
-//	if err != nil {
-//		return err
-//	}
-//
-//	return nil
-//}
+func persist(c context.Context, pairs []toPersistPair) {
+	if err := db.Conn(c).Transaction(func(tx *gorm.DB) error {
+		for _, pair := range pairs {
+			//l := pair.Lambda
+			newLambda := tx.Table("lambda").Create(pair.Lambda)
+			if err := newLambda.Error; err != nil {
+				return errors.Wrap(err, fmt.Sprintf("failed to create lambda: %s", pair.Lambda.FunctionArn))
+			}
+
+			if pair.Scheduler == nil {
+				continue
+			}
+
+			//s := pair.Scheduler
+			pair.Scheduler.LambdaID = pair.Lambda.ID
+
+			newScheduler := tx.Table("lambda_scheduler").Create(pair.Scheduler)
+			if err := newScheduler.Create(pair.Scheduler).Error; err != nil {
+				return errors.Wrap(err, fmt.Sprintf("failed to create lambda: %s", pair.Scheduler.ScheduleArn))
+			}
+		}
+
+		return nil
+	}); err != nil {
+		pkgLog.Logger.ERROR(err.Error())
+	}
+}

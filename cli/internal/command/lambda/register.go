@@ -21,24 +21,35 @@ import (
 var register = &cobra.Command{
 	Use:   "register [zips/packages]",
 	Short: "Lambda register of local handler",
-	Long: `Upload/Register the local handler/handlers to Amazon Lambda, with the 
-recurring/scheduled rule. 
+	Long: `
+Upload/Register the local handler/handlers to Amazon Lambda, with the
+	recurring/scheduled rule. 
 
 Rules:
-1. Manually, if no flags puts in, which means the handler/handlers will be triggered manually.
+1. Manually, if no flags puts in, which means the handler/handlers will 
+	be triggered manually.
 2. By corn. 
-3. By rate, only three units supported: minutes, hours, days. For example: rate(1 minutes).
-4. By at, only one-time execution, for a specific time in the future. For example: at(yyyy-mm-ddThh:mm:ss).
+3. By rate, only three units supported: minutes, hours, days. 
+	For example: rate(1 minutes).
+4. By at, only one-time execution, for a specific time in the future. 
+	For example: at(yyyy-mm-ddThh:mm:ss).
+5. At most one expression flag should be set.
 
-Only cron/rate/at would create an Event Bridge Scheduler to trigger the lambda function.`,
+Only cron/rate/at would create an Event Bridge Scheduler to trigger the
+	lambda function.
+`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if cmd.Flags().Changed(constant.FlagCron.ValStr()) &&
-			cmd.Flags().Changed(constant.FlagRate.ValStr()) {
-			return errors.New("cron and rate cannot be used together")
+		a := cmd.Flags().Changed(constant.FlagAt.ValStr())
+		c := cmd.Flags().Changed(constant.FlagCron.ValStr())
+		r := cmd.Flags().Changed(constant.FlagRate.ValStr())
+
+		if a && r || a && c || r && c {
+			return errors.New("at most one expression flag should be set")
 		}
 
 		return nil
 	},
+	Args: cobra.MinimumNArgs(1),
 	RunE: registerFunc,
 }
 
@@ -48,7 +59,7 @@ func init() {
 	flagCron := constant.FlagCron.ValStr()
 	register.Flags().StringP(
 		flagCron,
-		"",
+		"c",
 		viper.GetString(flagCron),
 		`The cron execution expression for the Event Bridge Scheduler.
 For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#rate-based
@@ -57,7 +68,7 @@ For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-t
 	flagRate := constant.FlagRate.ValStr()
 	register.Flags().StringP(
 		flagRate,
-		"",
+		"r",
 		viper.GetString(flagRate),
 		`The rate execution expression for the Event Bridge Scheduler.
 For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#cron-based
@@ -66,7 +77,7 @@ For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-t
 	flagAt := constant.FlagAt.ValStr()
 	register.Flags().StringP(
 		flagAt,
-		"",
+		"a",
 		viper.GetString(flagAt),
 		`The one-time execution expression for the Event Bridge Scheduler.
 For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#one-time
@@ -103,18 +114,23 @@ func supplierRegister(args []string) (*resty.Response, error) {
 		}).
 		SetFiles(argMap)
 
-	if len(args) > 0 {
-		flagMap := make(map[string]string, 1)
-		if strings.TrimSpace(viper.GetString(constant.FlagCron.ValStr())) == "" {
-			slog.Debug(fmt.Sprintf("rate expression: %s\n", viper.GetString(constant.FlagRate.ValStr())))
-			flagMap["expression"] = viper.GetString(constant.FlagRate.ValStr())
-		} else {
-			slog.Debug(fmt.Sprintf("cron expression: %s\n", viper.GetString(constant.FlagCron.ValStr())))
-			flagMap["expression"] = viper.GetString(constant.FlagCron.ValStr())
+	// flags handling
+	flagMap := make(map[string]string, 1)
+	flagKeys := []string{constant.FlagAt.ValStr(), constant.FlagCron.ValStr(), constant.FlagRate.ValStr()}
+	for _, key := range flagKeys {
+		if value := strings.TrimSpace(viper.GetString(key)); value != "" {
+			flagMap["expression"] = value
+			slog.Debug(fmt.Sprintf("%s expression: %s\n", key, value))
+			break
 		}
-
-		request = request.SetFormData(flagMap)
 	}
+
+	if len(flagMap) == 0 {
+		flagMap["expression"] = ""
+		slog.Debug("lambda will be triggered manually\n")
+	}
+
+	request = request.SetFormData(flagMap)
 
 	resp, err := request.Post(viper.GetString("bound_with.endpoint") + "/lambda/register")
 	if err != nil {

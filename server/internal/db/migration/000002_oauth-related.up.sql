@@ -35,9 +35,9 @@ DROP TABLE IF EXISTS "token";
 
 CREATE TABLE "token" (
     "id" serial PRIMARY KEY,
+    "user_id" integer UNIQUE NOT NULL,
     "access" varchar UNIQUE NOT NULL,
     "refresh" varchar UNIQUE NOT NULL,
-    "user_id" integer UNIQUE NOT NULL,
     "access_expires" timestamptz NOT NULL,
     "refresh_expires" timestamptz NOT NULL,
     "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL,

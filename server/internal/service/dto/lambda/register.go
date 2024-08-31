@@ -4,8 +4,6 @@ import (
 	"io"
 
 	dtoOrg "github.com/57blocks/auto-action/server/internal/service/dto/organization"
-
-	"github.com/aws/aws-sdk-go-v2/service/lambda"
 )
 
 type (
@@ -24,7 +22,22 @@ type (
 	}
 
 	RespRegister struct {
-		_    struct{}
-		CFOs []*lambda.CreateFunctionOutput `json:"cfos"`
+		_          struct{}
+		Lambdas    []RespLamBrief `json:"lambdas"`
+		Schedulers []RespSchBrief `json:"schedulers"`
+	}
+
+	RespLamBrief struct {
+		_       struct{}
+		Name    string `json:"function_name"`
+		Arn     string `json:"function_arn"`
+		Runtime string `json:"runtime"`
+		Handler string `json:"handler"`
+		Version string `json:"version"`
+	}
+	RespSchBrief struct {
+		_              struct{}
+		Arn            string `json:"schedule_arn"`
+		BoundLambdaArn string `json:"bound_lambda_arn"`
 	}
 )

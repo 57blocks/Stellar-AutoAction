@@ -14,8 +14,9 @@ import (
 
 type (
 	Service interface {
-		RelatedOrg(c context.Context) (*model.Organization, error)
-		RelatedKeyPairs(c context.Context) (*dto.RespRelatedKeyPairs, error)
+		CurrentOrg(c context.Context) (*model.Organization, error)
+		CurrentOrgKPs(c context.Context) (*dto.RespRelatedKeyPairs, error)
+		CurrentVpc(c context.Context) (*model.Vpc, error)
 	}
 	conductor struct{}
 )
@@ -30,7 +31,7 @@ func init() {
 	}
 }
 
-func (cd conductor) RelatedOrg(c context.Context) (*model.Organization, error) {
+func (cd conductor) CurrentOrg(c context.Context) (*model.Organization, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errors.New("convert context.Context to gin.Context failed")
@@ -47,13 +48,14 @@ func (cd conductor) RelatedOrg(c context.Context) (*model.Organization, error) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("none organization found")
 		}
-		return nil, errors.Wrap(err, "none organization failed")
+
+		return nil, errors.Wrap(err, "db error when find organization by name")
 	}
 
 	return org, nil
 }
 
-func (cd conductor) RelatedKeyPairs(c context.Context) (*dto.RespRelatedKeyPairs, error) {
+func (cd conductor) CurrentOrgKPs(c context.Context) (*dto.RespRelatedKeyPairs, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errors.New("convert context.Context to gin.Context failed")
@@ -86,4 +88,29 @@ func (cd conductor) RelatedKeyPairs(c context.Context) (*dto.RespRelatedKeyPairs
 		JWTPairs:        dto.JWTPairs{},
 		CubeSignerPairs: cubeKeyPairs,
 	}, nil
+}
+
+func (cd conductor) CurrentVpc(c context.Context) (*model.Vpc, error) {
+	ctx, ok := c.(*gin.Context)
+	if !ok {
+		return nil, errors.New("convert context.Context to gin.Context failed")
+	}
+
+	jwtOrg, _ := ctx.Get("jwt_organization")
+
+	vpc := new(model.Vpc)
+	if err := db.Conn(c).Table(vpc.TableNameWithAbbr()).
+		Joins("LEFT JOIN organization AS o ON o.id = v.organization_id").
+		Where(map[string]interface{}{
+			"o.name": jwtOrg,
+		}).
+		First(vpc).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("none vpc found")
+		}
+
+		return nil, errors.Wrap(err, "db error when find vpc by organization name")
+	}
+
+	return vpc, nil
 }
