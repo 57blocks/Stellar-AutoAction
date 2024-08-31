@@ -7,7 +7,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
-	oauth2 "github.com/57blocks/auto-action/server/internal/service/dto/oauth"
+	dto "github.com/57blocks/auto-action/server/internal/service/dto/oauth"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
@@ -18,9 +18,9 @@ import (
 
 type (
 	Service interface {
-		Login(c context.Context, req oauth2.ReqLogin) (*oauth2.RespCredential, error)
-		Refresh(c context.Context, req oauth2.ReqRefresh) (*oauth2.RespCredential, error)
-		Logout(c context.Context, req oauth2.ReqLogout) (*oauth2.RespLogout, error)
+		Login(c context.Context, req dto.ReqLogin) (*dto.RespCredential, error)
+		Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCredential, error)
+		Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogout, error)
 	}
 	conductor struct{}
 )
@@ -33,7 +33,7 @@ func init() {
 	}
 }
 
-func (cd *conductor) Login(c context.Context, req oauth2.ReqLogin) (*oauth2.RespCredential, error) {
+func (cd *conductor) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredential, error) {
 	user := new(model.User)
 	if err := db.Conn(c).Table(user.TableNameWithAbbr()).
 		Joins("LEFT JOIN organization AS o ON u.organization_id = o.id").
@@ -102,11 +102,11 @@ func (cd *conductor) Login(c context.Context, req oauth2.ReqLogin) (*oauth2.Resp
 	}
 
 	// build response
-	resp := oauth2.BuildRespCred(
-		oauth2.WithAccount(req.Account),
-		oauth2.WithOrganization(req.Organization),
-		oauth2.WithEnvironment(req.Environment),
-		oauth2.WithTokenPair(jwtx.Tokens{
+	resp := dto.BuildRespCred(
+		dto.WithAccount(req.Account),
+		dto.WithOrganization(req.Organization),
+		dto.WithEnvironment(req.Environment),
+		dto.WithTokenPair(jwtx.Tokens{
 			Token:   access,
 			Refresh: refresh,
 		}),
@@ -115,7 +115,7 @@ func (cd *conductor) Login(c context.Context, req oauth2.ReqLogin) (*oauth2.Resp
 	return resp, nil
 }
 
-func (cd *conductor) Refresh(c context.Context, req oauth2.ReqRefresh) (*oauth2.RespCredential, error) {
+func (cd *conductor) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCredential, error) {
 	token := new(model.Token)
 	if err := db.Conn(c).
 		Where(map[string]interface{}{
@@ -184,11 +184,11 @@ func (cd *conductor) Refresh(c context.Context, req oauth2.ReqRefresh) (*oauth2.
 		return nil, errors.New(err.Error())
 	}
 
-	resp := oauth2.BuildRespCred(
-		oauth2.WithAccount(claims["account"].(string)),
-		oauth2.WithOrganization(claims["organization"].(string)),
-		oauth2.WithEnvironment(claims["environment"].(string)),
-		oauth2.WithTokenPair(jwtx.Tokens{
+	resp := dto.BuildRespCred(
+		dto.WithAccount(claims["account"].(string)),
+		dto.WithOrganization(claims["organization"].(string)),
+		dto.WithEnvironment(claims["environment"].(string)),
+		dto.WithTokenPair(jwtx.Tokens{
 			Token:   access,
 			Refresh: req.Refresh,
 		}),
@@ -197,7 +197,7 @@ func (cd *conductor) Refresh(c context.Context, req oauth2.ReqRefresh) (*oauth2.
 	return resp, nil
 }
 
-func (cd *conductor) Logout(c context.Context, req oauth2.ReqLogout) (*oauth2.RespLogout, error) {
+func (cd *conductor) Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogout, error) {
 	if err := db.Conn(c).
 		Where(map[string]interface{}{
 			"access": req.Token,
@@ -206,5 +206,5 @@ func (cd *conductor) Logout(c context.Context, req oauth2.ReqLogout) (*oauth2.Re
 		return nil, errors.New(err.Error())
 	}
 
-	return new(oauth2.RespLogout), nil
+	return new(dto.RespLogout), nil
 }
