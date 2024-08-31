@@ -247,8 +247,7 @@ func persist(c context.Context, pairs []toPersistPair) {
 			//s := pair.Scheduler
 			pair.Scheduler.LambdaID = pair.Lambda.ID
 
-			newScheduler := tx.Table("lambda_scheduler").Create(pair.Scheduler)
-			if err := newScheduler.Create(pair.Scheduler).Error; err != nil {
+			if err := tx.Table("lambda_scheduler").Create(pair.Scheduler).Error; err != nil {
 				return errors.Wrap(err, fmt.Sprintf("failed to create lambda: %s", pair.Scheduler.ScheduleArn))
 			}
 		}
