@@ -2,12 +2,13 @@ package oauth
 
 import (
 	"context"
-	"github.com/57blocks/auto-action/server/internal/db"
-	"github.com/57blocks/auto-action/server/internal/model"
-	oauth2 "github.com/57blocks/auto-action/server/internal/service/dto/oauth"
 	"time"
 
+	"github.com/57blocks/auto-action/server/internal/db"
+	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
+	oauth2 "github.com/57blocks/auto-action/server/internal/service/dto/oauth"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
