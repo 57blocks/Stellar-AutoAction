@@ -21,10 +21,10 @@ import (
 
 // logs represents the log command
 var logs = &cobra.Command{
-	Use:   "log",
-	Short: "Track logs of the lambda function",
+	Use:   "log <name/arn>",
+	Short: "Tracking execution logs of the lambda function",
 	Long: `
-Tracking execution logs of a specific Lambda, by its name.
+Tracking execution logs of a specific Lambda, by its name/arn.
 
 Which with a 5 seconds interval to fetch the logs.
 `,
@@ -52,7 +52,7 @@ func logFunc(_ *cobra.Command, args []string) error {
 	u := url.URL{
 		Scheme: "ws",
 		Host:   splits[1],
-		Path:   "/lambda/logs/" + args[0],
+		Path:   fmt.Sprintf("/lambda/%s/logs", args[0]),
 	}
 	slog.Info(fmt.Sprintf("dailing to %s\n", u.String()))
 

@@ -43,7 +43,7 @@ func (cd *conductor) Login(c context.Context, req dto.ReqLogin) (*dto.RespCreden
 		}).
 		First(user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.Wrap(err, "user/organization not found")
+			return nil, errors.New("user/organization not found")
 		}
 		return nil, errors.Wrap(err, err.Error())
 	}
@@ -123,7 +123,7 @@ func (cd *conductor) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCr
 		}).
 		First(token).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("refresh token not found")
+			return nil, errors.New("none refresh token found")
 		}
 		return nil, errors.New(err.Error())
 	}
