@@ -12,7 +12,7 @@ import (
 
 // trigger represents the trigger command
 var trigger = &cobra.Command{
-	Use:   "trigger <Lambda ARN>",
+	Use:   "trigger <name/arn>",
 	Short: "Trigger a specific lambda function",
 	Long: `Trigger a specific lambda function by its ARN, which is inputted as an
 argument in CLI. Then the lambda will be executed instantly.

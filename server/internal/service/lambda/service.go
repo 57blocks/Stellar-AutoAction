@@ -35,6 +35,8 @@ type (
 	Service interface {
 		Register(c context.Context, r *http.Request) (*dto.RespRegister, error)
 		Logs(c context.Context, r *dto.ReqLogs) error
+
+		GetLambdaInfo(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error)
 	}
 	conductor struct{}
 )
@@ -276,6 +278,7 @@ var upgrader = websocket.Upgrader{
 func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 	var err error
 
+	// Amazon clients
 	awsConfig, err = config.LoadDefaultConfig(
 		c,
 		config.WithRegion(configx.Global.Region),
@@ -297,7 +300,9 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 	}
 	defer wsConn.Close()
 
-	logGroupName := "/aws/lambda/" + req.LambdaName
+	// TODO: query Lambda name
+
+	logGroupName := "/aws/lambda/" + req.Lambda
 
 	describeInput := &cloudwatchlogs.DescribeLogStreamsInput{
 		LogGroupName: &logGroupName,
@@ -342,7 +347,34 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 		nextToken = output.NextForwardToken
 
 		if nextToken == nil {
-			time.Sleep(5 * time.Second)
+			time.Sleep(30 * time.Second)
 		}
 	}
+}
+
+func (cd *conductor) GetLambdaInfo(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error) {
+	resp := new(dto.RespInfo)
+
+	if err := db.Conn(c).Table("lambda").
+		Preload("VPC", func(db *gorm.DB) *gorm.DB {
+			return db.Table("vpc")
+		}).
+		Preload("Schedulers", func(db *gorm.DB) *gorm.DB {
+			return db.Table("lambda_scheduler")
+		}).
+		Where(map[string]interface{}{
+			"function_arn": r.Lambda,
+		}).
+		Or(map[string]interface{}{
+			"function_name": r.Lambda,
+		}).
+		First(resp).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New(fmt.Sprintf("none lambda found by: %s\n", r.Lambda))
+		}
+
+		return nil, errors.Wrap(err, err.Error())
+	}
+
+	return resp, nil
 }
