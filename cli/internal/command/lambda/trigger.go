@@ -19,7 +19,9 @@ argument in CLI. Then the lambda will be executed instantly.
 
 As for the handlers arguments, `,
 	Args: cobra.ExactArgs(1),
-	RunE: triggerFunc,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return triggerFunc(cmd, args)
+	},
 }
 
 func init() {
@@ -36,7 +38,7 @@ well-formed JSON string.
 Meanwhile, it should be suitable/executable/valid in your handler to use.'`)
 }
 
-func triggerFunc(cmd *cobra.Command, args []string) error {
+func triggerFunc(_ *cobra.Command, args []string) error {
 	fmt.Println("trigger called")
 
 	return nil

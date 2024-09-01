@@ -20,7 +20,8 @@ func RegisterHandlers(g *gin.Engine) http.Handler {
 
 	lambdaGroup := g.Group("/lambda", middleware.Authentication(), middleware.Authorization())
 	{
-		lambdaGroup.POST("/register", lambda.Register)
+		lambdaGroup.POST("/register", lambda.Register, middleware.Authentication(), middleware.Authorization())
+		lambdaGroup.GET("/logs/:lambda_name", lambda.Logs, middleware.Authentication(), middleware.Authorization())
 	}
 
 	return g

@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strings"
+	"time"
 
 	configx "github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/db"
@@ -18,10 +19,14 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	lambTypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	scheTypes "github.com/aws/aws-sdk-go-v2/service/scheduler/types"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -29,6 +34,7 @@ import (
 type (
 	Service interface {
 		Register(c context.Context, r *http.Request) (*dto.RespRegister, error)
+		Logs(c context.Context, r *dto.ReqLogs) error
 	}
 	conductor struct{}
 )
@@ -39,6 +45,7 @@ var (
 	// TODO: init them for once
 	awsConfig    aws.Config
 	lambdaClient *lambda.Client
+	cwClient     *cloudwatchlogs.Client
 )
 
 func init() {
@@ -255,5 +262,87 @@ func persist(c context.Context, pairs []toPersistPair) {
 		return nil
 	}); err != nil {
 		pkgLog.Logger.ERROR(err.Error())
+	}
+}
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
+	var err error
+
+	awsConfig, err = config.LoadDefaultConfig(
+		c,
+		config.WithRegion(configx.Global.Region),
+		config.WithSharedConfigProfile("iamp3ngf3i"), // TODO: only for local
+	)
+	if err != nil {
+		return errors.Wrap(err, fmt.Sprintf("failed to load AWS config: %s", err.Error()))
+	}
+	cwClient = cloudwatchlogs.NewFromConfig(awsConfig)
+
+	// websocket
+	ctx, ok := c.(*gin.Context)
+	if !ok {
+		return errors.New("convert context.Context to gin.Context failed")
+	}
+	wsConn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to set websocket upgrade")
+	}
+	defer wsConn.Close()
+
+	logGroupName := "/aws/lambda/" + req.LambdaName
+
+	describeInput := &cloudwatchlogs.DescribeLogStreamsInput{
+		LogGroupName: &logGroupName,
+		OrderBy:      types.OrderByLastEventTime,
+		Descending:   aws.Bool(true),
+	}
+
+	describeOutput, err := cwClient.DescribeLogStreams(c, describeInput)
+	if err != nil {
+		return errors.Wrap(err, "failed to describe log streams")
+	}
+
+	if len(describeOutput.LogStreams) == 0 {
+		return errors.New("no log streams found")
+	}
+
+	logStreamName := describeOutput.LogStreams[0].LogStreamName
+
+	input := &cloudwatchlogs.GetLogEventsInput{
+		LogGroupName:  &logGroupName,
+		LogStreamName: logStreamName,
+	}
+
+	var nextToken *string
+
+	for {
+		if nextToken != nil {
+			input.NextToken = nextToken
+		}
+
+		output, err := cwClient.GetLogEvents(c, input)
+		if err != nil {
+			return errors.Wrap(err, "failed to get log events")
+		}
+
+		for _, event := range output.Events {
+			if err := wsConn.WriteMessage(websocket.TextMessage, []byte(*event.Message)); err != nil {
+				return errors.Wrap(err, "failed to write message")
+			}
+		}
+
+		nextToken = output.NextForwardToken
+
+		if nextToken == nil {
+			time.Sleep(5 * time.Second)
+		}
 	}
 }
