@@ -347,7 +347,7 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 		nextToken = output.NextForwardToken
 
 		if nextToken == nil {
-			time.Sleep(5 * time.Second)
+			time.Sleep(30 * time.Second)
 		}
 	}
 }

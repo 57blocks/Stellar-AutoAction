@@ -84,7 +84,7 @@ func logFunc(_ *cobra.Command, args []string) error {
 		}
 	}()
 
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(time.Second * 10)
 	defer ticker.Stop()
 
 	for {
