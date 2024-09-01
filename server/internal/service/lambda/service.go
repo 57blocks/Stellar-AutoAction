@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	lambTypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
@@ -275,7 +276,6 @@ var upgrader = websocket.Upgrader{
 func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 	var err error
 
-	// Amazon configuration
 	awsConfig, err = config.LoadDefaultConfig(
 		c,
 		config.WithRegion(configx.Global.Region),
@@ -289,7 +289,7 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 	// websocket
 	ctx, ok := c.(*gin.Context)
 	if !ok {
-		return errors.Wrap(err, "convert context.Context to gin.Context failed")
+		return errors.New("convert context.Context to gin.Context failed")
 	}
 	wsConn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
@@ -297,16 +297,37 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 	}
 	defer wsConn.Close()
 
-	// 假设我们有一个日志组名称和流名称
 	logGroupName := "/aws/lambda/" + req.LambdaName
-	logStreamName := "2024/09/01/[$LATEST]c538cf06bdac4ccfb5e0a9cd80ae2fef"
+
+	describeInput := &cloudwatchlogs.DescribeLogStreamsInput{
+		LogGroupName: &logGroupName,
+		OrderBy:      types.OrderByLastEventTime,
+		Descending:   aws.Bool(true),
+	}
+
+	describeOutput, err := cwClient.DescribeLogStreams(c, describeInput)
+	if err != nil {
+		return errors.Wrap(err, "failed to describe log streams")
+	}
+
+	if len(describeOutput.LogStreams) == 0 {
+		return errors.New("no log streams found")
+	}
+
+	logStreamName := describeOutput.LogStreams[0].LogStreamName
 
 	input := &cloudwatchlogs.GetLogEventsInput{
 		LogGroupName:  &logGroupName,
-		LogStreamName: &logStreamName,
+		LogStreamName: logStreamName,
 	}
 
+	var nextToken *string
+
 	for {
+		if nextToken != nil {
+			input.NextToken = nextToken
+		}
+
 		output, err := cwClient.GetLogEvents(c, input)
 		if err != nil {
 			return errors.Wrap(err, "failed to get log events")
@@ -318,7 +339,10 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 			}
 		}
 
-		// 等待一段时间再获取新的日志
-		time.Sleep(2 * time.Second)
+		nextToken = output.NextForwardToken
+
+		if nextToken == nil {
+			time.Sleep(5 * time.Second)
+		}
 	}
 }
