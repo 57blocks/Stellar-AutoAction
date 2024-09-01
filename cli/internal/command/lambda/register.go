@@ -50,7 +50,9 @@ Only cron/rate/at would create an Event Bridge Scheduler to trigger the
 		return nil
 	},
 	Args: cobra.MinimumNArgs(1),
-	RunE: registerFunc,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return registerFunc(cmd, args)
+	},
 }
 
 func init() {
@@ -84,7 +86,7 @@ For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-t
 `)
 }
 
-func registerFunc(cmd *cobra.Command, args []string) error {
+func registerFunc(_ *cobra.Command, args []string) error {
 	resp, err := supplierRegister(args)
 	if err != nil {
 		return err
