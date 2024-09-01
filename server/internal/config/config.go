@@ -1,8 +1,10 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
+	"reflect"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -87,7 +89,39 @@ func Setup() error {
 	}
 
 	cfgLogger.Debug(fmt.Sprintf("config path: %#v\n", viper.ConfigFileUsed()))
-	cfgLogger.Debug(fmt.Sprintf("config: %#v\n", Global))
+	cfgLogger.Debug(fmt.Sprintf("config: %#v\n", Global.DebugStr()))
 
 	return nil
+}
+
+func (c *Configuration) DebugStr() string {
+	debugMap := make(map[string]interface{})
+	debugMapRecursive(reflect.ValueOf(*c), "", debugMap)
+	jsonBytes, _ := json.Marshal(debugMap)
+	return string(jsonBytes)
+}
+
+func debugMapRecursive(v reflect.Value, prefix string, debugMap map[string]interface{}) {
+	t := v.Type()
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		value := v.Field(i)
+		fieldName := prefix + field.Name
+
+		switch field.Type.Kind() {
+		case reflect.String:
+			strValue := value.String()
+			if len(strValue) > 20 {
+				strValue = strValue[:20] + "..."
+			}
+			debugMap[fieldName] = strValue
+		case reflect.Struct:
+			subMap := make(map[string]interface{})
+			debugMap[fieldName] = subMap
+			debugMapRecursive(value, fieldName+".", subMap)
+		default:
+			debugMap[fieldName] = value.Interface()
+		}
+	}
 }

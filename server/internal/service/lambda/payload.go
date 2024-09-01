@@ -21,7 +21,7 @@ func buildLambdaEvent(c context.Context) (dtoLam.ReqSchedulerEvent, error) {
 
 	jwtRaw, _ := ctx.Get("jwt_raw")
 
-	keyPairs, err := svcOrg.Conductor.RelatedKeyPairs(c)
+	keyPairs, err := svcOrg.Conductor.CurrentOrgKPs(c)
 	if err != nil {
 		return dtoLam.ReqSchedulerEvent{}, err
 	}

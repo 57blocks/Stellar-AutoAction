@@ -19,9 +19,9 @@ const (
 
 // Flags for Lambda register command
 const (
+	FlagAt   FlagName = "at"
 	FlagCron FlagName = "cron"
 	FlagRate FlagName = "rate"
-	FlagAt   FlagName = "at"
 )
 
 // FlagPayload Flags for Lambda invoke command

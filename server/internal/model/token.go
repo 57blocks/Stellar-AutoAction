@@ -8,7 +8,7 @@ type Token struct {
 	ICU
 	Access         string    `json:"access"`
 	Refresh        string    `json:"refresh"`
-	UserId         int64     `json:"user_id"`
+	UserId         uint64    `json:"user_id"`
 	AccessExpires  time.Time `json:"access_expires"`
 	RefreshExpires time.Time `json:"refresh_expires"`
 }

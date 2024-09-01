@@ -12,7 +12,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/api"
 	"github.com/57blocks/auto-action/server/internal/boot"
 	"github.com/57blocks/auto-action/server/internal/config"
-	"github.com/57blocks/auto-action/server/internal/pkg/db"
+	"github.com/57blocks/auto-action/server/internal/db"
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
 )
 

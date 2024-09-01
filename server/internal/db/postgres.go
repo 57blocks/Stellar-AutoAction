@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/57blocks/auto-action/server/internal/config"
-	migs "github.com/57blocks/auto-action/server/internal/pkg/db/migration"
+	migs "github.com/57blocks/auto-action/server/internal/db/migration"
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
 
 	"github.com/golang-migrate/migrate/v4"
