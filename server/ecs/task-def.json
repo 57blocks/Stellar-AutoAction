@@ -22,7 +22,7 @@
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/st3llar-supplier",
+          "awslogs-group": "/ecs/autotask-supplier",
           "awslogs-create-group": "true",
           "awslogs-region": "us-east-2",
           "awslogs-stream-prefix": "ecs"
@@ -32,8 +32,8 @@
       "systemControls": []
     }
   ],
-  "family": "autotak-defs",
-  "executionRoleArn": "arn:aws:iam::123340007534:role/ecsTaskExecutionRole",
+  "family": "autotask-defs",
+  "executionRoleArn": "arn:aws:iam::123340007534:role/ECS-Task-Execution-Role",
   "networkMode": "awsvpc",
   "volumes": [],
   "placementConstraints": [],

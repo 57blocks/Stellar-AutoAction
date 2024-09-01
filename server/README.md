@@ -4,9 +4,11 @@
 Terraform
 1. VPC init with pub/pir subnets, and get the subnet ids.
 2. Security group init for ALB, Application, RDS and public access.
-3. Execution role for both Lambda and Scheduler:
-   a. Basic execution role for Lambda: CloudWatch logs, log groups, put events.
-   b. Execution role for Scheduler: The `Resource` should involve all the Lambdas in the account.
+3. Execution roles:
+   a. Execution role for Lambda: CloudWatch logs, log groups, log streams and put events.
+   b. Execution role for Scheduler: The `Resource` should involve **all** the Lambdas in the account.
+   c. Execution role for ECS task: ecr and log related.
+
 
 ## DB migration
 There is an initial version: `000000_init`, which aims at:
