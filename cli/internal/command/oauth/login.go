@@ -23,13 +23,20 @@ import (
 var login = &cobra.Command{
 	Use:   "login",
 	Short: "Login to the Stellar auto-action.",
-	Long: `Login the Stellar auto-action based on credential path in
-the config. And will create a new credential under the path you just claimed
-and set it to config, if it's the first time.
+	Long: `
+Description:
+  Login the Stellar auto-action based on credential path in the config.
+  Or, by the --credential/-c flag, to specify the credential path.
+  And will create a new credential under the path you just
+  claimed and set it to config, when it's the first time.
 
-And also, you could specify other credentials by **configure** command.`,
+Note:
+  - You could specify other credentials by **configure** command.
+`,
 	Args: cobra.NoArgs,
-	RunE: loginFunc,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return loginFunc(cmd, args)
+	},
 }
 
 func init() {

@@ -22,21 +22,22 @@ var register = &cobra.Command{
 	Use:   "register [zips/packages]",
 	Short: "Lambda register of local handler",
 	Long: `
-Upload/Register the local handler/handlers to Amazon Lambda, with the
-	recurring/scheduled rule. 
-
-Rules:
-1. Manually, if no flags puts in, which means the handler/handlers will 
-	be triggered manually.
-2. By corn. 
-3. By rate, only three units supported: minutes, hours, days. 
-	For example: rate(1 minutes).
-4. By at, only one-time execution, for a specific time in the future. 
-	For example: at(yyyy-mm-ddThh:mm:ss).
-5. At most one expression flag should be set.
-
-Only cron/rate/at would create an Event Bridge Scheduler to trigger the
-	lambda function.
+Description:
+  Register the local handler/handlers to Amazon Lambda, with the
+  recurring/scheduled rule. 
+	
+Note:
+  - The name of the Lambda is based on the file name, make it unique.
+  - Manually, if no flags puts in, which means the handler/handlers 
+	will be triggered by invoke command manually.
+  - By corn. 
+  - By rate, only three units supported: minutes, hours, days.
+  	For example: rate(1 minutes).
+  - By at, only one-time execution, for a specific time in the future.
+  	For example: at(yyyy-mm-ddThh:mm:ss).
+  - At most one expression flag could be set.
+  - Only cron/rate/at would create an Event Bridge Scheduler to invoke 
+	the lambda function.
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		a := cmd.Flags().Changed(constant.FlagAt.ValStr())
@@ -134,11 +135,10 @@ func supplierRegister(args []string) (*resty.Response, error) {
 
 	request = request.SetFormData(flagMap)
 
-	resp, err := request.Post(viper.GetString("bound_with.endpoint") + "/lambda/register")
+	resp, err := request.Post(viper.GetString("bound_with.endpoint") + "/lambda")
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("resty error: %s\n", err.Error()))
 	}
-
 	if e := util.HasError(resp); e != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("supplier error: %s\n", e))
 	}

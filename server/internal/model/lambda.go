@@ -5,11 +5,10 @@ import "github.com/aws/aws-sdk-go-v2/service/lambda"
 // Vpc model, currently, the relationship between Vpc and Lambda is 1:1
 type Vpc struct {
 	ICU
-	OrganizationID uint64   `json:"organization_id"`
-	AmazonID       string   `json:"aws_id" gorm:"column:aws_id"`
-	SubnetIDs      []string `json:"subnet_ids"`
-	// maybe, add another table for security group details
-	SecurityGroupIDs []string `json:"security_group_ids"`
+	OrganizationID   uint64  `json:"organization_id"`
+	AmazonID         string  `json:"aws_id" gorm:"column:aws_id"`
+	SubnetIDs        StrList `json:"subnet_ids" gorm:"type:text[]"`
+	SecurityGroupIDs StrList `json:"security_group_ids" gorm:"type:text[]"`
 }
 
 func (lv *Vpc) TableName() string {

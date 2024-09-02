@@ -34,9 +34,9 @@ import (
 type (
 	Service interface {
 		Register(c context.Context, r *http.Request) (*dto.RespRegister, error)
+		Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrigger, error)
+		Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error)
 		Logs(c context.Context, r *dto.ReqLogs) error
-
-		GetLambdaInfo(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error)
 	}
 	conductor struct{}
 )
@@ -64,18 +64,17 @@ type toPersistPair struct {
 func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegister, error) {
 	var err error
 
-	fileHeaders := r.MultipartForm.File
-	expression := r.Form.Get("expression")
-
 	awsConfig, err = config.LoadDefaultConfig(
 		c,
 		config.WithRegion(configx.Global.Region),
 		config.WithSharedConfigProfile("iamp3ngf3i"), // TODO: only for local
 	)
 	if err != nil {
-		pkgLog.Logger.ERROR(fmt.Sprintf("failed to load AWS config: %s", err.Error()))
-		return nil, errors.New(err.Error())
+		return nil, errors.Wrap(err, "failed to load AWS config")
 	}
+
+	fileHeaders := r.MultipartForm.File
+	expression := r.Form.Get("expression")
 
 	// db persistence
 	toPersists := make([]toPersistPair, 0, len(fileHeaders))
@@ -267,26 +266,89 @@ func persist(c context.Context, pairs []toPersistPair) {
 	}
 }
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
-func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
+func (cd *conductor) Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrigger, error) {
 	var err error
 
-	// Amazon clients
 	awsConfig, err = config.LoadDefaultConfig(
 		c,
 		config.WithRegion(configx.Global.Region),
 		config.WithSharedConfigProfile("iamp3ngf3i"), // TODO: only for local
 	)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to load AWS config: %s", err.Error()))
+		return nil, errors.Wrap(err, "failed to load AWS config")
 	}
+
+	lambdaClient = lambda.NewFromConfig(awsConfig)
+
+	l := new(model.Lambda)
+
+	if err := db.Conn(c).Table("lambda").
+		Where(map[string]interface{}{
+			"function_arn": r.Lambda,
+		}).
+		Or(map[string]interface{}{
+			"function_name": r.Lambda,
+		}).
+		First(l).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New(fmt.Sprintf("none lambda found by: %s\n", r.Lambda))
+		}
+
+		return nil, errors.Wrap(err, err.Error())
+	}
+
+	// invoke
+	invokeOutput, err := lambdaClient.Invoke(c, &lambda.InvokeInput{
+		FunctionName: aws.String(l.FunctionName),
+		LogType:      lambTypes.LogTypeTail,
+		Payload:      []byte(r.Payload),
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to invoke lambda: %s", l.FunctionName))
+	}
+
+	return dto.BuildRespTrigger(dto.WithTriggerResp(invokeOutput)), nil
+}
+
+func (cd *conductor) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error) {
+	resp := new(dto.RespInfo)
+
+	if err := db.Conn(c).Table("lambda").
+		Preload("VPC", func(db *gorm.DB) *gorm.DB {
+			return db.Table("vpc")
+		}).
+		Preload("Schedulers", func(db *gorm.DB) *gorm.DB {
+			return db.Table("lambda_scheduler")
+		}).
+		Where(map[string]interface{}{
+			"function_arn": r.Lambda,
+		}).
+		Or(map[string]interface{}{
+			"function_name": r.Lambda,
+		}).
+		First(resp).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New(fmt.Sprintf("none lambda found by: %s\n", r.Lambda))
+		}
+
+		return nil, errors.Wrap(err, err.Error())
+	}
+
+	return resp, nil
+}
+
+func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
+	var err error
+
+	awsConfig, err = config.LoadDefaultConfig(
+		c,
+		config.WithRegion(configx.Global.Region),
+		config.WithSharedConfigProfile("iamp3ngf3i"), // TODO: only for local
+	)
+	if err != nil {
+		return errors.Wrap(err, "failed to load AWS config")
+	}
+
 	cwClient = cloudwatchlogs.NewFromConfig(awsConfig)
 
 	// websocket
@@ -294,6 +356,15 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 	if !ok {
 		return errors.New("convert context.Context to gin.Context failed")
 	}
+
+	upgrader := websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+
 	wsConn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		return errors.Wrap(err, "failed to set websocket upgrade")
@@ -350,31 +421,4 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 			time.Sleep(30 * time.Second)
 		}
 	}
-}
-
-func (cd *conductor) GetLambdaInfo(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error) {
-	resp := new(dto.RespInfo)
-
-	if err := db.Conn(c).Table("lambda").
-		Preload("VPC", func(db *gorm.DB) *gorm.DB {
-			return db.Table("vpc")
-		}).
-		Preload("Schedulers", func(db *gorm.DB) *gorm.DB {
-			return db.Table("lambda_scheduler")
-		}).
-		Where(map[string]interface{}{
-			"function_arn": r.Lambda,
-		}).
-		Or(map[string]interface{}{
-			"function_name": r.Lambda,
-		}).
-		First(resp).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New(fmt.Sprintf("none lambda found by: %s\n", r.Lambda))
-		}
-
-		return nil, errors.Wrap(err, err.Error())
-	}
-
-	return resp, nil
 }

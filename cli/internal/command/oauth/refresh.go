@@ -18,12 +18,19 @@ import (
 var refreshCmd = &cobra.Command{
 	Use:   "refresh",
 	Short: "Refresh expired access token.",
-	Long: `Using the refresh token which stores in the credential file
-to refresh.
+	Long: `
+Description:
+  Using the refresh token which stores in the credential file to refresh.
 
-If the refresh token is expired, you need to login again.`,
+Note:
+  - Refresh do not update the refresh token, so the expiration of it
+    is still the same.
+  - When the refresh token is expired, you need to login again.
+`,
 	Args: cobra.NoArgs,
-	RunE: refreshFunc,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return refreshFunc(cmd, args)
+	},
 }
 
 func init() {

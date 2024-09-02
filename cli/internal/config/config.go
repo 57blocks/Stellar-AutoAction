@@ -22,8 +22,7 @@ type (
 	GlobalConfigOpt func(sc *GlobalConfig)
 
 	General struct {
-		EnvPrefix string `toml:"env_prefix"`
-		Log       string `toml:"log"`
+		Log string `toml:"log"`
 	}
 
 	BoundWith struct {
@@ -45,12 +44,6 @@ func Build(opts ...GlobalConfigOpt) *GlobalConfig {
 func WithLogLevel(logLevel string) GlobalConfigOpt {
 	return func(sc *GlobalConfig) {
 		sc.Log = logLevel
-	}
-}
-
-func WithEnvPrefix(prefix string) GlobalConfigOpt {
-	return func(sc *GlobalConfig) {
-		sc.EnvPrefix = prefix
 	}
 }
 
@@ -81,7 +74,6 @@ func FindOrInit() (*GlobalConfig, string) {
 	cfg := Build(
 		WithCredential(util.DefaultCredPath()),
 		WithEndPoint(constant.Host.String()),
-		WithEnvPrefix(constant.EnvPrefix.ValStr()),
 		WithLogLevel(constant.GetLogLevel(constant.Info)),
 	)
 
@@ -142,10 +134,6 @@ func SyncConfigByFlags() error {
 	if newEndPoint := viper.GetString(constant.FlagEndPoint.ValStr()); newEndPoint != "" {
 		slog.Debug(fmt.Sprintf("newEndPoint: %v\n", newEndPoint))
 		cfg.EndPoint = newEndPoint
-	}
-	if newEnvPrefix := viper.GetString(constant.FlagPrefix.ValStr()); newEnvPrefix != "" {
-		slog.Debug(fmt.Sprintf("newEnvPrefix: %v\n", newEnvPrefix))
-		cfg.EnvPrefix = newEnvPrefix
 	}
 	if newLogLevel := viper.GetString(constant.FlagLog.ValStr()); newLogLevel != "" {
 		slog.Debug(fmt.Sprintf("newLogLevel: %v\n", newLogLevel))
