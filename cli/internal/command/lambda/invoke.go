@@ -15,38 +15,43 @@ import (
 	"github.com/spf13/viper"
 )
 
-// trigger represents the trigger command
-var trigger = &cobra.Command{
-	Use:   "trigger <name/arn> [flags]",
-	Short: "Trigger a specific lambda function with its required payload",
+// invoke represents the invoke command
+var invoke = &cobra.Command{
+	Use:   "invoke <name/arn> [flags]",
+	Short: "Invoke a specific lambda function with its required payload",
 	Long: `
-Trigger a specific lambda function by its ARN, which is inputted as an
-argument in CLI. Then the lambda will be executed instantly.
+Description:
+  Invoke a specific lambda function by its name/ARN, which is inputted
+  as an argument. Then the lambda will be executed instantly.
 
-As for the handlers required payload, it should be a well-formed JSON 
-string, suitable/executable/valid in your handler to use.
+Note:
+  1. If the Lambda does not depend on the input in the EVENT, the 
+  payload is not required.
+  2. If so, the payload should be a well-formed JSON string, which is
+  suitable/executable/valid in your handler to use.
+  For example: -p '{"key": "value"}'
 `,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return triggerFunc(cmd, args)
+		return invokeFunc(cmd, args)
 	},
 }
 
 func init() {
-	command.Root.AddCommand(trigger)
+	command.Root.AddCommand(invoke)
 
 	flagPayload := constant.FlagPayload.ValStr()
-	trigger.Flags().StringP(
+	invoke.Flags().StringP(
 		flagPayload,
 		"p",
 		viper.GetString(flagPayload),
-		`The input event payload of the Lambda function. It should be a 
-well-formed JSON string.
-
-Meanwhile, it should be suitable/executable/valid in your handler to use.'`)
+		`
+A well-formed JSON string. And should be suitable/executable/valid in
+your handler to use. Example: '{"key": "value"}'
+`)
 }
 
-func triggerFunc(_ *cobra.Command, args []string) error {
+func invokeFunc(_ *cobra.Command, args []string) error {
 	token, err := config.Token()
 	if err != nil {
 		return err
@@ -55,19 +60,21 @@ func triggerFunc(_ *cobra.Command, args []string) error {
 	response, err := restyx.Client.R().
 		EnableTrace().
 		SetHeaders(map[string]string{
-			"Content-Type":  "multipart/form-data",
+			"Content-Type":  "application/json",
 			"Authorization": token,
+		}).
+		SetBody(map[string]string{
+			"payload": viper.GetString(constant.FlagPayload.ValStr()),
 		}).
 		Post(fmt.Sprintf("%s/lambda/%s", viper.GetString("bound_with.endpoint"), args[0]))
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("resty error: %s\n", err.Error()))
 	}
-
-	slog.Debug(fmt.Sprintf("%v\n", response)) // TODO: remove
-
 	if e := util.HasError(response); e != nil {
 		return errors.Wrap(e, fmt.Sprintf("supplier error: %s\n", e))
 	}
+
+	slog.Debug(fmt.Sprintf("%v\n", response))
 
 	return nil
 }

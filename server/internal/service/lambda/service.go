@@ -34,7 +34,7 @@ import (
 type (
 	Service interface {
 		Register(c context.Context, r *http.Request) (*dto.RespRegister, error)
-		Trigger(c context.Context, r *dto.ReqTrigger) (*dto.RespTrigger, error)
+		Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrigger, error)
 		Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error)
 		Logs(c context.Context, r *dto.ReqLogs) error
 	}
@@ -64,18 +64,17 @@ type toPersistPair struct {
 func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegister, error) {
 	var err error
 
-	fileHeaders := r.MultipartForm.File
-	expression := r.Form.Get("expression")
-
 	awsConfig, err = config.LoadDefaultConfig(
 		c,
 		config.WithRegion(configx.Global.Region),
 		config.WithSharedConfigProfile("iamp3ngf3i"), // TODO: only for local
 	)
 	if err != nil {
-		pkgLog.Logger.ERROR(fmt.Sprintf("failed to load AWS config: %s", err.Error()))
-		return nil, errors.New(err.Error())
+		return nil, errors.Wrap(err, "failed to load AWS config")
 	}
+
+	fileHeaders := r.MultipartForm.File
+	expression := r.Form.Get("expression")
 
 	// db persistence
 	toPersists := make([]toPersistPair, 0, len(fileHeaders))
@@ -267,7 +266,20 @@ func persist(c context.Context, pairs []toPersistPair) {
 	}
 }
 
-func (cd *conductor) Trigger(c context.Context, r *dto.ReqTrigger) (*dto.RespTrigger, error) {
+func (cd *conductor) Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrigger, error) {
+	var err error
+
+	awsConfig, err = config.LoadDefaultConfig(
+		c,
+		config.WithRegion(configx.Global.Region),
+		config.WithSharedConfigProfile("iamp3ngf3i"), // TODO: only for local
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to load AWS config")
+	}
+
+	lambdaClient = lambda.NewFromConfig(awsConfig)
+
 	l := new(model.Lambda)
 
 	if err := db.Conn(c).Table("lambda").
@@ -286,32 +298,16 @@ func (cd *conductor) Trigger(c context.Context, r *dto.ReqTrigger) (*dto.RespTri
 	}
 
 	// invoke
-	//logType := lambTypes.LogTypeNone
-	//logType = lambTypes.LogTypeTail
-	//
-	//payload, err := json.Marshal(parameters)
-	//if err != nil {
-	//	log.Panicf("Couldn't marshal parameters to JSON. Here's why %v\n", err)
-	//}
-	//invokeOutput, err := wrapper.LambdaClient.Invoke(context.TODO(), &lambda.InvokeInput{
-	//	FunctionName: aws.String(functionName),
-	//	LogType:      logType,
-	//	Payload:      payload,
-	//})
-	//if err != nil {
-	//	log.Panicf("Couldn't invoke function %v. Here's why: %v\n", functionName, err)
-	//}
-	//return invokeOutput
+	invokeOutput, err := lambdaClient.Invoke(c, &lambda.InvokeInput{
+		FunctionName: aws.String(l.FunctionName),
+		LogType:      lambTypes.LogTypeTail,
+		Payload:      []byte(r.Payload),
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to invoke lambda: %s", l.FunctionName))
+	}
 
-	return nil, nil
-}
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
+	return dto.BuildRespTrigger(dto.WithTriggerResp(invokeOutput)), nil
 }
 
 func (cd *conductor) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error) {
@@ -344,15 +340,15 @@ func (cd *conductor) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, err
 func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 	var err error
 
-	// Amazon clients
 	awsConfig, err = config.LoadDefaultConfig(
 		c,
 		config.WithRegion(configx.Global.Region),
 		config.WithSharedConfigProfile("iamp3ngf3i"), // TODO: only for local
 	)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("failed to load AWS config: %s", err.Error()))
+		return errors.Wrap(err, "failed to load AWS config")
 	}
+
 	cwClient = cloudwatchlogs.NewFromConfig(awsConfig)
 
 	// websocket
@@ -360,6 +356,15 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 	if !ok {
 		return errors.New("convert context.Context to gin.Context failed")
 	}
+
+	upgrader := websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+
 	wsConn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		return errors.Wrap(err, "failed to set websocket upgrade")

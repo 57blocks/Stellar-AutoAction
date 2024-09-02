@@ -19,9 +19,9 @@ var info = &cobra.Command{
 	Use:   "info <name/arn>",
 	Short: "Lambda essential information",
 	Long: `
-Query the essential information of a specific Lambda, by its name/arn.
-
-Which includes the VPC and Event Bridge Schedulers bound with.
+Description:
+  Query the essential information of a specific Lambda, by name/arn.
+  Which includes the VPC and Event Bridge Schedulers bound with.
 `,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -49,12 +49,11 @@ func infoFunc(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("resty error: %s\n", err.Error()))
 	}
-
-	slog.Debug(fmt.Sprintf("%v\n", response)) // TODO: remove
-
 	if e := util.HasError(response); e != nil {
 		return errors.Wrap(e, fmt.Sprintf("supplier error: %s\n", e))
 	}
+
+	slog.Debug(fmt.Sprintf("%v\n", response))
 
 	return nil
 }

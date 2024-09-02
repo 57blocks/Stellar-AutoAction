@@ -25,7 +25,7 @@ func Register(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func Trigger(c *gin.Context) {
+func Invoke(c *gin.Context) {
 	req := new(dto.ReqTrigger)
 
 	if err := c.BindUri(req); err != nil {
@@ -33,7 +33,12 @@ func Trigger(c *gin.Context) {
 		return
 	}
 
-	resp, err := Conductor.Trigger(c, req)
+	if err := c.ShouldBindJSON(req); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	resp, err := Conductor.Invoke(c, req)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return

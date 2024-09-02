@@ -24,9 +24,13 @@ var logs = &cobra.Command{
 	Use:   "log <name/arn>",
 	Short: "Tracking execution logs of the lambda function",
 	Long: `
-Tracking execution logs of a specific Lambda, by its name/arn.
+Description:
+  Tracking execution logs of a specific Lambda, by name/arn.
+  Which with a 5 seconds interval to fetch the latest events.
 
-Which with a 5 seconds interval to fetch the logs.
+TODO:
+  - Add time range filer
+  - Add error events filer
 `,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
