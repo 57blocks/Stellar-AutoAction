@@ -20,12 +20,15 @@ var configure = &cobra.Command{
 	Long: `
 Description:
   Configure the configuration file under the default path.
+
+Note:
+  - When specifying other credentials, please confirm with that the
+    credential is match with the bound endpoint.
 `,
 	Args: cobra.NoArgs,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if !cmd.Flags().Changed(constant.FlagCredential.ValStr()) &&
 			!cmd.Flags().Changed(constant.FlagEndPoint.ValStr()) &&
-			!cmd.Flags().Changed(constant.FlagPrefix.ValStr()) &&
 			!cmd.Flags().Changed(constant.FlagLog.ValStr()) {
 			return errors.New("at least one of the flags must be set")
 		}
@@ -51,13 +54,6 @@ func init() {
 		"",
 		viper.GetString(fEndPoint),
 		"configure the endpoint of the service")
-
-	fEnvPrefix := constant.FlagPrefix.ValStr()
-	configure.Flags().StringP(
-		fEnvPrefix,
-		"",
-		viper.GetString(fEnvPrefix),
-		"configure the name prefix of the environment variables")
 
 	fLogLevel := constant.FlagLog.ValStr()
 	configure.Flags().StringP(

@@ -22,6 +22,9 @@ var info = &cobra.Command{
 Description:
   Query the essential information of a specific Lambda, by name/arn.
   Which includes the VPC and Event Bridge Schedulers bound with.
+
+Note:
+  - The results contains the essential info about VPC and Schedulers.
 `,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
