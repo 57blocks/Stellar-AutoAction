@@ -34,9 +34,9 @@ import (
 type (
 	Service interface {
 		Register(c context.Context, r *http.Request) (*dto.RespRegister, error)
+		Trigger(c context.Context, r *dto.ReqTrigger) (*dto.RespTrigger, error)
+		Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error)
 		Logs(c context.Context, r *dto.ReqLogs) error
-
-		GetLambdaInfo(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error)
 	}
 	conductor struct{}
 )
@@ -267,12 +267,78 @@ func persist(c context.Context, pairs []toPersistPair) {
 	}
 }
 
+func (cd *conductor) Trigger(c context.Context, r *dto.ReqTrigger) (*dto.RespTrigger, error) {
+	l := new(model.Lambda)
+
+	if err := db.Conn(c).Table("lambda").
+		Where(map[string]interface{}{
+			"function_arn": r.Lambda,
+		}).
+		Or(map[string]interface{}{
+			"function_name": r.Lambda,
+		}).
+		First(l).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New(fmt.Sprintf("none lambda found by: %s\n", r.Lambda))
+		}
+
+		return nil, errors.Wrap(err, err.Error())
+	}
+
+	// invoke
+	//logType := lambTypes.LogTypeNone
+	//logType = lambTypes.LogTypeTail
+	//
+	//payload, err := json.Marshal(parameters)
+	//if err != nil {
+	//	log.Panicf("Couldn't marshal parameters to JSON. Here's why %v\n", err)
+	//}
+	//invokeOutput, err := wrapper.LambdaClient.Invoke(context.TODO(), &lambda.InvokeInput{
+	//	FunctionName: aws.String(functionName),
+	//	LogType:      logType,
+	//	Payload:      payload,
+	//})
+	//if err != nil {
+	//	log.Panicf("Couldn't invoke function %v. Here's why: %v\n", functionName, err)
+	//}
+	//return invokeOutput
+
+	return nil, nil
+}
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
+}
+
+func (cd *conductor) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error) {
+	resp := new(dto.RespInfo)
+
+	if err := db.Conn(c).Table("lambda").
+		Preload("VPC", func(db *gorm.DB) *gorm.DB {
+			return db.Table("vpc")
+		}).
+		Preload("Schedulers", func(db *gorm.DB) *gorm.DB {
+			return db.Table("lambda_scheduler")
+		}).
+		Where(map[string]interface{}{
+			"function_arn": r.Lambda,
+		}).
+		Or(map[string]interface{}{
+			"function_name": r.Lambda,
+		}).
+		First(resp).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New(fmt.Sprintf("none lambda found by: %s\n", r.Lambda))
+		}
+
+		return nil, errors.Wrap(err, err.Error())
+	}
+
+	return resp, nil
 }
 
 func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
@@ -350,31 +416,4 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 			time.Sleep(30 * time.Second)
 		}
 	}
-}
-
-func (cd *conductor) GetLambdaInfo(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error) {
-	resp := new(dto.RespInfo)
-
-	if err := db.Conn(c).Table("lambda").
-		Preload("VPC", func(db *gorm.DB) *gorm.DB {
-			return db.Table("vpc")
-		}).
-		Preload("Schedulers", func(db *gorm.DB) *gorm.DB {
-			return db.Table("lambda_scheduler")
-		}).
-		Where(map[string]interface{}{
-			"function_arn": r.Lambda,
-		}).
-		Or(map[string]interface{}{
-			"function_name": r.Lambda,
-		}).
-		First(resp).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New(fmt.Sprintf("none lambda found by: %s\n", r.Lambda))
-		}
-
-		return nil, errors.Wrap(err, err.Error())
-	}
-
-	return resp, nil
 }

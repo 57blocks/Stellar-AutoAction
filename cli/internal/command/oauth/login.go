@@ -29,7 +29,9 @@ and set it to config, if it's the first time.
 
 And also, you could specify other credentials by **configure** command.`,
 	Args: cobra.NoArgs,
-	RunE: loginFunc,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return loginFunc(cmd, args)
+	},
 }
 
 func init() {

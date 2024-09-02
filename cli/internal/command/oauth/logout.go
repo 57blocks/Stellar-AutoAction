@@ -26,7 +26,9 @@ For other credentials, they are still alive. It's recommended that
 switching session by using **configure** command to set other 
 credentials to the config`,
 	Args: cobra.NoArgs,
-	RunE: logoutFunc,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return logoutFunc(cmd, args)
+	},
 }
 
 func init() {

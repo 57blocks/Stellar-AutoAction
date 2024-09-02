@@ -23,7 +23,9 @@ to refresh.
 
 If the refresh token is expired, you need to login again.`,
 	Args: cobra.NoArgs,
-	RunE: refreshFunc,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return refreshFunc(cmd, args)
+	},
 }
 
 func init() {

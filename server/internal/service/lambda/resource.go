@@ -25,6 +25,23 @@ func Register(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+func Trigger(c *gin.Context) {
+	req := new(dto.ReqTrigger)
+
+	if err := c.BindUri(req); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	resp, err := Conductor.Trigger(c, req)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+}
+
 func Info(c *gin.Context) {
 	req := new(dto.ReqInfo)
 
@@ -33,7 +50,7 @@ func Info(c *gin.Context) {
 		return
 	}
 
-	resp, err := Conductor.GetLambdaInfo(c, req)
+	resp, err := Conductor.Info(c, req)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return

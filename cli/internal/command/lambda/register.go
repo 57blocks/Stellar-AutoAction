@@ -134,7 +134,7 @@ func supplierRegister(args []string) (*resty.Response, error) {
 
 	request = request.SetFormData(flagMap)
 
-	resp, err := request.Post(viper.GetString("bound_with.endpoint") + "/lambda/register")
+	resp, err := request.Post(viper.GetString("bound_with.endpoint") + "/lambda")
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("resty error: %s\n", err.Error()))
 	}
