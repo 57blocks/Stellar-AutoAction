@@ -25,11 +25,11 @@ Description:
   as an argument. Then the lambda will be executed instantly.
 
 Note:
-  1. If the Lambda does not depend on the input in the EVENT, the 
-  payload is not required.
-  2. If so, the payload should be a well-formed JSON string, which is
-  suitable/executable/valid in your handler to use.
-  For example: -p '{"key": "value"}'
+  - If the Lambda does not depend on the input in the EVENT, the 
+    payload is not required.
+  - If so, the payload should be a well-formed JSON string, which is
+    suitable/executable/valid in your handler to use.
+    For example: -p '{"key": "value"}'
 `,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {

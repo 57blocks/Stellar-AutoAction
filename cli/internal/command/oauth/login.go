@@ -26,12 +26,12 @@ var login = &cobra.Command{
 	Long: `
 Description:
   Login the Stellar auto-action based on credential path in the config.
-  Or, by the --credential flag, to specify the credential path.
+  Or, by the --credential/-c flag, to specify the credential path.
   And will create a new credential under the path you just
   claimed and set it to config, when it's the first time.
 
 Note:
-  You could specify other credentials by **configure** command.
+  - You could specify other credentials by **configure** command.
 `,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {

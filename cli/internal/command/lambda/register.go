@@ -27,16 +27,16 @@ Description:
   recurring/scheduled rule. 
 	
 Note:
-  1. The name of the Lambda is based on the file name, make it unique.
-  2. Manually, if no flags puts in, which means the handler/handlers 
+  - The name of the Lambda is based on the file name, make it unique.
+  - Manually, if no flags puts in, which means the handler/handlers 
 	will be triggered by invoke command manually.
-  3. By corn. 
-  4. By rate, only three units supported: minutes, hours, days.
+  - By corn. 
+  - By rate, only three units supported: minutes, hours, days.
   	For example: rate(1 minutes).
-  5. By at, only one-time execution, for a specific time in the future.
+  - By at, only one-time execution, for a specific time in the future.
   	For example: at(yyyy-mm-ddThh:mm:ss).
-  6. At most one expression flag could be set.
-  7. Only cron/rate/at would create an Event Bridge Scheduler to invoke 
+  - At most one expression flag could be set.
+  - Only cron/rate/at would create an Event Bridge Scheduler to invoke 
 	the lambda function.
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {

@@ -17,9 +17,10 @@ import (
 var configure = &cobra.Command{
 	Use:   "configure",
 	Short: "Configure the configuration file",
-	Long: `Configure the configuration file under the default path.
-
-The configuration path on Mac is $HOME/.st3llar`,
+	Long: `
+Description:
+  Configure the configuration file under the default path.
+`,
 	Args: cobra.NoArgs,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if !cmd.Flags().Changed(constant.FlagCredential.ValStr()) &&

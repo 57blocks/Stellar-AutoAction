@@ -23,9 +23,10 @@ var logout = &cobra.Command{
 Description:
   Logout the current session by the path of credential in the config.
 
-  For other credentials, they are still alive. It's recommended that
-  switching session by using **configure** command to set other 
-  credentials.
+Note:
+  - For other credentials, they are still alive. It's recommended that
+    switching session by using **configure** command to set other 
+    credentials.
 `,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
