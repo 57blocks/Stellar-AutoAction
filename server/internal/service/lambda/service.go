@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	svcOrg "github.com/57blocks/auto-action/server/internal/service/organization"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -15,7 +16,6 @@ import (
 	"github.com/57blocks/auto-action/server/internal/model"
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/lambda"
-	svcOrg "github.com/57blocks/auto-action/server/internal/service/organization"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -98,13 +98,8 @@ func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegi
 			Version: *newLamResp.Version,
 		})
 
-		vpc, err := svcOrg.Conductor.CurrentVpc(c)
-		if err != nil {
-			return nil, err
-		}
 		tpp := toPersistPair{
 			Lambda: model.BuildLambda(
-				model.WithVpcID(vpc.ID),
 				model.WithLambdaResp(newLamResp),
 			),
 		}
@@ -151,6 +146,7 @@ func registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.Create
 	}
 
 	splits := strings.Split(fh.Filename, ".")
+	fileName := splits[0]
 
 	lambdaClient = lambda.NewFromConfig(awsConfig)
 
@@ -161,26 +157,17 @@ func registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.Create
 			Code: &lambTypes.FunctionCode{
 				ZipFile: fileBytes,
 			},
-			FunctionName: aws.String(splits[0]),
+			FunctionName: aws.String(genLambdaFuncName(c, fileName)),
 			// TODO: put into env when the infrastructure is ready, the same as `VpcConfig` below.
-			Environment: &lambTypes.Environment{Variables: map[string]string{"ENV_REGION": "us-east-2"}},
+			Environment: &lambTypes.Environment{Variables: map[string]string{"ENV_AWS_REGION": "us-east-2"}},
 			// This execution role has full access of CloudWatch and Lambda execution access.
 			Role:        aws.String("arn:aws:iam::123340007534:role/LambdaExecutionRole"),
 			Runtime:     lambTypes.RuntimeNodejs20x,
+			Timeout:     aws.Int32(30),
 			Description: nil,
-			Handler:     aws.String(fmt.Sprintf("%s.handler", splits[0])),
+			Handler:     aws.String(fmt.Sprintf("%s.handler", fileName)),
 			PackageType: lambTypes.PackageTypeZip,
 			Publish:     false,
-			VpcConfig: &lambTypes.VpcConfig{
-				Ipv6AllowedForDualStack: aws.Bool(false),
-				SecurityGroupIds:        []string{"sg-0b77e2d29b5bca26a"}, // default SG of the VPC
-				// now below all are public subnets
-				SubnetIds: []string{
-					"subnet-05e584ba2ffb30d2d",
-					"subnet-0ce2404213f76db94",
-					"subnet-0ecc12c551120284b",
-				},
-			},
 		},
 		func(opt *lambda.Options) {},
 	)
@@ -202,7 +189,7 @@ func boundScheduler(
 
 	schClient := scheduler.NewFromConfig(awsConfig)
 
-	event, err := buildLambdaEvent(c)
+	event, err := genSchEventPayload(c)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +202,7 @@ func boundScheduler(
 		FlexibleTimeWindow: &scheTypes.FlexibleTimeWindow{
 			Mode: scheTypes.FlexibleTimeWindowModeOff,
 		},
-		Name:               aws.String(fmt.Sprintf("scheduler-%s", *lambdaFun.FunctionName)),
+		Name:               aws.String(*lambdaFun.FunctionName),
 		ScheduleExpression: aws.String(expression), // rate(1 minutes)/cron(...)
 		Target: &scheTypes.Target{
 			Arn: lambdaFun.FunctionArn,
@@ -287,7 +274,7 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrig
 			"function_arn": r.Lambda,
 		}).
 		Or(map[string]interface{}{
-			"function_name": r.Lambda,
+			"function_name": genLambdaFuncName(c, r.Lambda),
 		}).
 		First(l).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -297,11 +284,27 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrig
 		return nil, errors.Wrap(err, err.Error())
 	}
 
+	// generate merged payload with secret key
+	secret, err := svcOrg.Conductor.OrgSecret(c)
+	if err != nil {
+		return nil, err
+	}
+
+	var payloadMap map[string]interface{}
+	if err := json.Unmarshal([]byte(r.Payload), &payloadMap); err != nil {
+		return nil, err
+	}
+	payloadMap["secret_key"] = secret.SecretKey
+	payload, err := json.Marshal(payloadMap)
+	if err != nil {
+		return nil, err
+	}
+
 	// invoke
 	invokeOutput, err := lambdaClient.Invoke(c, &lambda.InvokeInput{
 		FunctionName: aws.String(l.FunctionName),
 		LogType:      lambTypes.LogTypeTail,
-		Payload:      []byte(r.Payload),
+		Payload:      payload,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("failed to invoke lambda: %s", l.FunctionName))
@@ -373,7 +376,7 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 
 	// TODO: query Lambda name
 
-	logGroupName := "/aws/lambda/" + req.Lambda
+	logGroupName := "/aws/lambda/" + genLambdaFuncName(c, req.Lambda)
 
 	describeInput := &cloudwatchlogs.DescribeLogStreamsInput{
 		LogGroupName: &logGroupName,

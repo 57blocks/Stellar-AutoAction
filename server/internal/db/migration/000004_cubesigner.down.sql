@@ -1,1 +1,2 @@
-DROP TABLE IF EXISTS "organization_key_pairs";
+DROP TABLE IF EXISTS "organization_secret";
+DROP TABLE IF EXISTS "organization_role_key";

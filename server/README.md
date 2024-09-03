@@ -12,8 +12,15 @@ Terraform
 
 ## DB migration
 There is an initial version: `000000_init`, which aims at:
-1. Solve the problem of the dirty version at the version at the beginning. [Issue Ref](https://github.com/golang-migrate/migrate/issues/282#issuecomment-660760237)
-2. The init version does nothing except: setup the tracing table: `schema_migrations`
-3. If any error in migration which leads to a dirty version, fix it, and then it will be re-executed when the 
-   server started.
+1. Solve the problem of the dirty version at the beginning. [Issue Ref](https://github.com/golang-migrate/migrate/issues/282#issuecomment-660760237)
+2. The init version does nothing except: establish the changelog table: `schema_migrations`
+3. If any error in migration which leads to a dirty version, fix migrations, then it will be re-executed when the 
+   server starts.
 4. If the fixed version is dirty still, go back to step `3`.
+5. There exists some data migrations required:
+   - Insert the VPC configuration when the Amazon infrastructure is ready.
+     - Which subnets are going to use to host the BE endpoint.
+     - Security groups.
+   - Insert the organization in use.
+   - Insert the initial user account.
+   - CubeSigner related data.

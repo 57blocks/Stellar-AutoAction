@@ -14,9 +14,9 @@ import (
 
 type (
 	Service interface {
-		CurrentOrg(c context.Context) (*model.Organization, error)
-		CurrentOrgKPs(c context.Context) (*dto.RespRelatedKeyPairs, error)
-		CurrentVpc(c context.Context) (*model.Vpc, error)
+		Organization(c context.Context) (*model.Organization, error)
+		OrgRoleKey(c context.Context) (*dto.RespRelatedRoleKey, error)
+		OrgSecret(c context.Context) (*model.OrgSecret, error)
 	}
 	conductor struct{}
 )
@@ -31,7 +31,7 @@ func init() {
 	}
 }
 
-func (cd conductor) CurrentOrg(c context.Context) (*model.Organization, error) {
+func (cd conductor) Organization(c context.Context) (*model.Organization, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errors.New("convert context.Context to gin.Context failed")
@@ -55,7 +55,7 @@ func (cd conductor) CurrentOrg(c context.Context) (*model.Organization, error) {
 	return org, nil
 }
 
-func (cd conductor) CurrentOrgKPs(c context.Context) (*dto.RespRelatedKeyPairs, error) {
+func (cd conductor) OrgRoleKey(c context.Context) (*dto.RespRelatedRoleKey, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errors.New("convert context.Context to gin.Context failed")
@@ -63,54 +63,57 @@ func (cd conductor) CurrentOrgKPs(c context.Context) (*dto.RespRelatedKeyPairs, 
 
 	jwtOrg, _ := ctx.Get("jwt_organization")
 
-	okpList := make([]*model.OrganizationKeyPairs, 0)
+	orkList := make([]*model.CSOrgRoleKey, 0)
 	if err := db.Conn(c).
-		Table(new(model.OrganizationKeyPairs).TableNameWithAbbr()).
-		Joins("LEFT JOIN organization AS o ON o.id = okp.organization_id").
-		Where(map[string]interface{}{"o.name": jwtOrg}).
-		Find(&okpList).Error; err != nil {
-		return nil, errors.Wrap(err, "query organization key pairs failed")
-	}
-
-	if len(okpList) == 0 {
-		return nil, errors.New("none organization related key pairs found")
-	}
-
-	cubeKeyPairs := make([]dto.CubeSignerPairs, 0, len(okpList))
-	for _, okp := range okpList {
-		cubeKeyPairs = append(cubeKeyPairs, dto.CubeSignerPairs{
-			Private: okp.PrivateKey,
-			Public:  okp.PublicKey,
-		})
-	}
-
-	return &dto.RespRelatedKeyPairs{
-		JWTPairs:        dto.JWTPairs{},
-		CubeSignerPairs: cubeKeyPairs,
-	}, nil
-}
-
-func (cd conductor) CurrentVpc(c context.Context) (*model.Vpc, error) {
-	ctx, ok := c.(*gin.Context)
-	if !ok {
-		return nil, errors.New("convert context.Context to gin.Context failed")
-	}
-
-	jwtOrg, _ := ctx.Get("jwt_organization")
-
-	vpc := new(model.Vpc)
-	if err := db.Conn(c).Table(vpc.TableNameWithAbbr()).
-		Joins("LEFT JOIN organization AS o ON o.id = v.organization_id").
+		Table(model.TabNameAbbrOrgRoleKey()).
+		Joins("LEFT JOIN organization AS o ON o.id = ork.organization_id").
 		Where(map[string]interface{}{
 			"o.name": jwtOrg,
 		}).
-		First(vpc).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("none vpc found")
-		}
-
-		return nil, errors.Wrap(err, "db error when find vpc by organization name")
+		Find(&orkList).Error; err != nil {
+		return nil, errors.Wrap(err, "query organization key pairs failed")
 	}
 
-	return vpc, nil
+	if len(orkList) == 0 {
+		return nil, errors.New("none organization related key pairs found")
+	}
+
+	csRoleKeyList := make([]dto.RespCSRoleKey, 0, len(orkList))
+	for _, ork := range orkList {
+		csRoleKeyList = append(csRoleKeyList, dto.RespCSRoleKey{
+			CSRoleID: ork.CSRoleID,
+			CSKeyID:  ork.CSKeyID,
+			CSScopes: ork.CSScopes,
+		})
+	}
+
+	return &dto.RespRelatedRoleKey{
+		CSRoleKeys: csRoleKeyList,
+	}, nil
+}
+
+func (cd conductor) OrgSecret(c context.Context) (*model.OrgSecret, error) {
+	ctx, ok := c.(*gin.Context)
+	if !ok {
+		return nil, errors.New("convert context.Context to gin.Context failed")
+	}
+
+	jwtOrg, _ := ctx.Get("jwt_organization")
+
+	orgSecret := new(model.OrgSecret)
+	if err := db.Conn(c).Table(model.TabNameAbbrOrgSecret()).
+		Joins("LEFT JOIN organization AS o ON o.id = os.organization_id").
+		Where(map[string]interface{}{
+			"o.name":    jwtOrg,
+			"os.active": true,
+		}).
+		First(orgSecret).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("none organization secret found")
+		}
+
+		return nil, errors.Wrap(err, "db error when find organization secret by organization id")
+	}
+
+	return orgSecret, nil
 }

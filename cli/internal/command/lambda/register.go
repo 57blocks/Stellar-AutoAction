@@ -28,6 +28,7 @@ Description:
 	
 Note:
   - The name of the Lambda is based on the file name, make it unique.
+  - The name of the handler must be: **handler**. 
   - Manually, if no flags puts in, which means the handler/handlers 
 	will be triggered by invoke command manually.
   - By corn. 
