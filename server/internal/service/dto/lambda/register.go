@@ -5,7 +5,7 @@ import (
 )
 
 type (
-	ReqSchedulerEvent struct {
+	StdEventPayload struct {
 		_            struct{}
 		Organization string `json:"organization"`
 		Account      string `json:"account"`

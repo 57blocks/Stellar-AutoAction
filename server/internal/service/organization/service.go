@@ -19,8 +19,6 @@ type (
 	Service interface {
 		Organization(c context.Context) (*model.Organization, error)
 		OrgRoleKey(c context.Context, req *dto.ReqKeys) (*dto.RespOrgRoleKey, error)
-		//OrgRootSession(c context.Context, req *dto.ReqKeys) (*dto.RespKeys, error)
-
 		OrgSecret(c context.Context) (string, error)
 	}
 	conductor struct{}

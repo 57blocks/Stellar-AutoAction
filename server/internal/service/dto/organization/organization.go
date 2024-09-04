@@ -20,20 +20,3 @@ type (
 		Account      string `json:"account"`
 	}
 )
-
-type (
-	RespRefreshRootSession struct {
-		Token        string `json:"token"`
-		RefreshToken string `json:"refresh_token"`
-		Expiration   int    `json:"expiration"`
-		SessionInfo  struct {
-			SessionID       string `json:"session_id"`
-			AuthToken       string `json:"auth_token"`
-			RefreshToken    string `json:"refresh_token"`
-			Epoch           int    `json:"epoch"`
-			EpochToken      string `json:"epoch_token"`
-			AuthTokenExp    int    `json:"auth_token_exp"`
-			RefreshTokenExp int    `json:"refresh_token_exp"`
-		} `json:"session_info"`
-	}
-)

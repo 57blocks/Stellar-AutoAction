@@ -20,7 +20,7 @@ func genLambdaFuncName(c context.Context, name string) string {
 	return fmt.Sprintf("%s-%s-%s", org.Name, account, name)
 }
 
-func genEventPayload(c context.Context) (*dtoLam.ReqSchedulerEvent, error) {
+func genEventPayload(c context.Context) (*dtoLam.StdEventPayload, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errors.New("convert context.Context to gin.Context failed")
@@ -29,7 +29,7 @@ func genEventPayload(c context.Context) (*dtoLam.ReqSchedulerEvent, error) {
 	jwtOrg, _ := ctx.Get("jwt_organization")
 	jwtAccount, _ := ctx.Get("jwt_account")
 
-	return &dtoLam.ReqSchedulerEvent{
+	return &dtoLam.StdEventPayload{
 		Organization: jwtOrg.(string),
 		Account:      jwtAccount.(string),
 	}, nil
