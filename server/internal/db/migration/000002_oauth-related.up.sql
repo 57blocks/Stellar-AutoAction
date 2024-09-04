@@ -23,6 +23,7 @@ DROP TABLE IF EXISTS "organization";
 CREATE TABLE "organization" (
     "id" serial PRIMARY KEY,
     "name" varchar UNIQUE NOT NULL,
+    "cs_organization_id" varchar UNIQUE NOT NULL,
     "description" text,
     "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL,
     "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL

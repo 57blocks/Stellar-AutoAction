@@ -1,21 +1,22 @@
 package organization
 
 type (
-	RespRelatedKeyPairs struct {
-		_               struct{}
-		JWTPairs        `json:"jwt_pairs"`
-		CubeSignerPairs []CubeSignerPairs `json:"cubesigner_pairs"`
+	RespOrgRoleKey struct {
+		_          struct{}
+		CSRoleKeys []RespCSRoleKey `json:"cs_role_keys"`
 	}
 
-	CubeSignerPairs struct {
-		_       struct{}
-		Private string `json:"private"`
-		Public  string `json:"public"`
+	RespCSRoleKey struct {
+		_        struct{}
+		CSRoleID string   `json:"role"`
+		CSKeyID  string   `json:"key"`
+		CSScopes []string `json:"scopes"`
 	}
+)
 
-	JWTPairs struct {
-		_       struct{}
-		Private string `json:"private"`
-		Public  string `json:"public"`
+type (
+	ReqKeys struct {
+		Organization string `json:"organization"`
+		Account      string `json:"account"`
 	}
 )

@@ -2,30 +2,13 @@ package model
 
 import "github.com/aws/aws-sdk-go-v2/service/lambda"
 
-// Vpc model, currently, the relationship between Vpc and Lambda is 1:1
-type Vpc struct {
-	ICU
-	OrganizationID   uint64  `json:"organization_id"`
-	AmazonID         string  `json:"aws_id" gorm:"column:aws_id"`
-	SubnetIDs        StrList `json:"subnet_ids" gorm:"type:text[]"`
-	SecurityGroupIDs StrList `json:"security_group_ids" gorm:"type:text[]"`
-}
-
-func (lv *Vpc) TableName() string {
-	return "vpc"
-}
-
-func (lv *Vpc) TableNameWithAbbr() string {
-	return "vpc AS v"
-}
-
 // Lambda model
 type Lambda struct {
 	ICU
-	VpcID        uint64 `json:"vpc_id"`
 	FunctionName string `json:"function_name"`
 	FunctionArn  string `json:"function_arn"`
 	Runtime      string `json:"runtime"`
+	Timeout      uint8  `json:"timeout"`
 	Role         string `json:"role"`
 	Handler      string `json:"handler"`
 	Description  string `json:"description"`
@@ -40,6 +23,14 @@ func (l *Lambda) TableName() string {
 
 func (l *Lambda) TableNameWithAbbr() string {
 	return "lambda AS l"
+}
+
+func TabNameLambda() string {
+	return (&Lambda{}).TableName()
+}
+
+func TabNameLambdaAbbr() string {
+	return (&Lambda{}).TableNameWithAbbr()
 }
 
 // LambdaScheduler model
@@ -58,13 +49,22 @@ func (l *LambdaScheduler) TableNameWithAbbr() string {
 	return "lambda_scheduler AS ls"
 }
 
+func TabNameLambdaSch() string {
+	return (&LambdaScheduler{}).TableName()
+}
+
+func TabNameLambdaSchAbbr() string {
+	return (&LambdaScheduler{}).TableNameWithAbbr()
+}
+
 // model builders and builder options
 type (
 	LambdaOpt    func(l *Lambda)
 	SchedulerOpt func(l *LambdaScheduler)
 )
 
-// BuildLambda build the credential pair
+// BuildLambda
+// build the Lambda in optional pattern
 func BuildLambda(opts ...LambdaOpt) *Lambda {
 	l := new(Lambda)
 
@@ -75,17 +75,12 @@ func BuildLambda(opts ...LambdaOpt) *Lambda {
 	return l
 }
 
-func WithVpcID(vpcID uint64) LambdaOpt {
-	return func(l *Lambda) {
-		l.VpcID = vpcID
-	}
-}
-
 func WithLambdaResp(resp *lambda.CreateFunctionOutput) LambdaOpt {
 	return func(l *Lambda) {
 		l.FunctionName = *resp.FunctionName
 		l.FunctionArn = *resp.FunctionArn
 		l.Runtime = string(resp.Runtime)
+		l.Timeout = uint8(*resp.Timeout)
 		l.Role = *resp.Role
 		l.Handler = *resp.Handler
 		l.Description = *resp.Description
@@ -95,7 +90,8 @@ func WithLambdaResp(resp *lambda.CreateFunctionOutput) LambdaOpt {
 	}
 }
 
-// BuildScheduler build the LambdaScheduler bound with Lambda
+// BuildScheduler
+// build the LambdaScheduler bound with Lambda in optional pattern
 func BuildScheduler(opts ...SchedulerOpt) *LambdaScheduler {
 	ls := new(LambdaScheduler)
 

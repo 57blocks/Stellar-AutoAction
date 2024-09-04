@@ -2,11 +2,14 @@ package organization
 
 import (
 	"context"
-
+	"encoding/json"
+	configx "github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/model"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/organization"
-
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -14,15 +17,17 @@ import (
 
 type (
 	Service interface {
-		CurrentOrg(c context.Context) (*model.Organization, error)
-		CurrentOrgKPs(c context.Context) (*dto.RespRelatedKeyPairs, error)
-		CurrentVpc(c context.Context) (*model.Vpc, error)
+		Organization(c context.Context) (*model.Organization, error)
+		OrgRoleKey(c context.Context, req *dto.ReqKeys) (*dto.RespOrgRoleKey, error)
+		OrgSecret(c context.Context) (string, error)
 	}
 	conductor struct{}
 )
 
 var (
 	Conductor Service
+	awsConfig aws.Config
+	smClient  *secretsmanager.Client
 )
 
 func init() {
@@ -31,7 +36,7 @@ func init() {
 	}
 }
 
-func (cd conductor) CurrentOrg(c context.Context) (*model.Organization, error) {
+func (cd conductor) Organization(c context.Context) (*model.Organization, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errors.New("convert context.Context to gin.Context failed")
@@ -55,62 +60,64 @@ func (cd conductor) CurrentOrg(c context.Context) (*model.Organization, error) {
 	return org, nil
 }
 
-func (cd conductor) CurrentOrgKPs(c context.Context) (*dto.RespRelatedKeyPairs, error) {
-	ctx, ok := c.(*gin.Context)
-	if !ok {
-		return nil, errors.New("convert context.Context to gin.Context failed")
-	}
-
-	jwtOrg, _ := ctx.Get("jwt_organization")
-
-	okpList := make([]*model.OrganizationKeyPairs, 0)
+func (cd conductor) OrgRoleKey(c context.Context, req *dto.ReqKeys) (*dto.RespOrgRoleKey, error) {
+	orkList := make([]*model.CSOrgRoleKey, 0)
 	if err := db.Conn(c).
-		Table(new(model.OrganizationKeyPairs).TableNameWithAbbr()).
-		Joins("LEFT JOIN organization AS o ON o.id = okp.organization_id").
-		Where(map[string]interface{}{"o.name": jwtOrg}).
-		Find(&okpList).Error; err != nil {
-		return nil, errors.Wrap(err, "query organization key pairs failed")
+		Table(model.TabNameOrgRoleKeyAbbr()).
+		Joins("LEFT JOIN organization AS o ON o.id = ork.organization_id").
+		Joins("LEFT JOIN \"user\" AS u ON u.organization_id = o.id").
+		Where(map[string]interface{}{
+			"o.name": req.Organization,
+		}).
+		Find(&orkList).Error; err != nil {
+		return nil, errors.Wrap(err, "db error when query organization key pairs")
 	}
 
-	if len(okpList) == 0 {
+	if len(orkList) == 0 {
 		return nil, errors.New("none organization related key pairs found")
 	}
 
-	cubeKeyPairs := make([]dto.CubeSignerPairs, 0, len(okpList))
-	for _, okp := range okpList {
-		cubeKeyPairs = append(cubeKeyPairs, dto.CubeSignerPairs{
-			Private: okp.PrivateKey,
-			Public:  okp.PublicKey,
+	csRoleKeyList := make([]dto.RespCSRoleKey, 0, len(orkList))
+	for _, ork := range orkList {
+		csRoleKeyList = append(csRoleKeyList, dto.RespCSRoleKey{
+			CSRoleID: ork.CSRoleID,
+			CSKeyID:  ork.CSKeyID,
+			CSScopes: ork.CSScopes,
 		})
 	}
 
-	return &dto.RespRelatedKeyPairs{
-		JWTPairs:        dto.JWTPairs{},
-		CubeSignerPairs: cubeKeyPairs,
+	return &dto.RespOrgRoleKey{
+		CSRoleKeys: csRoleKeyList,
 	}, nil
 }
 
-func (cd conductor) CurrentVpc(c context.Context) (*model.Vpc, error) {
-	ctx, ok := c.(*gin.Context)
-	if !ok {
-		return nil, errors.New("convert context.Context to gin.Context failed")
+func (cd conductor) OrgSecret(c context.Context) (string, error) {
+	var err error
+
+	awsConfig, err := config.LoadDefaultConfig(
+		c,
+		config.WithRegion(configx.Global.Region),
+		config.WithSharedConfigProfile("iamp3ngf3i"), // TODO: only for local
+	)
+
+	smClient = secretsmanager.NewFromConfig(awsConfig)
+
+	input := &secretsmanager.GetSecretValueInput{
+		SecretId:     aws.String("AutoActionSecretKey-Dev"),
+		VersionStage: aws.String("AWSCURRENT"), // VersionStage defaults to AWSCURRENT if unspecified
 	}
 
-	jwtOrg, _ := ctx.Get("jwt_organization")
-
-	vpc := new(model.Vpc)
-	if err := db.Conn(c).Table(vpc.TableNameWithAbbr()).
-		Joins("LEFT JOIN organization AS o ON o.id = v.organization_id").
-		Where(map[string]interface{}{
-			"o.name": jwtOrg,
-		}).
-		First(vpc).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("none vpc found")
-		}
-
-		return nil, errors.Wrap(err, "db error when find vpc by organization name")
+	resp, err := smClient.GetSecretValue(c, input)
+	if err != nil {
+		// For a list of exceptions thrown, see
+		// https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+		return "", errors.Wrap(err, "failed to get secret value")
 	}
 
-	return vpc, nil
+	resMap := make(map[string]interface{})
+	if err := json.Unmarshal([]byte(*resp.SecretString), &resMap); err != nil {
+		return "", errors.Wrap(err, "json unmarshal error when parse secret value")
+	}
+
+	return resMap["Server_Secret_Key"].(string), nil
 }

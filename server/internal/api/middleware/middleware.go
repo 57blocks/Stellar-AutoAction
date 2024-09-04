@@ -5,10 +5,34 @@ import (
 
 	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
+	svcOrg "github.com/57blocks/auto-action/server/internal/service/organization"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
+
+func SecretKey() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		key := c.GetHeader("API-Secret-Key")
+		if key == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "missing secret key"})
+			return
+		}
+
+		secret, err := svcOrg.Conductor.OrgSecret(c)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			return
+		}
+
+		if secret != key {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "invalid secret key"})
+			return
+		}
+
+		c.Next()
+	}
+}
 
 func Authentication() gin.HandlerFunc {
 	return func(c *gin.Context) {
