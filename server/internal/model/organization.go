@@ -19,7 +19,7 @@ func TabNameOrg() string {
 	return (&Organization{}).TableName()
 }
 
-func TabNameAbbrOrg() string {
+func TabNameOrgAbbr() string {
 	return (&Organization{}).TableNameWithAbbr()
 }
 
@@ -52,7 +52,7 @@ func TabNameOrgSession() string {
 	return (&OrgRootSession{}).TableName()
 }
 
-func TabNameAbbrOrgSession() string {
+func TabNameOrgSessionAbbr() string {
 	return (&OrgRootSession{}).TableNameWithAbbr()
 }
 
@@ -65,7 +65,7 @@ type CSOrgRoleKey struct {
 	OrganizationID uint64  `json:"organization_id"`
 	CSRoleID       string  `json:"cs_role_id"`
 	CSKeyID        string  `json:"cs_key_id"`
-	CSScopes       StrList `json:"cs_scopes"`
+	CSScopes       StrList `json:"cs_scopes" gorm:"column:cs_scopes;type:text[]"`
 }
 
 func (o *CSOrgRoleKey) TableName() string {
@@ -80,6 +80,6 @@ func TabNameOrgRoleKey() string {
 	return (&CSOrgRoleKey{}).TableName()
 }
 
-func TabNameAbbrOrgRoleKey() string {
+func TabNameOrgRoleKeyAbbr() string {
 	return (&CSOrgRoleKey{}).TableNameWithAbbr()
 }

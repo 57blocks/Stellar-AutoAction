@@ -29,7 +29,7 @@ func TabNameLambda() string {
 	return (&Lambda{}).TableName()
 }
 
-func TabNameAbbrLambda() string {
+func TabNameLambdaAbbr() string {
 	return (&Lambda{}).TableNameWithAbbr()
 }
 
@@ -47,6 +47,14 @@ func (l *LambdaScheduler) TableName() string {
 
 func (l *LambdaScheduler) TableNameWithAbbr() string {
 	return "lambda_scheduler AS ls"
+}
+
+func TabNameLambdaSch() string {
+	return (&LambdaScheduler{}).TableName()
+}
+
+func TabNameLambdaSchAbbr() string {
+	return (&LambdaScheduler{}).TableNameWithAbbr()
 }
 
 // model builders and builder options

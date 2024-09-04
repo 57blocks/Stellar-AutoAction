@@ -1,21 +1,34 @@
 package organization
 
 type (
-	RespRelatedRoleKey struct {
+	RespOrgRoleKey struct {
 		_          struct{}
 		CSRoleKeys []RespCSRoleKey `json:"cs_role_keys"`
 	}
 
 	RespCSRoleKey struct {
 		_        struct{}
-		CSRoleID string   `json:"cs_role_id"`
-		CSKeyID  string   `json:"cs_key_id"`
-		CSScopes []string `json:"cs_scopes"`
+		CSRoleID string   `json:"role"`
+		CSKeyID  string   `json:"key"`
+		CSScopes []string `json:"scopes"`
 	}
 )
 
 type (
-	RespRootSessionRefresh struct {
+	ReqSDKRequired struct {
+		Organization string `json:"organization"`
+		Account      string `json:"account"`
+	}
+
+	RespSDKRequired struct {
+		Token        string          `json:"token"`
+		Organization string          `json:"organization"`
+		Keys         []RespCSRoleKey `json:"cs_role_keys"`
+	}
+)
+
+type (
+	RespRefreshRootSession struct {
 		Token        string `json:"token"`
 		RefreshToken string `json:"refresh_token"`
 		Expiration   int    `json:"expiration"`

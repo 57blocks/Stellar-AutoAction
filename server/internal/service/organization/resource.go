@@ -1,0 +1,36 @@
+package organization
+
+import (
+	"net/http"
+
+	dto "github.com/57blocks/auto-action/server/internal/service/dto/organization"
+
+	"github.com/gin-gonic/gin"
+)
+
+func SDKRequired(c *gin.Context) {
+	req := new(dto.ReqSDKRequired)
+
+	if err := c.ShouldBindJSON(req); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	roleKey, err := Conductor.OrgRoleKey(c, req)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	session, err := Conductor.OrgRootSession(c, req)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.RespSDKRequired{
+		Organization: session.Organization,
+		Token:        session.Token,
+		Keys:         roleKey.CSRoleKeys,
+	})
+}

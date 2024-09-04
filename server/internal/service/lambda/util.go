@@ -20,18 +20,22 @@ func genLambdaFuncName(c context.Context, name string) string {
 	return fmt.Sprintf("%s-%s-%s", org.Name, account, name)
 }
 
-func genSchEventPayload(c context.Context) (dtoLam.ReqSchedulerEvent, error) {
-	// TODO: make key-value pairs extraction as an util
+func genSchEventPayload(c context.Context) (*dtoLam.ReqSchedulerEvent, error) {
+	orgSecretKey, err := svcOrg.Conductor.OrgSecret(c)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx, ok := c.(*gin.Context)
 	if !ok {
-		return dtoLam.ReqSchedulerEvent{}, errors.New("convert context.Context to gin.Context failed")
+		return nil, errors.New("convert context.Context to gin.Context failed")
 	}
 
 	jwtOrg, _ := ctx.Get("jwt_organization")
 	jwtAccount, _ := ctx.Get("jwt_account")
 
-	return dtoLam.ReqSchedulerEvent{
-		APIKey:       "sample_api_key", // TODO
+	return &dtoLam.ReqSchedulerEvent{
+		SecretKey:    orgSecretKey,
 		Organization: jwtOrg.(string),
 		Account:      jwtAccount.(string),
 	}, nil

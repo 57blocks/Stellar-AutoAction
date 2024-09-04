@@ -6,6 +6,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/api/middleware"
 	"github.com/57blocks/auto-action/server/internal/service/lambda"
 	"github.com/57blocks/auto-action/server/internal/service/oauth"
+	"github.com/57blocks/auto-action/server/internal/service/organization"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,10 +21,15 @@ func RegisterHandlers(g *gin.Engine) http.Handler {
 
 	lambdaGroup := g.Group("/lambda", middleware.Authentication(), middleware.Authorization())
 	{
-		lambdaGroup.POST("", lambda.Register, middleware.Authentication(), middleware.Authorization())
-		lambdaGroup.POST("/:lambda", lambda.Invoke, middleware.Authentication(), middleware.Authorization())
-		lambdaGroup.GET("/:lambda/info", lambda.Info, middleware.Authentication(), middleware.Authorization())
-		lambdaGroup.GET("/:lambda/logs", lambda.Logs, middleware.Authentication(), middleware.Authorization())
+		lambdaGroup.POST("", lambda.Register)
+		lambdaGroup.POST("/:lambda", lambda.Invoke)
+		lambdaGroup.GET("/:lambda/info", lambda.Info)
+		lambdaGroup.GET("/:lambda/logs", lambda.Logs)
+	}
+
+	sdkGroup := g.Group("/sdk", middleware.SecretKey())
+	{
+		sdkGroup.GET("/required", organization.SDKRequired)
 	}
 
 	return g

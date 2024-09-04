@@ -20,3 +20,11 @@ func (t *Token) TableName() string {
 func (t *Token) TableNameWithAbbr() string {
 	return "token AS t"
 }
+
+func TabNameToken() string {
+	return (&Token{}).TableName()
+}
+
+func TabNameTokenAbbr() string {
+	return (&Token{}).TableNameWithAbbr()
+}

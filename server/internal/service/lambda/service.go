@@ -284,8 +284,8 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrig
 		return nil, errors.Wrap(err, err.Error())
 	}
 
-	// generate merged payload with secret key
-	secret, err := svcOrg.Conductor.OrgSecret(c)
+	// generate merged payload with orgSecretKey key
+	orgSecretKey, err := svcOrg.Conductor.OrgSecret(c)
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +294,7 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrig
 	if err := json.Unmarshal([]byte(r.Payload), &payloadMap); err != nil {
 		return nil, err
 	}
-	payloadMap["secret_key"] = secret.SecretKey
+	payloadMap["secret_key"] = orgSecretKey
 	payload, err := json.Marshal(payloadMap)
 	if err != nil {
 		return nil, err
