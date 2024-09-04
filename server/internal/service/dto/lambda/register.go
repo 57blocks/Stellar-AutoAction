@@ -7,7 +7,6 @@ import (
 type (
 	ReqSchedulerEvent struct {
 		_            struct{}
-		SecretKey    string `json:"secret_key"`
 		Organization string `json:"organization"`
 		Account      string `json:"account"`
 	}

@@ -27,9 +27,9 @@ func RegisterHandlers(g *gin.Engine) http.Handler {
 		lambdaGroup.GET("/:lambda/logs", lambda.Logs)
 	}
 
-	sdkGroup := g.Group("/sdk", middleware.SecretKey())
+	sdkGroup := g.Group("/sign", middleware.SecretKey())
 	{
-		sdkGroup.GET("/required", organization.SDKRequired)
+		sdkGroup.GET("/keys", organization.Keys)
 	}
 
 	return g

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	svcOrg "github.com/57blocks/auto-action/server/internal/service/organization"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -189,7 +188,7 @@ func boundScheduler(
 
 	schClient := scheduler.NewFromConfig(awsConfig)
 
-	event, err := genSchEventPayload(c)
+	event, err := genEventPayload(c)
 	if err != nil {
 		return nil, err
 	}
@@ -285,17 +284,18 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrig
 	}
 
 	// generate merged payload with orgSecretKey key
-	orgSecretKey, err := svcOrg.Conductor.OrgSecret(c)
+	stdPayload, err := genEventPayload(c)
 	if err != nil {
 		return nil, err
 	}
 
-	var payloadMap map[string]interface{}
-	if err := json.Unmarshal([]byte(r.Payload), &payloadMap); err != nil {
+	var inputPayload map[string]interface{}
+	if err := json.Unmarshal([]byte(r.Payload), &inputPayload); err != nil {
 		return nil, err
 	}
-	payloadMap["secret_key"] = orgSecretKey
-	payload, err := json.Marshal(payloadMap)
+	inputPayload["organization"] = stdPayload.Organization
+	inputPayload["account"] = stdPayload.Account
+	payload, err := json.Marshal(inputPayload)
 	if err != nil {
 		return nil, err
 	}

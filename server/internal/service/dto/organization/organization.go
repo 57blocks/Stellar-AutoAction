@@ -15,15 +15,9 @@ type (
 )
 
 type (
-	ReqSDKRequired struct {
+	ReqKeys struct {
 		Organization string `json:"organization"`
 		Account      string `json:"account"`
-	}
-
-	RespSDKRequired struct {
-		Token        string          `json:"token"`
-		Organization string          `json:"organization"`
-		Keys         []RespCSRoleKey `json:"cs_role_keys"`
 	}
 )
 

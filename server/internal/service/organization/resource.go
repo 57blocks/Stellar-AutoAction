@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SDKRequired(c *gin.Context) {
-	req := new(dto.ReqSDKRequired)
+func Keys(c *gin.Context) {
+	req := new(dto.ReqKeys)
 
 	if err := c.ShouldBindJSON(req); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
@@ -22,15 +22,5 @@ func SDKRequired(c *gin.Context) {
 		return
 	}
 
-	session, err := Conductor.OrgRootSession(c, req)
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, dto.RespSDKRequired{
-		Organization: session.Organization,
-		Token:        session.Token,
-		Keys:         roleKey.CSRoleKeys,
-	})
+	c.JSON(http.StatusOK, roleKey.CSRoleKeys)
 }
