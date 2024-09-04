@@ -23,28 +23,37 @@ func TabNameAbbrOrg() string {
 	return (&Organization{}).TableNameWithAbbr()
 }
 
-// OrgSecret organization_secrets
-type OrgSecret struct {
+// OrgRootSession organization_secrets
+type OrgRootSession struct {
 	ICU
 	OrganizationID uint64 `json:"organization_id"`
-	SecretKey      string `json:"secret_key"`
-	Active         bool   `json:"active"`
+	Expiration     uint64 `json:"secret_key"`
+	Token          string `json:"token"`
+	RefreshToken   string `json:"refresh_token"`
+	// Session epoch
+	SessionID            string `json:"session_id"`
+	Epoch                uint64 `json:"epoch"`
+	EpochToken           string `json:"epoch_token"`
+	EpochAuthToken       string `json:"epoch_auth_token"`
+	EpochAuthTokenExp    uint64 `json:"epoch_auth_token_exp"`
+	EpochRefreshToken    string `json:"epoch_refresh_token"`
+	EpochRefreshTokenExp uint64 `json:"epoch_refresh_token_exp"`
 }
 
-func (o *OrgSecret) TableName() string {
-	return "organization_secret"
+func (o *OrgRootSession) TableName() string {
+	return "organization_root_session"
 }
 
-func (o *OrgSecret) TableNameWithAbbr() string {
-	return "organization_secret AS os"
+func (o *OrgRootSession) TableNameWithAbbr() string {
+	return "organization_root_session AS ors"
 }
 
-func TabNameOrgSecret() string {
-	return (&OrgSecret{}).TableName()
+func TabNameOrgSession() string {
+	return (&OrgRootSession{}).TableName()
 }
 
-func TabNameAbbrOrgSecret() string {
-	return (&OrgSecret{}).TableNameWithAbbr()
+func TabNameAbbrOrgSession() string {
+	return (&OrgRootSession{}).TableNameWithAbbr()
 }
 
 // CSOrgRoleKey is a struct that represents the organization key pairs.

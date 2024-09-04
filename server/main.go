@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/57blocks/auto-action/server/internal/pkg/restyx"
 	"log"
 	"net/http"
 	"os"
@@ -24,6 +25,7 @@ func main() {
 		boot.Wrap(pkgLog.Setup),
 		boot.Wrap(db.Setup),
 		boot.Wrap(api.Setup),
+		boot.Wrap(restyx.Setup),
 	); err != nil {
 		log.Panicf("boots components occurred error: %s\n", err.Error())
 	}
