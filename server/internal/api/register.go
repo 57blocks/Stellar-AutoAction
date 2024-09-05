@@ -29,7 +29,7 @@ func RegisterHandlers(g *gin.Engine) http.Handler {
 
 	sdkGroup := g.Group("/sign", middleware.SecretKey())
 	{
-		sdkGroup.GET("/keys", organization.Keys)
+		sdkGroup.POST("/keys", organization.Keys)
 	}
 
 	return g

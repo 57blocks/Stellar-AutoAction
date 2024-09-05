@@ -79,9 +79,23 @@ func (cd conductor) OrgRoleKey(c context.Context, req *dto.ReqKeys) (*dto.RespOr
 		return nil, errors.New("none organization related key pairs found")
 	}
 
+	org := new(model.Organization)
+	if err := db.Conn(c).Table(org.TableName()).
+		Where(map[string]interface{}{
+			"id": orkList[0].ID,
+		}).
+		First(org).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("none organization found")
+		}
+
+		return nil, errors.Wrap(err, "db error when find organization by name")
+	}
+
 	csRoleKeyList := make([]dto.RespCSRoleKey, 0, len(orkList))
 	for _, ork := range orkList {
 		csRoleKeyList = append(csRoleKeyList, dto.RespCSRoleKey{
+			CSOrgID:  org.CSOrganizationID,
 			CSRoleID: ork.CSRoleID,
 			CSKeyID:  ork.CSKeyID,
 			CSScopes: ork.CSScopes,
@@ -105,7 +119,7 @@ func (cd conductor) OrgSecret(c context.Context) (string, error) {
 	smClient = secretsmanager.NewFromConfig(awsConfig)
 
 	input := &secretsmanager.GetSecretValueInput{
-		SecretId:     aws.String("AutoActionSecretKey-Dev"),
+		SecretId:     aws.String("AA_API_KEY"),
 		VersionStage: aws.String("AWSCURRENT"), // VersionStage defaults to AWSCURRENT if unspecified
 	}
 
@@ -121,5 +135,5 @@ func (cd conductor) OrgSecret(c context.Context) (string, error) {
 		return "", errors.Wrap(err, "json unmarshal error when parse secret value")
 	}
 
-	return resMap["Server_Secret_Key"].(string), nil
+	return resMap["api_key"].(string), nil
 }
