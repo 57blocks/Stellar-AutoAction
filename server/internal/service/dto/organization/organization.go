@@ -8,6 +8,7 @@ type (
 
 	RespCSRoleKey struct {
 		_        struct{}
+		CSOrgID  string   `json:"organization"`
 		CSRoleID string   `json:"role"`
 		CSKeyID  string   `json:"key"`
 		CSScopes []string `json:"scopes"`

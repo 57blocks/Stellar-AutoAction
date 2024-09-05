@@ -13,7 +13,7 @@ import (
 
 func SecretKey() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		key := c.GetHeader("API-Secret-Key")
+		key := c.GetHeader("API-Key")
 		if key == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "missing secret key"})
 			return

@@ -30,11 +30,11 @@ There is an initial version: `000000_init`, which aims at:
 
 ### CubeSigner Session
 1. Login with MFA:
-   - `cs login -s google --session-lifetime 31536000 --auth-lifetime 600 --refresh-lifetime 2592000`
+   - `cs login -s google --session-lifetime 31536000 --auth-lifetime 600 --refresh-lifetime 31536000`
      - Command above will create a root/admin session with a quick-expired auth token, and a long-lived session and 
        refresh token.
-     - The refresh frequency is based on the `--auth-lifetime 600`, which will keep the auth token alive and short 
-       enough at the same time.
+     - The refresh frequency is based on the `--auth-lifetime 600`, which will keep the auth token alive and 
+       refreshed short enough at the same time.
    - Response sample: 
         ```
         {
@@ -73,15 +73,19 @@ There is an initial version: `000000_init`, which aims at:
      - `token`: if you use this token to sign, you will get an `ImproperSessionScope` error which indicates that 
        management token should not be used to sign.
      - `session_info`: 
-       - This is like a change-log/change-version of session refreshment, the `epoch` will be added 1 
-         everytime you refresh the session.
+       - This is like a change-log/change-version of the session refreshment, the `epoch` will be added 1 
+         everytime you refreshed the session.
        - The session expiration will not be longer when refreshed.
    - Practice:
      1. Init a root/admin/management session with:
         1. long **session** lifetime, currently for 1 year.
         2. long **refresh** lifetime, currently, the same as the session lifetime.
         3. short **auth** lifetime, currently for 10 minutes.
-     2. Hanging a recurring job to refresh the root session with a fixed interval, to keep it alive.
-     3. To log in aging manually with MFA annually before the session and refresh expired.
-     4. When a role/signer session is needed, we will use the root session to generate a **role** session with short 
-        lifetime, which will be used to sign transactions.
+     2. Hanging a recurring job to refresh the root session with a fixed interval to keep it alive, which is based 
+        on the `--auth-lifetime`.
+        1. We could make the fixed interval longer or shorter which is depends on your requirement.
+        2. Using the token and required info to refresh, even the token is expired already.
+     3. To log in again manually with MFA annually before the session and refresh expired.
+     4. When a role/signer session is needed, we will use the root session to generate a **role**/**signer** session 
+        with short lifetime for all scopes, which will be used to sign transactions. Generally, in some degree, we 
+        could treat it as an one-time session.

@@ -1,6 +1,15 @@
 # AutoAction CLI
 
-This is the CLI for AutoAction tasks.
+The CLI for AutoAction tasks: `st3llar`
+
+## Commands
+
+1. Add/New commands:
+    - All the commands should be well-grouped by their responsibilities.
+    - `cobra-cli add sub-command`, which should be executed in the `.workspace/cli/` folder, and will create a template
+      file under the path of `.workspace/cli/cmd/`
+    - Do remember to add the subcommand package get initialized in th entrance package: `_ "github.
+   com/57blocks/auto-action/cli/internal/command/general"` in main.
 
 ## Scheduler expression types
 
