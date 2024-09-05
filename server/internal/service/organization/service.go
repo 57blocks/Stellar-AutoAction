@@ -3,10 +3,12 @@ package organization
 import (
 	"context"
 	"encoding/json"
+
 	configx "github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/model"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/organization"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -94,7 +96,7 @@ func (cd conductor) OrgRoleKey(c context.Context, req *dto.ReqKeys) (*dto.RespOr
 func (cd conductor) OrgSecret(c context.Context) (string, error) {
 	var err error
 
-	awsConfig, err := config.LoadDefaultConfig(
+	awsConfig, err = config.LoadDefaultConfig(
 		c,
 		config.WithRegion(configx.Global.Region),
 		config.WithSharedConfigProfile("iamp3ngf3i"), // TODO: only for local
