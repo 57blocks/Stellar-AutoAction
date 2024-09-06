@@ -65,7 +65,7 @@ func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegi
 
 	awsConfig, err = config.LoadDefaultConfig(
 		c,
-		config.WithRegion(configx.Global.Region),
+		config.WithRegion(configx.GlobalConfig.Region),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to load AWS config")
@@ -256,7 +256,7 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrig
 
 	awsConfig, err = config.LoadDefaultConfig(
 		c,
-		config.WithRegion(configx.Global.Region),
+		config.WithRegion(configx.GlobalConfig.Region),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to load AWS config")
@@ -343,7 +343,7 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 
 	awsConfig, err = config.LoadDefaultConfig(
 		c,
-		config.WithRegion(configx.Global.Region),
+		config.WithRegion(configx.GlobalConfig.Region),
 	)
 	if err != nil {
 		return errors.Wrap(err, "failed to load AWS config")

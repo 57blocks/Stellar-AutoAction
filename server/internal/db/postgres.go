@@ -36,7 +36,7 @@ func Setup() error {
 }
 
 func connect() error {
-	rds := config.Global.RDS
+	rds := config.GlobalConfig.RDS
 
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s timezone=UTC connect_timeout=10",

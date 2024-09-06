@@ -112,7 +112,7 @@ func (cd conductor) OrgSecret(c context.Context) (string, error) {
 
 	awsConfig, err = config.LoadDefaultConfig(
 		c,
-		config.WithRegion(configx.Global.Region),
+		config.WithRegion(configx.GlobalConfig.Region),
 	)
 
 	smClient = secretsmanager.NewFromConfig(awsConfig)

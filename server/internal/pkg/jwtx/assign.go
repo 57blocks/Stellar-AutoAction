@@ -32,7 +32,7 @@ type (
 )
 
 func AssignAccess(accClaim AccessClaims) (string, error) {
-	priPEM, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
+	priPEM, err := base64.StdEncoding.DecodeString(config.GlobalConfig.JWT.PrivateKey)
 	if err != nil {
 		return "", errors.Wrap(err, "decode private key failed")
 	}
@@ -53,7 +53,7 @@ func AssignAccess(accClaim AccessClaims) (string, error) {
 }
 
 func AssignRefresh(refClaim jwt.StandardClaims) (string, error) {
-	priPEM, err := base64.StdEncoding.DecodeString(config.Global.JWT.PrivateKey)
+	priPEM, err := base64.StdEncoding.DecodeString(config.GlobalConfig.JWT.PrivateKey)
 	if err != nil {
 		return "", errors.Wrap(err, "decode private key failed")
 	}
@@ -74,7 +74,7 @@ func AssignRefresh(refClaim jwt.StandardClaims) (string, error) {
 }
 
 func ParseToken(tokenStr string) (*jwt.Token, error) {
-	pubPEM, err := base64.StdEncoding.DecodeString(config.Global.JWT.PublicKey)
+	pubPEM, err := base64.StdEncoding.DecodeString(config.GlobalConfig.JWT.PublicKey)
 	if err != nil {
 		return nil, errors.Wrap(err, "decode public key failed")
 	}

@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var Global *Configuration
+var GlobalConfig *Configuration
 
 type (
 	Configuration struct {
@@ -82,14 +82,14 @@ func Setup() error {
 
 	viper.AutomaticEnv()
 
-	Global = new(Configuration)
+	GlobalConfig = new(Configuration)
 
-	if err := viper.Unmarshal(&Global); err != nil {
+	if err := viper.Unmarshal(&GlobalConfig); err != nil {
 		return err
 	}
 
 	cfgLogger.Debug(fmt.Sprintf("config path: %#v\n", viper.ConfigFileUsed()))
-	cfgLogger.Debug(fmt.Sprintf("config: %#v\n", Global.DebugStr()))
+	cfgLogger.Debug(fmt.Sprintf("config: %#v\n", GlobalConfig.DebugStr()))
 
 	return nil
 }
