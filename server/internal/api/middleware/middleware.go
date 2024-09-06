@@ -1,8 +1,10 @@
 package middleware
 
 import (
+	"errors"
 	"net/http"
 
+	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
 	svcOrg "github.com/57blocks/auto-action/server/internal/service/organization"
@@ -91,34 +93,34 @@ func Header() gin.HandlerFunc {
 	}
 }
 
-func Response() gin.HandlerFunc {
+// Here are the post-middlewares
+// Their execution order is the opposite of the register order.
+
+func PostResponse() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Header("Content-Type", "application/json")
 		c.Next()
+		c.Header("Content-Type", "application/json")
 	}
 }
 
-func Error() gin.HandlerFunc {
-	// TODO: finish the general error handler in middleware
+func PostHandleErr() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 
-		if len(c.Errors) > 0 {
-			c.Header("Content-Type", "application/json")
-			lastError := c.Errors.Last()
-
-			status := http.StatusInternalServerError // 默认状态码
-			if err, ok := lastError.Err.(interface{ Status() int }); ok {
-				status = err.Status()
-			}
-			c.JSON(
-				status,
-				gin.H{
-					"message": lastError.Error(),
-				},
-			)
-
-			c.Abort()
+		if len(c.Errors) == 0 {
+			return
 		}
+
+		e := c.Errors.Last()
+
+		err := new(errorx.Errorx)
+		if errors.As(e.Err, &err) {
+			c.JSON(err.Status(), &struct{ Error interface{} }{Error: err})
+			return
+		}
+
+		// unrecognized error
+		c.JSON(http.StatusInternalServerError, &struct{ Error interface{} }{Error: e})
+		return
 	}
 }

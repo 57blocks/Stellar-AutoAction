@@ -10,7 +10,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-var Global *Configuration
+var (
+	GlobalConfig *Configuration
+	Vp           *viper.Viper
+)
 
 type (
 	Configuration struct {
@@ -56,40 +59,35 @@ type (
 		Database string `mapstructure:"database"`
 		SSLMode  string `mapstructure:"sslmode"`
 	}
-
-	Lambda struct {
-		_    struct{}
-		Role string `mapstructure:"role"`
-	}
 )
 
 func Setup() error {
 	cfgLogger := slog.Default()
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 
-	viper.NewWithOptions(
+	Vp = viper.NewWithOptions(
 		viper.WithLogger(cfgLogger),
 	)
 
-	viper.AddConfigPath("./internal/config/")
-	viper.SetConfigType("toml")
-	viper.SetConfigName("config")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	Vp.AddConfigPath("./internal/config/")
+	Vp.SetConfigType("toml")
+	Vp.SetConfigName("config")
+	Vp.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
-	if err := viper.ReadInConfig(); err != nil {
+	if err := Vp.ReadInConfig(); err != nil {
 		return err
 	}
 
-	viper.AutomaticEnv()
+	Vp.AutomaticEnv()
 
-	Global = new(Configuration)
+	GlobalConfig = new(Configuration)
 
-	if err := viper.Unmarshal(&Global); err != nil {
+	if err := Vp.Unmarshal(&GlobalConfig); err != nil {
 		return err
 	}
 
-	cfgLogger.Debug(fmt.Sprintf("config path: %#v\n", viper.ConfigFileUsed()))
-	cfgLogger.Debug(fmt.Sprintf("config: %#v\n", Global.DebugStr()))
+	cfgLogger.Debug(fmt.Sprintf("config path: %#v\n", Vp.ConfigFileUsed()))
+	cfgLogger.Debug(fmt.Sprintf("config: %#v\n", GlobalConfig.DebugStr()))
 
 	return nil
 }

@@ -2,15 +2,16 @@ package oauth
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/model"
+	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/oauth"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -42,14 +43,14 @@ func (cd *conductor) Login(c context.Context, req dto.ReqLogin) (*dto.RespCreden
 			"o.name":    req.Organization,
 		}).
 		First(user).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("user/organization not found")
+		if errors.As(err, &gorm.ErrRecordNotFound) {
+			return nil, errorx.NotFound("user/organization not found")
 		}
-		return nil, errors.Wrap(err, err.Error())
+		return nil, errorx.Internal(err.Error())
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), req.Password); err != nil {
-		return nil, errors.New("password not match")
+		return nil, errorx.BadRequest("password not match")
 	}
 
 	// tokens assignment
@@ -98,7 +99,7 @@ func (cd *conductor) Login(c context.Context, req dto.ReqLogin) (*dto.RespCreden
 		}).
 		Create(token).
 		Error; err != nil {
-		return nil, errors.New(err.Error())
+		return nil, errorx.Internal(err.Error())
 	}
 
 	// build response
@@ -122,21 +123,22 @@ func (cd *conductor) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCr
 			"refresh": req.Refresh,
 		}).
 		First(token).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("none refresh token found")
+		if errors.As(err, &gorm.ErrRecordNotFound) {
+			return nil, errorx.NotFound("none refresh token found")
 		}
-		return nil, errors.New(err.Error())
+
+		return nil, errorx.Internal(err.Error())
 	}
 
 	jwtToken, _ := jwtx.ParseToken(token.Access)
 	claims, ok := jwtToken.Claims.(jwt.MapClaims)
 	if !ok {
-		return nil, errors.New("failed to assert JWT claims as MapClaims")
+		return nil, errorx.Internal("failed to assert JWT claims as MapClaims")
 	}
 
 	refreshExp := token.RefreshExpires.UTC()
 	if refreshExp.Before(time.Now().UTC()) {
-		return nil, errors.New("refresh token expired, please login again")
+		return nil, errorx.UnauthorizedWithMsg("refresh token expired, please login again")
 	}
 
 	now := time.Now().UTC()
@@ -181,7 +183,7 @@ func (cd *conductor) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCr
 	token.UpdatedAt = &now
 
 	if err := db.Conn(c).Save(token).Error; err != nil {
-		return nil, errors.New(err.Error())
+		return nil, errorx.Internal(err.Error())
 	}
 
 	resp := dto.BuildRespCred(
@@ -203,7 +205,7 @@ func (cd *conductor) Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogo
 			"access": req.Token,
 		}).
 		Delete(&model.Token{}).Error; err != nil {
-		return nil, errors.New(err.Error())
+		return nil, errorx.Internal(err.Error())
 	}
 
 	return new(dto.RespLogout), nil

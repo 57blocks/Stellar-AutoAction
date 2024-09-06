@@ -13,14 +13,9 @@ var GinEngine *gin.Engine
 func Setup() error {
 	GinEngine = gin.New(
 		WithCustomRecovery(),
-		WithReqHeader(),
-		WithError(),
-		WithResponse(),
-	)
-
-	GinEngine.Use(
-		middleware.ZapLogger(),
-		middleware.Header(),
+		WithLogger(),
+		WithPostError(),
+		WithPostResponse(),
 	)
 
 	GinEngine.GET("/up", func(ctx *gin.Context) {
@@ -30,4 +25,52 @@ func Setup() error {
 	RegisterHandlers(GinEngine)
 
 	return nil
+}
+
+func WithCustomRecovery() gin.OptionFunc {
+	return func(g *gin.Engine) {
+		g.Use(
+			gin.CustomRecovery(func(c *gin.Context, err interface{}) {
+				e, ok := err.(error)
+				if ok {
+					c.JSON(http.StatusInternalServerError, gin.H{
+						"success": false,
+						"message": "internal error",
+						"msg":     e.Error(),
+					})
+				}
+			},
+			),
+		)
+	}
+}
+
+func WithCORS() gin.OptionFunc {
+	return func(g *gin.Engine) {
+		g.Use(middleware.CORS())
+	}
+}
+
+func WithReqHeader() gin.OptionFunc {
+	return func(g *gin.Engine) {
+		g.Use(middleware.Header())
+	}
+}
+
+func WithLogger() gin.OptionFunc {
+	return func(g *gin.Engine) {
+		g.Use(middleware.ZapLogger())
+	}
+}
+
+func WithPostResponse() gin.OptionFunc {
+	return func(g *gin.Engine) {
+		g.Use(middleware.PostResponse())
+	}
+}
+
+func WithPostError() gin.OptionFunc {
+	return func(g *gin.Engine) {
+		g.Use(middleware.PostHandleErr())
+	}
 }
