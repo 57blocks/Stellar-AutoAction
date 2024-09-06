@@ -1,10 +1,9 @@
 package organization
 
 import (
-	"fmt"
-	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"net/http"
 
+	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/organization"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +13,7 @@ func Keys(c *gin.Context) {
 	req := new(dto.ReqKeys)
 
 	if err := c.ShouldBindJSON(req); err != nil {
-		c.Error(fmt.Errorf("%w", errorx.BadRequestErr(err.Error())))
+		c.Error(errorx.BadRequest(err.Error()))
 		return
 	}
 

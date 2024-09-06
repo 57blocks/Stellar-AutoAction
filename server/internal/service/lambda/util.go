@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	dtoLam "github.com/57blocks/auto-action/server/internal/service/dto/lambda"
 	svcOrg "github.com/57blocks/auto-action/server/internal/service/organization"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 )
 
 func genLambdaFuncName(c context.Context, name string) string {
@@ -23,7 +23,7 @@ func genLambdaFuncName(c context.Context, name string) string {
 func genEventPayload(c context.Context) (*dtoLam.StdEventPayload, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
-		return nil, errors.New("convert context.Context to gin.Context failed")
+		return nil, errorx.GinContextConv()
 	}
 
 	jwtOrg, _ := ctx.Get("jwt_organization")

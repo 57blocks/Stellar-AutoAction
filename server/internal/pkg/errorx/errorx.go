@@ -2,6 +2,7 @@ package errorx
 
 import (
 	"fmt"
+	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
 	"net/http"
 )
 
@@ -31,37 +32,57 @@ func newErr(status, code int, message string) *Errorx {
 	}
 }
 
-// BadRequestErr returns an error with status 400 and message.
-func BadRequestErr(msg string) error {
+// BadRequest returns an error with status 400 and message.
+func BadRequest(msg string) error {
 	return fmt.Errorf("%w", newErr(http.StatusBadRequest, 400, msg))
 }
 
-// UnauthorizedErr returns an error with status 400 and message.
-func UnauthorizedErr() error {
+// Unauthorized returns an error with status 400 and message.
+func Unauthorized() error {
 	return fmt.Errorf("%w", newErr(http.StatusUnauthorized, 401, "request unauthorized"))
 }
 
-// UnauthorizedErrMsg returns an error with status 400 and message.
-func UnauthorizedErrMsg(msg string) error {
+// UnauthorizedWithMsg returns an error with status 400 and message.
+func UnauthorizedWithMsg(msg string) error {
 	return fmt.Errorf("%w", newErr(http.StatusUnauthorized, 401, msg))
 }
 
-// ForbiddenErr returns an error with status 400 and message.
-func ForbiddenErr() error {
+// Forbidden returns an error with status 400 and message.
+func Forbidden() error {
 	return fmt.Errorf("%w", newErr(http.StatusForbidden, 403, "request forbidden"))
 }
 
-// ForbiddenErrMsg returns an error with status 400 and message.
-func ForbiddenErrMsg(msg string) error {
+// ForbiddenWithMsg returns an error with status 400 and message.
+func ForbiddenWithMsg(msg string) error {
 	return fmt.Errorf("%w", newErr(http.StatusForbidden, 403, msg))
 }
 
-// NotFoundErr returns an error with status 404 and message.
-func NotFoundErr(msg string) error {
+// NotFound returns an error with status 404 and message.
+func NotFound(msg string) error {
 	return fmt.Errorf("%w", newErr(http.StatusNotFound, 404, msg))
 }
 
-// InternalErr returns an error with status 404 and message.
-func InternalErr(msg string) error {
+// Internal returns an error with status 404 and message.
+func Internal(msg string) error {
+	pkgLog.Logger.ERROR(msg)
+
 	return fmt.Errorf("%w", newErr(http.StatusInternalServerError, 500, msg))
+}
+
+func GinContextConv() error {
+	return fmt.Errorf("%w", newErr(
+		http.StatusInternalServerError,
+		500,
+		"convert context.Context to gin.Context failed",
+	))
+}
+
+func AmazonConfig(msg string) error {
+	pkgLog.Logger.ERROR(msg)
+
+	return fmt.Errorf("%w", newErr(
+		http.StatusInternalServerError,
+		500,
+		fmt.Sprintf("failed to config Amazon: %s", msg),
+	))
 }

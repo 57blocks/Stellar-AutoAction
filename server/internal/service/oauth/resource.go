@@ -3,6 +3,7 @@ package oauth
 import (
 	"net/http"
 
+	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/oauth"
 
@@ -13,13 +14,13 @@ func Login(c *gin.Context) {
 	req := new(dto.ReqLogin)
 
 	if err := c.BindJSON(req); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.Error(errorx.BadRequest(err.Error()))
 		return
 	}
 
 	resp, err := Conductor.Login(c, *req)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.Error(err)
 		return
 	}
 
@@ -30,17 +31,17 @@ func Logout(c *gin.Context) {
 	req := new(dto.ReqLogout)
 
 	if err := c.BindJSON(req); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.Error(errorx.BadRequest(err.Error()))
 		return
 	}
 
-	pkgLog.Logger.DEBUG("logout", map[string]interface{}{
+	pkgLog.Logger.DEBUG("oauth logout", map[string]interface{}{
 		"logout_token": req.Token,
 	})
 
 	resp, err := Conductor.Logout(c, *req)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.Error(err)
 		return
 	}
 
@@ -51,17 +52,17 @@ func Refresh(c *gin.Context) {
 	req := new(dto.ReqRefresh)
 
 	if err := c.BindJSON(req); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.Error(errorx.BadRequest(err.Error()))
 		return
 	}
 
-	pkgLog.Logger.DEBUG("refresh", map[string]interface{}{
+	pkgLog.Logger.DEBUG("oauth refresh", map[string]interface{}{
 		"refresh_token": req.Refresh,
 	})
 
 	resp, err := Conductor.Refresh(c, *req)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.Error(err)
 		return
 	}
 

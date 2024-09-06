@@ -2,8 +2,9 @@ package model
 
 import (
 	"database/sql/driver"
-	"errors"
 	"strings"
+
+	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 )
 
 type StrList []string
@@ -20,7 +21,7 @@ func (a *StrList) Scan(value interface{}) error {
 
 	s, ok := value.(string)
 	if !ok {
-		return errors.New("type assertion to string failed")
+		return errorx.Internal("type assertion to string failed")
 	}
 
 	*a = strings.Split(strings.Trim(s, "{}"), ",")

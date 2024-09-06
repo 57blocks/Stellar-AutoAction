@@ -3,7 +3,9 @@ package lambda
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -26,7 +28,6 @@ import (
 	scheTypes "github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -68,7 +69,7 @@ func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegi
 		config.WithRegion(configx.GlobalConfig.Region),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to load AWS config")
+		return nil, errorx.AmazonConfig(err.Error())
 	}
 
 	fileHeaders := r.MultipartForm.File
@@ -117,7 +118,8 @@ func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegi
 				model.WithSchArn(*newSchResp.ScheduleArn),
 			)
 		} else {
-			pkgLog.Logger.DEBUG("no expression found, will be triggered manually")
+			splits := strings.Split(fh.Filename, ".")
+			pkgLog.Logger.INFO(fmt.Sprintf("%s: will be triggered manually", splits[0]))
 		}
 
 		toPersists = append(toPersists, tpp)
@@ -140,7 +142,7 @@ func registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.Create
 
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read zip handler file")
+		return nil, errorx.Internal(fmt.Sprintf("failed to read file: %s, err: %s", fh.Filename, err.Error()))
 	}
 
 	splits := strings.Split(fh.Filename, ".")
@@ -170,9 +172,7 @@ func registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.Create
 		func(opt *lambda.Options) {},
 	)
 	if err != nil {
-		errMsg := fmt.Sprintf("failed to register lambda: %s, err: %s\n", fh.Filename, err.Error())
-		pkgLog.Logger.ERROR(errMsg)
-		return nil, errors.Wrap(err, errMsg)
+		return nil, errorx.Internal(fmt.Sprintf("failed to register lambda: %s, err: %s\n", fh.Filename, err.Error()))
 	}
 
 	return lambdaFun, nil
@@ -214,9 +214,7 @@ func boundScheduler(
 		State:                      scheTypes.ScheduleStateEnabled,
 	})
 	if err != nil {
-		errMsg := fmt.Sprintf("failed to bound lambda with scheduler: %s\n", err.Error())
-		pkgLog.Logger.ERROR(errMsg)
-		return nil, errors.New(errMsg)
+		return nil, errorx.Internal(fmt.Sprintf("failed to bind scheduler: %s, err: %s\n", *lambdaFun.FunctionName, err.Error()))
 	}
 
 	pkgLog.Logger.DEBUG(fmt.Sprintf("scheduler created: %s", *newSchResp.ScheduleArn))
@@ -230,7 +228,7 @@ func persist(c context.Context, pairs []toPersistPair) {
 			//l := pair.Lambda
 			newLambda := tx.Table("lambda").Create(pair.Lambda)
 			if err := newLambda.Error; err != nil {
-				return errors.Wrap(err, fmt.Sprintf("failed to create lambda: %s", pair.Lambda.FunctionArn))
+				return errorx.Internal(fmt.Sprintf("failed to create lambda: %s", pair.Lambda.FunctionArn))
 			}
 
 			if pair.Scheduler == nil {
@@ -241,7 +239,8 @@ func persist(c context.Context, pairs []toPersistPair) {
 			pair.Scheduler.LambdaID = pair.Lambda.ID
 
 			if err := tx.Table("lambda_scheduler").Create(pair.Scheduler).Error; err != nil {
-				return errors.Wrap(err, fmt.Sprintf("failed to create lambda: %s", pair.Scheduler.ScheduleArn))
+				return errorx.NotFound(fmt.Sprintf("failed to create lambda scheduler: %s",
+					pair.Scheduler.ScheduleArn))
 			}
 		}
 
@@ -259,7 +258,7 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrig
 		config.WithRegion(configx.GlobalConfig.Region),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to load AWS config")
+		return nil, errorx.AmazonConfig(err.Error())
 	}
 
 	lambdaClient = lambda.NewFromConfig(awsConfig)
@@ -274,11 +273,11 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrig
 			"function_name": genLambdaFuncName(c, r.Lambda),
 		}).
 		First(l).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New(fmt.Sprintf("none lambda found by: %s\n", r.Lambda))
+		if errors.As(err, &gorm.ErrRecordNotFound) {
+			return nil, errorx.NotFound(fmt.Sprintf("none lambda found by: %s\n", r.Lambda))
 		}
 
-		return nil, errors.Wrap(err, err.Error())
+		return nil, errorx.Internal(fmt.Sprintf("failed to query lambda: %s, err: %s\n", r.Lambda, err.Error()))
 	}
 
 	// generate merged payload with orgSecretKey key
@@ -305,7 +304,7 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrig
 		Payload:      payload,
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to invoke lambda: %s", l.FunctionName))
+		return nil, errorx.Internal(fmt.Sprintf("failed to invoke lambda: %s", l.FunctionName))
 	}
 
 	return dto.BuildRespTrigger(dto.WithTriggerResp(invokeOutput)), nil
@@ -328,11 +327,11 @@ func (cd *conductor) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, err
 			"function_name": r.Lambda,
 		}).
 		First(resp).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New(fmt.Sprintf("none lambda found by: %s\n", r.Lambda))
+		if errors.As(err, &gorm.ErrRecordNotFound) {
+			return nil, errorx.NotFound(fmt.Sprintf("none lambda found by: %s\n", r.Lambda))
 		}
 
-		return nil, errors.Wrap(err, err.Error())
+		return nil, errorx.Internal(fmt.Sprintf("failed to query lambda: %s, err: %s\n", r.Lambda, err.Error()))
 	}
 
 	return resp, nil
@@ -346,7 +345,7 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 		config.WithRegion(configx.GlobalConfig.Region),
 	)
 	if err != nil {
-		return errors.Wrap(err, "failed to load AWS config")
+		return errorx.AmazonConfig(err.Error())
 	}
 
 	cwClient = cloudwatchlogs.NewFromConfig(awsConfig)
@@ -354,7 +353,7 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 	// websocket
 	ctx, ok := c.(*gin.Context)
 	if !ok {
-		return errors.New("convert context.Context to gin.Context failed")
+		return errorx.GinContextConv()
 	}
 
 	upgrader := websocket.Upgrader{
@@ -367,11 +366,9 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 
 	wsConn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
-		return errors.Wrap(err, "failed to set websocket upgrade")
+		return errorx.Internal(fmt.Sprintf("failed to upgrade websocket: %s", err.Error()))
 	}
 	defer wsConn.Close()
-
-	// TODO: query Lambda name
 
 	logGroupName := "/aws/lambda/" + genLambdaFuncName(c, req.Lambda)
 
@@ -383,11 +380,11 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 
 	describeOutput, err := cwClient.DescribeLogStreams(c, describeInput)
 	if err != nil {
-		return errors.Wrap(err, "failed to describe log streams")
+		return errorx.Internal(fmt.Sprintf("failed to describe log streams: %s\n", err.Error()))
 	}
 
 	if len(describeOutput.LogStreams) == 0 {
-		return errors.New("no log streams found")
+		return errorx.NotFound("no log streams found")
 	}
 
 	logStreamName := describeOutput.LogStreams[0].LogStreamName
@@ -406,12 +403,12 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 
 		output, err := cwClient.GetLogEvents(c, input)
 		if err != nil {
-			return errors.Wrap(err, "failed to get log events")
+			return errorx.Internal(fmt.Sprintf("failed to get log events: %s\n", err.Error()))
 		}
 
 		for _, event := range output.Events {
 			if err := wsConn.WriteMessage(websocket.TextMessage, []byte(*event.Message)); err != nil {
-				return errors.Wrap(err, "failed to write message")
+				return errorx.Internal(fmt.Sprintf("failed to write message: %s\n", err.Error()))
 			}
 		}
 

@@ -43,7 +43,7 @@ func init() {
 func (cd conductor) Organization(c context.Context) (*model.Organization, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
-		return nil, errorx.InternalErr("convert context.Context to gin.Context failed")
+		return nil, errorx.GinContextConv()
 	}
 
 	jwtOrg, _ := ctx.Get("jwt_organization")
@@ -55,10 +55,10 @@ func (cd conductor) Organization(c context.Context) (*model.Organization, error)
 		}).
 		First(org).Error; err != nil {
 		if errors.As(err, gorm.ErrRecordNotFound) {
-			return nil, errorx.NotFoundErr("none organization found")
+			return nil, errorx.NotFound("none organization found")
 		}
 
-		return nil, errorx.InternalErr(fmt.Sprintf("find organization by name: %s, occurred error: %s", jwtOrg, err.Error()))
+		return nil, errorx.Internal(fmt.Sprintf("find organization by name: %s, occurred error: %s", jwtOrg, err.Error()))
 	}
 
 	return org, nil
@@ -75,12 +75,12 @@ func (cd conductor) OrgRoleKey(c context.Context, req *dto.ReqKeys) (*dto.RespOr
 			"u.account": req.Account,
 		}).
 		Find(&orkList).Error; err != nil {
-		return nil, errorx.InternalErr(err.Error())
+		return nil, errorx.Internal(err.Error())
 
 	}
 
 	if len(orkList) == 0 {
-		return nil, errorx.NotFoundErr("none organization related key pairs found")
+		return nil, errorx.NotFound("none organization related key pairs found")
 	}
 
 	org := new(model.Organization)
@@ -90,10 +90,10 @@ func (cd conductor) OrgRoleKey(c context.Context, req *dto.ReqKeys) (*dto.RespOr
 		}).
 		First(org).Error; err != nil {
 		if errors.As(err, &gorm.ErrRecordNotFound) {
-			return nil, errorx.NotFoundErr("none organization found")
+			return nil, errorx.NotFound("none organization found")
 		}
 
-		return nil, errorx.InternalErr(fmt.Sprintf("db error: %s", err.Error()))
+		return nil, errorx.Internal(fmt.Sprintf("db error: %s", err.Error()))
 	}
 
 	csRoleKeyList := make([]dto.RespCSRoleKey, 0, len(orkList))
@@ -119,7 +119,7 @@ func (cd conductor) OrgSecret(c context.Context) (string, error) {
 		config.WithRegion(configx.GlobalConfig.Region),
 	)
 	if err != nil {
-		return "", errorx.InternalErr(fmt.Sprintf("load aws config error: %s", err.Error()))
+		return "", errorx.AmazonConfig(err.Error())
 	}
 
 	smClient = secretsmanager.NewFromConfig(awsConfig)
@@ -133,12 +133,12 @@ func (cd conductor) OrgSecret(c context.Context) (string, error) {
 	if err != nil {
 		// For a list of exceptions thrown, see
 		// https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
-		return "", errorx.InternalErr(err.Error())
+		return "", errorx.Internal(err.Error())
 	}
 
 	resMap := make(map[string]interface{})
 	if err := json.Unmarshal([]byte(*resp.SecretString), &resMap); err != nil {
-		return "", errorx.InternalErr(fmt.Sprintf("json unmarshal error when parse secret value: %s", err.Error()))
+		return "", errorx.Internal(fmt.Sprintf("json unmarshal error when parse secret value: %s", err.Error()))
 	}
 
 	return resMap["api_key"].(string), nil
