@@ -172,7 +172,7 @@ func registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.Create
 		func(opt *lambda.Options) {},
 	)
 	if err != nil {
-		return nil, errorx.Internal(fmt.Sprintf("failed to register lambda: %s, err: %s\n", fh.Filename, err.Error()))
+		return nil, errorx.Internal(fmt.Sprintf("failed to register lambda: %s, err: %s", fh.Filename, err.Error()))
 	}
 
 	return lambdaFun, nil
@@ -214,7 +214,7 @@ func boundScheduler(
 		State:                      scheTypes.ScheduleStateEnabled,
 	})
 	if err != nil {
-		return nil, errorx.Internal(fmt.Sprintf("failed to bind scheduler: %s, err: %s\n", *lambdaFun.FunctionName, err.Error()))
+		return nil, errorx.Internal(fmt.Sprintf("failed to bind scheduler: %s, err: %s", *lambdaFun.FunctionName, err.Error()))
 	}
 
 	pkgLog.Logger.DEBUG(fmt.Sprintf("scheduler created: %s", *newSchResp.ScheduleArn))
@@ -274,10 +274,10 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrig
 		}).
 		First(l).Error; err != nil {
 		if errors.As(err, &gorm.ErrRecordNotFound) {
-			return nil, errorx.NotFound(fmt.Sprintf("none lambda found by: %s\n", r.Lambda))
+			return nil, errorx.NotFound(fmt.Sprintf("none lambda found by: %s", r.Lambda))
 		}
 
-		return nil, errorx.Internal(fmt.Sprintf("failed to query lambda: %s, err: %s\n", r.Lambda, err.Error()))
+		return nil, errorx.Internal(fmt.Sprintf("failed to query lambda: %s, err: %s", r.Lambda, err.Error()))
 	}
 
 	// generate merged payload with orgSecretKey key
@@ -328,10 +328,10 @@ func (cd *conductor) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, err
 		}).
 		First(resp).Error; err != nil {
 		if errors.As(err, &gorm.ErrRecordNotFound) {
-			return nil, errorx.NotFound(fmt.Sprintf("none lambda found by: %s\n", r.Lambda))
+			return nil, errorx.NotFound(fmt.Sprintf("none lambda found by: %s", r.Lambda))
 		}
 
-		return nil, errorx.Internal(fmt.Sprintf("failed to query lambda: %s, err: %s\n", r.Lambda, err.Error()))
+		return nil, errorx.Internal(fmt.Sprintf("failed to query lambda: %s, err: %s", r.Lambda, err.Error()))
 	}
 
 	return resp, nil
@@ -380,7 +380,7 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 
 	describeOutput, err := cwClient.DescribeLogStreams(c, describeInput)
 	if err != nil {
-		return errorx.Internal(fmt.Sprintf("failed to describe log streams: %s\n", err.Error()))
+		return errorx.Internal(fmt.Sprintf("failed to describe log streams: %s", err.Error()))
 	}
 
 	if len(describeOutput.LogStreams) == 0 {
@@ -403,12 +403,12 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 
 		output, err := cwClient.GetLogEvents(c, input)
 		if err != nil {
-			return errorx.Internal(fmt.Sprintf("failed to get log events: %s\n", err.Error()))
+			return errorx.Internal(fmt.Sprintf("failed to get log events: %s", err.Error()))
 		}
 
 		for _, event := range output.Events {
 			if err := wsConn.WriteMessage(websocket.TextMessage, []byte(*event.Message)); err != nil {
-				return errorx.Internal(fmt.Sprintf("failed to write message: %s\n", err.Error()))
+				return errorx.Internal(fmt.Sprintf("failed to write message: %s", err.Error()))
 			}
 		}
 

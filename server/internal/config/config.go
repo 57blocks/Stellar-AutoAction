@@ -86,8 +86,8 @@ func Setup() error {
 		return err
 	}
 
-	cfgLogger.Debug(fmt.Sprintf("config path: %#v\n", Vp.ConfigFileUsed()))
-	cfgLogger.Debug(fmt.Sprintf("config: %#v\n", GlobalConfig.DebugStr()))
+	cfgLogger.Debug(fmt.Sprintf("config path: %#v", Vp.ConfigFileUsed()))
+	cfgLogger.Debug(fmt.Sprintf("config: %#v", GlobalConfig.DebugStr()))
 
 	return nil
 }

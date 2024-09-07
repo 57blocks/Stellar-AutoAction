@@ -3,19 +3,16 @@ package oauth
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"os"
 
 	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/constant"
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
-	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -46,7 +43,7 @@ func init() {
 	login.Flags().StringP(
 		flagCred,
 		"c",
-		viper.GetString(flagCred),
+		config.Vp.GetString(flagCred),
 		`
 The credential file for the command about to be bound.
 If it's the first time, or ignored, the default path will be used.'`)
@@ -55,7 +52,7 @@ If it's the first time, or ignored, the default path will be used.'`)
 	login.Flags().StringP(
 		flagEnv,
 		"e",
-		viper.GetString(flagEnv),
+		config.Vp.GetString(flagEnv),
 		`
 The execution environment about to be bound.
 If ignored, the default environment: Horizon will be used.'`)
@@ -93,11 +90,11 @@ func loginFunc(cmd *cobra.Command, args []string) error {
 
 	pwdBytes, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("reading passowrd error: %s\n", err.Error()))
+		return errorx.Internal(fmt.Sprintf("reading passowrd error: %s", err.Error()))
 	}
 
 	if len(pwdBytes) == 0 {
-		return errors.New("empty cryptPwd error")
+		return errorx.BadRequest("empty cryptPwd error")
 	}
 
 	success, err := supplierLogin(pwdBytes)
@@ -112,20 +109,17 @@ func supplierLogin(cryptPwdBytes []byte) (*resty.Response, error) {
 	response, err := restyx.Client.R().
 		EnableTrace().
 		SetBody(ReqLogin{
-			Account:      viper.GetString(constant.FlagAccount.ValStr()),
-			Organization: viper.GetString(constant.FlagOrganization.ValStr()),
+			Account:      config.Vp.GetString(constant.FlagAccount.ValStr()),
+			Organization: config.Vp.GetString(constant.FlagOrganization.ValStr()),
 			Password:     cryptPwdBytes,
-			Environment:  viper.GetString(constant.FlagEnvironment.ValStr()),
+			Environment:  config.Vp.GetString(constant.FlagEnvironment.ValStr()),
 		}).
-		Post(viper.GetString("bound_with.endpoint") + "/oauth/login")
+		Post(config.Vp.GetString("bound_with.endpoint") + "/oauth/login")
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("resty error: %s\n", err.Error()))
+		return nil, errorx.WithRestyResp(response)
 	}
-
-	slog.Debug(fmt.Sprintf("%v\n", response)) // TODO: remove
-
-	if e := util.HasError(response); e != nil {
-		return nil, errors.Wrap(e, fmt.Sprintf("supplier error: %s\n", e))
+	if response.IsError() {
+		return nil, errorx.WithRestyResp(response)
 	}
 
 	return response, nil
@@ -134,10 +128,10 @@ func supplierLogin(cryptPwdBytes []byte) (*resty.Response, error) {
 func syncLogin(resp *resty.Response) error {
 	cred := new(config.Credential)
 	if err := json.Unmarshal(resp.Body(), cred); err != nil {
-		return errors.Wrap(err, fmt.Sprintf("unmarshaling json response error: %s\n", err.Error()))
+		return errorx.Internal(fmt.Sprintf("unmarshaling json response error: %s", err.Error()))
 	}
 
-	if err := config.WriteCredential(viper.GetString(constant.FlagCredential.ValStr()), cred); err != nil {
+	if err := config.WriteCredential(config.Vp.GetString(constant.FlagCredential.ValStr()), cred); err != nil {
 		return err
 	}
 

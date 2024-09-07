@@ -4,29 +4,30 @@ import (
 	"strings"
 
 	"github.com/57blocks/auto-action/cli/internal/constant"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-func SetupViper(cfg *GlobalConfig) {
-	logger := SetupLogger(cfg) // TODO: abstraction layer for logger
+var (
+	Vp *viper.Viper
+)
 
-	viper.NewWithOptions(
+func SetupViper(cfg *GlobalConfig) {
+	logx.SetupLogger(cfg.Log)
+
+	Vp = viper.NewWithOptions(
 		viper.EnvKeyReplacer(strings.NewReplacer(".", "_")),
-		viper.WithLogger(logger),
-		//viper.KeyDelimiter("::"),
+		viper.WithLogger(logx.Logger),
 	)
 
-	viper.AddConfigPath(util.Home())
-	viper.SetConfigType(constant.ConfigurationType.ValStr())
-	viper.SetConfigName(constant.ConfigName.ValStr())
+	Vp.AddConfigPath(util.Home())
+	Vp.SetConfigType(constant.ConfigurationType.ValStr())
+	Vp.SetConfigName(constant.ConfigName.ValStr())
 
-	//viper.SetDefault("author", "v3nooom@outlook.com")
-	//viper.SetDefault("license", "apache 2.0")
+	Vp.AutomaticEnv()
 
-	viper.AutomaticEnv()
-
-	cobra.CheckErr(viper.ReadInConfig())
+	cobra.CheckErr(Vp.ReadInConfig())
 }

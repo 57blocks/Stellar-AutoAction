@@ -2,17 +2,15 @@ package lambda
 
 import (
 	"fmt"
-	"log/slog"
 
 	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/constant"
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
-	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // invoke represents the invoke command
@@ -28,7 +26,7 @@ Note:
   - If the Lambda does not depend on the input in the EVENT, the 
     payload is not required.
   - If so, the payload should be a well-formed JSON string, which is
-    suitable/executable/valid in your handler to use.
+    suitable/executable/valid in your handler event to use.
     For example: -p '{"key": "value"}'
 `,
 	Args: cobra.ExactArgs(1),
@@ -44,7 +42,7 @@ func init() {
 	invoke.Flags().StringP(
 		flagPayload,
 		"p",
-		viper.GetString(flagPayload),
+		config.Vp.GetString(flagPayload),
 		`
 A well-formed JSON string. And should be suitable/executable/valid in
 your handler to use. Example: '{"key": "value"}'
@@ -64,17 +62,17 @@ func invokeFunc(_ *cobra.Command, args []string) error {
 			"Authorization": token,
 		}).
 		SetBody(map[string]string{
-			"payload": viper.GetString(constant.FlagPayload.ValStr()),
+			"payload": config.Vp.GetString(constant.FlagPayload.ValStr()),
 		}).
-		Post(fmt.Sprintf("%s/lambda/%s", viper.GetString("bound_with.endpoint"), args[0]))
+		Post(fmt.Sprintf("%s/lambda/%s", config.Vp.GetString("bound_with.endpoint"), args[0]))
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("resty error: %s\n", err.Error()))
+		return errorx.RestyError(err.Error())
 	}
-	if e := util.HasError(response); e != nil {
-		return errors.Wrap(e, fmt.Sprintf("supplier error: %s\n", e))
+	if response.IsError() {
+		return errorx.WithRestyResp(response)
 	}
 
-	slog.Debug(fmt.Sprintf("%v\n", response))
+	logx.Logger.Info("invoke lambda success", "result", response.String())
 
 	return nil
 }

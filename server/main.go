@@ -27,7 +27,7 @@ func main() {
 		boot.Wrap(api.Setup),
 		boot.Wrap(restyx.Setup),
 	); err != nil {
-		log.Panicf("boots components occurred error: %s\n", err.Error())
+		log.Panicf("boots components occurred error: %s", err.Error())
 	}
 
 	pkgLog.Logger.INFO("boots: server")

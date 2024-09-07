@@ -1,20 +1,17 @@
 package lambda
 
 import (
-	"fmt"
-	"log/slog"
 	"strings"
 
 	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/constant"
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
-	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // register represents the register command
@@ -46,7 +43,7 @@ Note:
 		r := cmd.Flags().Changed(constant.FlagRate.ValStr())
 
 		if a && r || a && c || r && c {
-			return errors.New("at most one expression flag should be set")
+			return errorx.BadRequest("at most one expression flag should be set")
 		}
 
 		return nil
@@ -64,7 +61,7 @@ func init() {
 	register.Flags().StringP(
 		flagCron,
 		"c",
-		viper.GetString(flagCron),
+		config.Vp.GetString(flagCron),
 		`The cron execution expression for the Event Bridge Scheduler.
 For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#rate-based
 `)
@@ -73,7 +70,7 @@ For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-t
 	register.Flags().StringP(
 		flagRate,
 		"r",
-		viper.GetString(flagRate),
+		config.Vp.GetString(flagRate),
 		`The rate execution expression for the Event Bridge Scheduler.
 For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#cron-based
 `)
@@ -82,7 +79,7 @@ For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-t
 	register.Flags().StringP(
 		flagAt,
 		"a",
-		viper.GetString(flagAt),
+		config.Vp.GetString(flagAt),
 		`The one-time execution expression for the Event Bridge Scheduler.
 For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#one-time
 `)
@@ -94,7 +91,7 @@ func registerFunc(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	slog.Info(fmt.Sprintf("lambda identifiers: %v\n", resp.String()))
+	logx.Logger.Info("register lambda", "result", resp.String())
 
 	return nil
 }
@@ -122,27 +119,27 @@ func supplierRegister(args []string) (*resty.Response, error) {
 	flagMap := make(map[string]string, 1)
 	flagKeys := []string{constant.FlagAt.ValStr(), constant.FlagCron.ValStr(), constant.FlagRate.ValStr()}
 	for _, key := range flagKeys {
-		if value := strings.TrimSpace(viper.GetString(key)); value != "" {
+		if value := strings.TrimSpace(config.Vp.GetString(key)); value != "" {
 			flagMap["expression"] = value
-			slog.Debug(fmt.Sprintf("%s expression: %s\n", key, value))
+			logx.Logger.Debug("register lambda", "trigger expression", value)
 			break
 		}
 	}
 
 	if len(flagMap) == 0 {
 		flagMap["expression"] = ""
-		slog.Debug("lambda will be triggered manually\n")
+		logx.Logger.Debug("register lambda", "trigger expression", "lambda will be triggered manually")
 	}
 
 	request = request.SetFormData(flagMap)
 
-	resp, err := request.Post(viper.GetString("bound_with.endpoint") + "/lambda")
+	response, err := request.Post(config.Vp.GetString("bound_with.endpoint") + "/lambda")
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("resty error: %s\n", err.Error()))
+		return nil, errorx.WithRestyResp(response)
 	}
-	if e := util.HasError(resp); e != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("supplier error: %s\n", e))
+	if response.IsError() {
+		return nil, errorx.WithRestyResp(response)
 	}
 
-	return resp, nil
+	return response, nil
 }

@@ -1,18 +1,16 @@
 package oauth
 
 import (
-	"fmt"
 	"log/slog"
 
 	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // logout represents the logout command
@@ -45,7 +43,7 @@ type ReqLogout struct {
 func logoutFunc(_ *cobra.Command, _ []string) error {
 	cfg, err := config.ReadConfig()
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("reading config error: %s\n", err.Error()))
+		return err
 	}
 
 	// logout already
@@ -63,11 +61,11 @@ func logoutFunc(_ *cobra.Command, _ []string) error {
 	// logout
 	credential, err := config.ReadCredential(cfg.Credential)
 	if err != nil {
-		return errors.New(fmt.Sprintf("reading credential error: %s\n", err.Error()))
+		return err
 	}
 
 	if _, err := supplierLogout(credential.Token); err != nil {
-		return errors.New(fmt.Sprintf("resty error: %s\n", err.Error()))
+		return err
 	}
 
 	if err := config.RemoveCredential(cfg.Credential); err != nil {
@@ -85,15 +83,12 @@ func supplierLogout(token string) (*resty.Response, error) {
 	response, err := restyx.Client.R().
 		EnableTrace().
 		SetBody(ReqLogout{Token: token}).
-		Delete(viper.GetString("bound_with.endpoint") + "/oauth/logout")
+		Delete(config.Vp.GetString("bound_with.endpoint") + "/oauth/logout")
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("resty error: %s\n", err.Error()))
+		return nil, errorx.WithRestyResp(response)
 	}
-
-	slog.Debug(fmt.Sprintf("response: %v\n", response)) // TODO: remove
-
-	if e := util.HasError(response); e != nil {
-		return nil, errors.New(fmt.Sprintf("supplier error: %s\n", e))
+	if response.IsError() {
+		return nil, errorx.WithRestyResp(response)
 	}
 
 	return response, nil

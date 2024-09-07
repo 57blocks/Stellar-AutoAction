@@ -2,16 +2,14 @@ package lambda
 
 import (
 	"fmt"
-	"log/slog"
 
 	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
-	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // info represents the info command
@@ -48,15 +46,15 @@ func infoFunc(_ *cobra.Command, args []string) error {
 			"Content-Type":  "multipart/form-data",
 			"Authorization": token,
 		}).
-		Get(fmt.Sprintf("%s/lambda/%s/info", viper.GetString("bound_with.endpoint"), args[0]))
+		Get(fmt.Sprintf("%s/lambda/%s/info", config.Vp.GetString("bound_with.endpoint"), args[0]))
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("resty error: %s\n", err.Error()))
+		return errorx.RestyError(err.Error())
 	}
-	if e := util.HasError(response); e != nil {
-		return errors.Wrap(e, fmt.Sprintf("supplier error: %s\n", e))
+	if response.IsError() {
+		return errorx.WithRestyResp(response)
 	}
 
-	slog.Debug(fmt.Sprintf("%v\n", response))
+	logx.Logger.Info("lambda info", "result", response.String())
 
 	return nil
 }
