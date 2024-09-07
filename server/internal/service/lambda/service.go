@@ -314,9 +314,6 @@ func (cd *conductor) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, err
 	resp := new(dto.RespInfo)
 
 	if err := db.Conn(c).Table("lambda").
-		Preload("VPC", func(db *gorm.DB) *gorm.DB {
-			return db.Table("vpc")
-		}).
 		Preload("Schedulers", func(db *gorm.DB) *gorm.DB {
 			return db.Table("lambda_scheduler")
 		}).
@@ -324,7 +321,7 @@ func (cd *conductor) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, err
 			"function_arn": r.Lambda,
 		}).
 		Or(map[string]interface{}{
-			"function_name": r.Lambda,
+			"function_name": genLambdaFuncName(c, r.Lambda),
 		}).
 		First(resp).Error; err != nil {
 		if errors.As(err, &gorm.ErrRecordNotFound) {

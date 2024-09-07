@@ -3,11 +3,11 @@ package lambda
 import (
 	"fmt"
 
-	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/spf13/cobra"
 )
@@ -31,7 +31,7 @@ Note:
 }
 
 func init() {
-	command.Root.AddCommand(info)
+	lambdaGroup.AddCommand(info)
 }
 
 func infoFunc(_ *cobra.Command, args []string) error {
@@ -40,13 +40,15 @@ func infoFunc(_ *cobra.Command, args []string) error {
 		return err
 	}
 
+	URL := util.ParseReqPath(fmt.Sprintf("%s/lambda/%s/info", config.Vp.GetString("bound_with.endpoint"), args[0]))
+
 	response, err := restyx.Client.R().
 		EnableTrace().
 		SetHeaders(map[string]string{
 			"Content-Type":  "multipart/form-data",
 			"Authorization": token,
 		}).
-		Get(fmt.Sprintf("%s/lambda/%s/info", config.Vp.GetString("bound_with.endpoint"), args[0]))
+		Get(URL)
 	if err != nil {
 		return errorx.RestyError(err.Error())
 	}
@@ -54,7 +56,7 @@ func infoFunc(_ *cobra.Command, args []string) error {
 		return errorx.WithRestyResp(response)
 	}
 
-	logx.Logger.Info("lambda info", "result", response.String())
+	logx.Logger.Info("lambda info", "result", string(response.Body()))
 
 	return nil
 }

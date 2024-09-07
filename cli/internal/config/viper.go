@@ -16,7 +16,12 @@ var (
 )
 
 func SetupViper(cfg *GlobalConfig) {
-	logx.SetupLogger(cfg.Log)
+	trackSource := false
+	if strings.EqualFold(cfg.Source, "on") {
+		trackSource = true
+	}
+
+	logx.SetupLogger(cfg.Log, trackSource)
 
 	Vp = viper.NewWithOptions(
 		viper.EnvKeyReplacer(strings.NewReplacer(".", "_")),

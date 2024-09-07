@@ -1,7 +1,9 @@
 package util
 
 import (
+	"net/url"
 	"os"
+	"strings"
 
 	"github.com/57blocks/auto-action/cli/internal/constant"
 
@@ -24,4 +26,12 @@ func DefaultPath() string {
 // DefaultCredPath returns the default path of the credential file
 func DefaultCredPath() string {
 	return Home() + "/" + constant.CredentialName.ValStr()
+}
+
+func ParseReqPath(input string) string {
+	path := url.QueryEscape(input)
+
+	path = strings.ReplaceAll(input, "#", "%23")
+
+	return path
 }

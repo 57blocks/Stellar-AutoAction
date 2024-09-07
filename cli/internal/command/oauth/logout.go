@@ -1,13 +1,12 @@
 package oauth
 
 import (
-	"log/slog"
-
-	"github.com/57blocks/auto-action/cli/internal/command"
+	"fmt"
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
+	"log/slog"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/spf13/cobra"
@@ -27,13 +26,11 @@ Note:
     credentials.
 `,
 	Args: cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return logoutFunc(cmd, args)
-	},
+	RunE: logoutFunc,
 }
 
 func init() {
-	command.Root.AddCommand(logout)
+	oauthGroup.AddCommand(logout)
 }
 
 type ReqLogout struct {
@@ -80,10 +77,12 @@ func logoutFunc(_ *cobra.Command, _ []string) error {
 }
 
 func supplierLogout(token string) (*resty.Response, error) {
+	URL := util.ParseReqPath(fmt.Sprintf("%s/oauth/logout", config.Vp.GetString("bound_with.endpoint")))
+
 	response, err := restyx.Client.R().
 		EnableTrace().
 		SetBody(ReqLogout{Token: token}).
-		Delete(config.Vp.GetString("bound_with.endpoint") + "/oauth/logout")
+		Delete(URL)
 	if err != nil {
 		return nil, errorx.WithRestyResp(response)
 	}

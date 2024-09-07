@@ -3,12 +3,12 @@ package lambda
 import (
 	"fmt"
 
-	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/constant"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/spf13/cobra"
 )
@@ -36,7 +36,7 @@ Note:
 }
 
 func init() {
-	command.Root.AddCommand(invoke)
+	lambdaGroup.AddCommand(invoke)
 
 	flagPayload := constant.FlagPayload.ValStr()
 	invoke.Flags().StringP(
@@ -55,6 +55,8 @@ func invokeFunc(_ *cobra.Command, args []string) error {
 		return err
 	}
 
+	URL := util.ParseReqPath(fmt.Sprintf("%s/lambda/%s", config.Vp.GetString("bound_with.endpoint"), args[0]))
+
 	response, err := restyx.Client.R().
 		EnableTrace().
 		SetHeaders(map[string]string{
@@ -64,7 +66,7 @@ func invokeFunc(_ *cobra.Command, args []string) error {
 		SetBody(map[string]string{
 			"payload": config.Vp.GetString(constant.FlagPayload.ValStr()),
 		}).
-		Post(fmt.Sprintf("%s/lambda/%s", config.Vp.GetString("bound_with.endpoint"), args[0]))
+		Post(URL)
 	if err != nil {
 		return errorx.RestyError(err.Error())
 	}

@@ -5,6 +5,7 @@ type FlagName string
 // Flags for the configure command
 const (
 	FlagLog        FlagName = "log"
+	FlagSource     FlagName = "source"
 	FlagCredential FlagName = "credential"
 	FlagEndPoint   FlagName = "endpoint"
 )

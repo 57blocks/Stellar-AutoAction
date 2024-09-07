@@ -3,10 +3,8 @@ package oauth
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
-
-	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
@@ -28,14 +26,11 @@ Note:
   - When the refresh token is expired, you need to login again.
 `,
 	Args: cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return refreshFunc(cmd, args)
-	},
+	RunE: refreshFunc,
 }
 
 func init() {
-	command.Root.AddCommand(refreshCmd)
-
+	oauthGroup.AddCommand(refreshCmd)
 }
 
 type ReqRefresh struct {
@@ -73,10 +68,12 @@ func refreshFunc(_ *cobra.Command, _ []string) error {
 }
 
 func supplierRefresh(refresh string) (*resty.Response, error) {
+	URL := util.ParseReqPath(fmt.Sprintf("%s/oauth/refresh", config.Vp.GetString("bound_with.endpoint")))
+
 	response, err := restyx.Client.R().
 		EnableTrace().
 		SetBody(ReqRefresh{Refresh: refresh}).
-		Post(config.Vp.GetString("bound_with.endpoint") + "/oauth/refresh")
+		Post(URL)
 	if err != nil {
 		return nil, errorx.WithRestyResp(response)
 	}

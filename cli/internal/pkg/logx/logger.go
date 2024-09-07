@@ -8,7 +8,7 @@ import (
 
 var Logger *slog.Logger
 
-func SetupLogger(level string) {
+func SetupLogger(level string, addSource bool) {
 	var logLevel slog.Level
 	switch level {
 	case constant.GetLogLevel(constant.Debug):
@@ -26,7 +26,7 @@ func SetupLogger(level string) {
 	}
 
 	opt := &slog.HandlerOptions{
-		AddSource: false,
+		AddSource: addSource,
 		Level:     logLevel,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			return a

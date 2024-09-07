@@ -2,6 +2,7 @@ package lambda
 
 import (
 	"fmt"
+	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 	"net/http"
 	"net/url"
 	"os"
@@ -9,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
@@ -38,7 +38,7 @@ TODO:
 }
 
 func init() {
-	command.Root.AddCommand(logs)
+	lambdaGroup.AddCommand(logs)
 }
 
 func logFunc(_ *cobra.Command, args []string) error {
@@ -55,7 +55,7 @@ func logFunc(_ *cobra.Command, args []string) error {
 	u := url.URL{
 		Scheme: "ws",
 		Host:   splits[1],
-		Path:   fmt.Sprintf("/lambda/%s/logs", args[0]),
+		Path:   util.ParseReqPath(fmt.Sprintf("/lambda/%s/logs", args[0])),
 	}
 	logx.Logger.Debug("ws", "dailing to", u.String())
 

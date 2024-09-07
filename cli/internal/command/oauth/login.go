@@ -3,9 +3,9 @@ package oauth
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 	"os"
 
-	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/constant"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
@@ -31,13 +31,11 @@ Note:
   - You could specify other credentials by **configure** command.
 `,
 	Args: cobra.NoArgs,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return loginFunc(cmd, args)
-	},
+	RunE: loginFunc,
 }
 
 func init() {
-	command.Root.AddCommand(login)
+	oauthGroup.AddCommand(login)
 
 	flagCred := constant.FlagCredential.ValStr()
 	login.Flags().StringP(
@@ -106,6 +104,8 @@ func loginFunc(cmd *cobra.Command, args []string) error {
 }
 
 func supplierLogin(cryptPwdBytes []byte) (*resty.Response, error) {
+	URL := util.ParseReqPath(fmt.Sprintf("%s/oauth/login", config.Vp.GetString("bound_with.endpoint")))
+
 	response, err := restyx.Client.R().
 		EnableTrace().
 		SetBody(ReqLogin{
@@ -114,7 +114,7 @@ func supplierLogin(cryptPwdBytes []byte) (*resty.Response, error) {
 			Password:     cryptPwdBytes,
 			Environment:  config.Vp.GetString(constant.FlagEnvironment.ValStr()),
 		}).
-		Post(config.Vp.GetString("bound_with.endpoint") + "/oauth/login")
+		Post(URL)
 	if err != nil {
 		return nil, errorx.WithRestyResp(response)
 	}

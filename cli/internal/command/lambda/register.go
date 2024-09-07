@@ -1,9 +1,10 @@
 package lambda
 
 import (
+	"fmt"
+	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 	"strings"
 
-	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/constant"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
@@ -55,7 +56,7 @@ Note:
 }
 
 func init() {
-	command.Root.AddCommand(register)
+	lambdaGroup.AddCommand(register)
 
 	flagCron := constant.FlagCron.ValStr()
 	register.Flags().StringP(
@@ -107,6 +108,8 @@ func supplierRegister(args []string) (*resty.Response, error) {
 		argMap[path] = path
 	}
 
+	URL := util.ParseReqPath(fmt.Sprintf("%s/lambda", config.Vp.GetString("bound_with.endpoint")))
+
 	request := restyx.Client.R().
 		EnableTrace().
 		SetHeaders(map[string]string{
@@ -133,7 +136,7 @@ func supplierRegister(args []string) (*resty.Response, error) {
 
 	request = request.SetFormData(flagMap)
 
-	response, err := request.Post(config.Vp.GetString("bound_with.endpoint") + "/lambda")
+	response, err := request.Post(URL)
 	if err != nil {
 		return nil, errorx.WithRestyResp(response)
 	}

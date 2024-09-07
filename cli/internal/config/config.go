@@ -21,7 +21,8 @@ type (
 	GlobalConfigOpt func(sc *GlobalConfig)
 
 	General struct {
-		Log string `toml:"log"`
+		Log    string `toml:"log"`
+		Source string `toml:"source"`
 	}
 
 	BoundWith struct {
@@ -127,6 +128,10 @@ func SyncConfigByFlags() error {
 	if newLogLevel := Vp.GetString(constant.FlagLog.ValStr()); newLogLevel != "" {
 		logx.Logger.Debug("sync log level", "updated to", newLogLevel)
 		cfg.Log = newLogLevel
+	}
+	if newSource := Vp.GetString(constant.FlagSource.ValStr()); newSource != "" {
+		logx.Logger.Debug("sync tracking source or not", "updated to", newSource)
+		cfg.Source = newSource
 	}
 
 	return WriteConfig(cfg)
