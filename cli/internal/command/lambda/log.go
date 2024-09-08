@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// logs represents the logx command
+// logs represents the `log` command
 var logs = &cobra.Command{
 	Use:   "log <name/arn>",
 	Short: "Tracking execution logs of the lambda function",

@@ -385,11 +385,11 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 
 	describeOutput, err := cwClient.DescribeLogStreams(c, describeInput)
 	if err != nil {
-		return errorx.Internal(fmt.Sprintf("failed to describe logx streams: %s", err.Error()))
+		return errorx.Internal(fmt.Sprintf("failed to describe log streams: %s", err.Error()))
 	}
 
 	if len(describeOutput.LogStreams) == 0 {
-		return errorx.NotFound("no logx streams found")
+		return errorx.NotFound("no log streams found")
 	}
 
 	logStreamName := describeOutput.LogStreams[0].LogStreamName
@@ -408,7 +408,7 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 
 		output, err := cwClient.GetLogEvents(c, input)
 		if err != nil {
-			return errorx.Internal(fmt.Sprintf("failed to get logx events: %s", err.Error()))
+			return errorx.Internal(fmt.Sprintf("failed to get log events: %s", err.Error()))
 		}
 
 		for _, event := range output.Events {

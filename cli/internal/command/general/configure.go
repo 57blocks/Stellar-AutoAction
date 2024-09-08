@@ -22,15 +22,15 @@ Description:
 Note:
   - When specifying other credentials, please confirm with that the
     credential is matched with the bound endpoint and not expired.
-  - When specifying the logx level, here are the options below:
+  - When specifying the log level, here are the options below:
     - Debug
     - Warn
     - Error
     - Info
     If none matched, using **Info** as default.
   - When specifying the tracking source, here are the options below:
-    - "On"
-    - "Off"
+    - ON
+    - OFF
 `,
 	Args: cobra.NoArgs,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
