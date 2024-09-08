@@ -2,8 +2,9 @@ package errorx
 
 import (
 	"fmt"
-	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
 	"net/http"
+
+	"github.com/57blocks/auto-action/server/internal/pkg/log"
 )
 
 type Errorx struct {
@@ -64,7 +65,7 @@ func NotFound(msg string) error {
 
 // Internal returns an error with status 404 and message.
 func Internal(msg string) error {
-	pkgLog.Logger.ERROR(msg)
+	log.Logger.ERROR(msg)
 
 	return fmt.Errorf("%w", newErr(http.StatusInternalServerError, 500, msg))
 }
@@ -78,7 +79,7 @@ func GinContextConv() error {
 }
 
 func AmazonConfig(msg string) error {
-	pkgLog.Logger.ERROR(msg)
+	log.Logger.ERROR(msg)
 
 	return fmt.Errorf("%w", newErr(
 		http.StatusInternalServerError,

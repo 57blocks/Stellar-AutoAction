@@ -2,9 +2,10 @@ package constant
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 	"strconv"
+
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 )
 
 type Config string
@@ -22,7 +23,7 @@ func (cc Config) ValStr() string {
 func (cc Config) ValInt() int {
 	intVal, err := strconv.Atoi(cc.ValStr())
 	if err != nil {
-		slog.Error(fmt.Sprintf("converting <%s> to int error: %s", cc.ValStr(), err.Error()))
+		logx.Logger.Error(fmt.Sprintf("converting <%s> to int error: %s", cc.ValStr(), err.Error()))
 		os.Exit(1)
 	}
 
@@ -32,8 +33,7 @@ func (cc Config) ValInt() int {
 func (cc Config) ValFloat32() float32 {
 	floatValue, err := strconv.ParseFloat(cc.ValStr(), 32)
 	if err != nil {
-		fmt.Printf("Error converting <%s> to float32 error: %s", cc.ValStr(), err.Error())
-		slog.Error(fmt.Sprintf("Error converting <%s> to float32 error: %s", cc.ValStr(), err.Error()))
+		logx.Logger.Error(fmt.Sprintf("Error converting <%s> to float32 error: %s", cc.ValStr(), err.Error()))
 		os.Exit(1)
 	}
 
@@ -43,7 +43,7 @@ func (cc Config) ValFloat32() float32 {
 func (cc Config) ValFloat64() float64 {
 	floatValue, err := strconv.ParseFloat(cc.ValStr(), 64)
 	if err != nil {
-		slog.Error(fmt.Sprintf("Error converting <%s> to float64 error: %s", cc.ValStr(), err.Error()))
+		logx.Logger.Error(fmt.Sprintf("Error converting <%s> to float64 error: %s", cc.ValStr(), err.Error()))
 		os.Exit(1)
 	}
 

@@ -11,7 +11,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/config"
 	migs "github.com/57blocks/auto-action/server/internal/db/migration"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
+	"github.com/57blocks/auto-action/server/internal/pkg/log"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -123,7 +123,7 @@ func migrateDB(db *gorm.DB) error {
 				err.Error(),
 			))
 		}
-		pkgLog.Logger.DEBUG(fmt.Sprintf(
+		log.Logger.DEBUG(fmt.Sprintf(
 			"re-migrate dirty version: %v successfully",
 			dirtyErr.Version,
 		))

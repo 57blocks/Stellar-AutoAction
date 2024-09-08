@@ -15,7 +15,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
+	"github.com/57blocks/auto-action/server/internal/pkg/log"
 	"github.com/57blocks/auto-action/server/internal/pkg/util"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/lambda"
 
@@ -120,7 +120,7 @@ func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegi
 			)
 		} else {
 			splits := strings.Split(fh.Filename, ".")
-			pkgLog.Logger.INFO(fmt.Sprintf("%s: will be triggered manually", splits[0]))
+			log.Logger.INFO(fmt.Sprintf("%s: will be triggered manually", splits[0]))
 		}
 
 		toPersists = append(toPersists, tpp)
@@ -184,7 +184,7 @@ func boundScheduler(
 	lambdaFun *lambda.CreateFunctionOutput,
 	expression string,
 ) (*scheduler.CreateScheduleOutput, error) {
-	pkgLog.Logger.DEBUG(fmt.Sprintf("scheduler expression found: %s", expression))
+	log.Logger.DEBUG(fmt.Sprintf("scheduler expression found: %s", expression))
 
 	schClient := scheduler.NewFromConfig(awsConfig)
 
@@ -218,7 +218,7 @@ func boundScheduler(
 		return nil, errorx.Internal(fmt.Sprintf("failed to bind scheduler: %s, err: %s", *lambdaFun.FunctionName, err.Error()))
 	}
 
-	pkgLog.Logger.DEBUG(fmt.Sprintf("scheduler created: %s", *newSchResp.ScheduleArn))
+	log.Logger.DEBUG(fmt.Sprintf("scheduler created: %s", *newSchResp.ScheduleArn))
 
 	return newSchResp, nil
 }
@@ -247,7 +247,7 @@ func persist(c context.Context, pairs []toPersistPair) {
 
 		return nil
 	}); err != nil {
-		pkgLog.Logger.ERROR(err.Error())
+		log.Logger.ERROR(err.Error())
 	}
 }
 

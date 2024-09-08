@@ -6,7 +6,7 @@ import (
 
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
-	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
+	"github.com/57blocks/auto-action/server/internal/pkg/log"
 	svcOrg "github.com/57blocks/auto-action/server/internal/service/organization"
 
 	"github.com/dgrijalva/jwt-go"
@@ -67,7 +67,7 @@ func Authentication() gin.HandlerFunc {
 		c.Set("jwt_organization", claimMap["organization"])
 		c.Set("jwt_environment", claimMap["environment"])
 
-		pkgLog.Logger.DEBUG("authentication success")
+		log.Logger.DEBUG("authentication success")
 
 		c.Next()
 	}
@@ -75,7 +75,7 @@ func Authentication() gin.HandlerFunc {
 
 func Authorization() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		pkgLog.Logger.DEBUG("authorization success")
+		log.Logger.DEBUG("authorization success")
 
 		c.Next()
 	}
