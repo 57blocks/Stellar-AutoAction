@@ -17,7 +17,7 @@ func SecretKey() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.GetHeader("API-Key")
 		if key == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "missing api key"})
+			c.Error(errorx.UnauthorizedWithMsg("missing api key"))
 			return
 		}
 
@@ -40,19 +40,19 @@ func Authentication() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("Authorization")
 		if token == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
+			c.Error(errorx.UnauthorizedWithMsg("missing token"))
 			return
 		}
 
 		jwtToken, err := jwtx.ParseToken(token)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "invalid token"})
+			c.Error(errorx.UnauthorizedWithMsg("invalid token"))
 			return
 		}
 
 		claimMap, ok := jwtToken.Claims.(jwt.MapClaims) // TODO: remove the type conversion after testing
 		if !ok {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "invalid token"})
+			c.Error(errors.New("invalid token"))
 			return
 		}
 
