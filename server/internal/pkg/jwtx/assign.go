@@ -6,7 +6,7 @@ import (
 
 	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	"github.com/57blocks/auto-action/server/internal/pkg/log"
+	"github.com/57blocks/auto-action/server/internal/pkg/logx"
 
 	"github.com/dgrijalva/jwt-go"
 )
@@ -102,13 +102,13 @@ func ParseToken(tokenStr string) (*jwt.Token, error) {
 func GetStrClaim(claims jwt.MapClaims, key string) (string, error) {
 	value, ok := claims[key]
 	if !ok {
-		log.Logger.ERROR("claim not found", map[string]interface{}{"claim_key": key})
+		logx.Logger.ERROR("claim not found", map[string]interface{}{"claim_key": key})
 		return "", errorx.Internal(fmt.Sprintf("claim not found by: %v", key))
 	}
 
 	strValue, ok := value.(string)
 	if !ok {
-		log.Logger.ERROR(
+		logx.Logger.ERROR(
 			"claim value conversion error",
 			map[string]interface{}{"claim_key": key, "value": value},
 		)

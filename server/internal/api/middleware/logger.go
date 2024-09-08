@@ -3,7 +3,7 @@ package middleware
 import (
 	"fmt"
 
-	"github.com/57blocks/auto-action/server/internal/pkg/log"
+	"github.com/57blocks/auto-action/server/internal/pkg/logx"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,7 +45,7 @@ func NewFromContext(ctx *gin.Context) *FormatterREST {
 
 func ZapLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		log.Logger.DEBUG(NewFromContext(c).Format())
+		logx.Logger.DEBUG(NewFromContext(c).Format())
 		c.Next()
 	}
 }

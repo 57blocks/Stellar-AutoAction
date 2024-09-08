@@ -22,7 +22,7 @@ Description:
 Note:
   - When specifying other credentials, please confirm with that the
     credential is matched with the bound endpoint and not expired.
-  - When specifying the log level, here are the options below:
+  - When specifying the logx level, here are the options below:
     - Debug
     - Warn
     - Error
@@ -68,7 +68,7 @@ func init() {
 		fLogLevel,
 		"",
 		config.Vp.GetString(fLogLevel),
-		"configure the log level")
+		"configure the logx level")
 
 	fSource := constant.FlagSource.ValStr()
 	configure.Flags().StringP(

@@ -21,7 +21,7 @@ type (
 	GlobalConfigOpt func(sc *GlobalConfig)
 
 	General struct {
-		Log    string `toml:"log"`
+		Log    string `toml:"logx"`
 		Source string `toml:"source"`
 	}
 
@@ -126,7 +126,7 @@ func SyncConfigByFlags() error {
 		cfg.EndPoint = newEndPoint
 	}
 	if newLogLevel := Vp.GetString(constant.FlagLog.ValStr()); newLogLevel != "" {
-		logx.Logger.Debug("sync log level", "updated to", newLogLevel)
+		logx.Logger.Debug("sync logx level", "updated to", newLogLevel)
 		cfg.Log = newLogLevel
 	}
 	if newSource := Vp.GetString(constant.FlagSource.ValStr()); newSource != "" {

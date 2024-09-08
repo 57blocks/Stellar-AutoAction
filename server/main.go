@@ -14,7 +14,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/boot"
 	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/db"
-	logx "github.com/57blocks/auto-action/server/internal/pkg/log"
+	logx "github.com/57blocks/auto-action/server/internal/pkg/logx"
 )
 
 var server *http.Server

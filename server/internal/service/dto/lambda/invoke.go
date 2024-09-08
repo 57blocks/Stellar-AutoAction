@@ -19,7 +19,7 @@ type (
 		// about the error are included in the response payload.
 		FunctionError *string
 
-		// The last 4 KB of the execution log, which is base64-encoded.
+		// The last 4 KB of the execution logx, which is base64-encoded.
 		LogResult *string
 
 		// The response from the function, or an error object.

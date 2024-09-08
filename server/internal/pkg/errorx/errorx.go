@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/57blocks/auto-action/server/internal/pkg/log"
+	"github.com/57blocks/auto-action/server/internal/pkg/logx"
 )
 
 type Errorx struct {
@@ -65,7 +65,7 @@ func NotFound(msg string) error {
 
 // Internal returns an error with status 404 and message.
 func Internal(msg string) error {
-	log.Logger.ERROR(msg)
+	logx.Logger.ERROR(msg)
 
 	return fmt.Errorf("%w", newErr(http.StatusInternalServerError, 500, msg))
 }
@@ -79,7 +79,7 @@ func GinContextConv() error {
 }
 
 func AmazonConfig(msg string) error {
-	log.Logger.ERROR(msg)
+	logx.Logger.ERROR(msg)
 
 	return fmt.Errorf("%w", newErr(
 		http.StatusInternalServerError,

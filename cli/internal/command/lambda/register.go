@@ -136,7 +136,7 @@ func supplierRegister(args []string) (*resty.Response, error) {
 
 	response, err := request.Post(URL)
 	if err != nil {
-		return nil, errorx.WithRestyResp(response)
+		return nil, errorx.RestyError(err.Error())
 	}
 	if response.IsError() {
 		return nil, errorx.WithRestyResp(response)

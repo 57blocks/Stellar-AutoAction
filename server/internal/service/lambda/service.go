@@ -15,7 +15,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	"github.com/57blocks/auto-action/server/internal/pkg/log"
+	"github.com/57blocks/auto-action/server/internal/pkg/logx"
 	"github.com/57blocks/auto-action/server/internal/pkg/util"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/lambda"
 
@@ -120,7 +120,7 @@ func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegi
 			)
 		} else {
 			splits := strings.Split(fh.Filename, ".")
-			log.Logger.INFO(fmt.Sprintf("%s: will be triggered manually", splits[0]))
+			logx.Logger.INFO(fmt.Sprintf("%s: will be triggered manually", splits[0]))
 		}
 
 		toPersists = append(toPersists, tpp)
@@ -184,7 +184,7 @@ func boundScheduler(
 	lambdaFun *lambda.CreateFunctionOutput,
 	expression string,
 ) (*scheduler.CreateScheduleOutput, error) {
-	log.Logger.DEBUG(fmt.Sprintf("scheduler expression found: %s", expression))
+	logx.Logger.DEBUG(fmt.Sprintf("scheduler expression found: %s", expression))
 
 	schClient := scheduler.NewFromConfig(awsConfig)
 
@@ -218,7 +218,7 @@ func boundScheduler(
 		return nil, errorx.Internal(fmt.Sprintf("failed to bind scheduler: %s, err: %s", *lambdaFun.FunctionName, err.Error()))
 	}
 
-	log.Logger.DEBUG(fmt.Sprintf("scheduler created: %s", *newSchResp.ScheduleArn))
+	logx.Logger.DEBUG(fmt.Sprintf("scheduler created: %s", *newSchResp.ScheduleArn))
 
 	return newSchResp, nil
 }
@@ -247,7 +247,7 @@ func persist(c context.Context, pairs []toPersistPair) {
 
 		return nil
 	}); err != nil {
-		log.Logger.ERROR(err.Error())
+		logx.Logger.ERROR(err.Error())
 	}
 }
 
@@ -385,11 +385,11 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 
 	describeOutput, err := cwClient.DescribeLogStreams(c, describeInput)
 	if err != nil {
-		return errorx.Internal(fmt.Sprintf("failed to describe log streams: %s", err.Error()))
+		return errorx.Internal(fmt.Sprintf("failed to describe logx streams: %s", err.Error()))
 	}
 
 	if len(describeOutput.LogStreams) == 0 {
-		return errorx.NotFound("no log streams found")
+		return errorx.NotFound("no logx streams found")
 	}
 
 	logStreamName := describeOutput.LogStreams[0].LogStreamName
@@ -408,7 +408,7 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 
 		output, err := cwClient.GetLogEvents(c, input)
 		if err != nil {
-			return errorx.Internal(fmt.Sprintf("failed to get log events: %s", err.Error()))
+			return errorx.Internal(fmt.Sprintf("failed to get logx events: %s", err.Error()))
 		}
 
 		for _, event := range output.Events {

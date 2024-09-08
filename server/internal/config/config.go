@@ -19,7 +19,7 @@ type (
 	Configuration struct {
 		Mode   string `mapstructure:"mode"`
 		Bound  `mapstructure:"bound"`
-		Log    `mapstructure:"log"`
+		Log    `mapstructure:"logx"`
 		JWT    `mapstructure:"jwt"`
 		Amazon `mapstructure:"aws"`
 		RDS    `mapstructure:"rds"`
