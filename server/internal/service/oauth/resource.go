@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
+	"github.com/57blocks/auto-action/server/internal/pkg/logx"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/oauth"
 
 	"github.com/gin-gonic/gin"
@@ -35,7 +35,7 @@ func Logout(c *gin.Context) {
 		return
 	}
 
-	pkgLog.Logger.DEBUG("oauth logout", map[string]interface{}{
+	logx.Logger.DEBUG("oauth logout", map[string]interface{}{
 		"logout_token": req.Token,
 	})
 
@@ -56,7 +56,7 @@ func Refresh(c *gin.Context) {
 		return
 	}
 
-	pkgLog.Logger.DEBUG("oauth refresh", map[string]interface{}{
+	logx.Logger.DEBUG("oauth refresh", map[string]interface{}{
 		"refresh_token": req.Refresh,
 	})
 

@@ -1,12 +1,14 @@
 package lambda
 
+import "time"
+
 type (
 	ReqInfo struct {
 		Lambda string `uri:"lambda"`
 	}
 
 	RespInfo struct {
-		ID           uint64      `json:"id"`
+		ID           uint64      `json:"-"`
 		FunctionName string      `json:"function_name"`
 		FunctionArn  string      `json:"function_arn"`
 		Runtime      string      `json:"runtime"`
@@ -17,6 +19,8 @@ type (
 		Version      string      `json:"version"`
 		RevisionID   string      `json:"revision_id"`
 		Schedulers   []Scheduler `json:"schedulers" gorm:"foreignKey:lambda_id"`
+		CreatedAt    *time.Time  `json:"created_at"`
+		UpdatedAt    *time.Time  `json:"updated_at"`
 	}
 
 	Scheduler struct {

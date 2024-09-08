@@ -6,7 +6,7 @@ import (
 
 	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
+	"github.com/57blocks/auto-action/server/internal/pkg/logx"
 
 	"github.com/dgrijalva/jwt-go"
 )
@@ -76,7 +76,7 @@ func AssignRefresh(refClaim jwt.StandardClaims) (string, error) {
 func ParseToken(tokenStr string) (*jwt.Token, error) {
 	pubPEM, err := base64.StdEncoding.DecodeString(config.GlobalConfig.JWT.PublicKey)
 	if err != nil {
-		return nil, errorx.Internal("decode private key failed")
+		return nil, errorx.Internal("decode public key failed")
 	}
 
 	pubKey, err := jwt.ParseRSAPublicKeyFromPEM(pubPEM)
@@ -102,13 +102,13 @@ func ParseToken(tokenStr string) (*jwt.Token, error) {
 func GetStrClaim(claims jwt.MapClaims, key string) (string, error) {
 	value, ok := claims[key]
 	if !ok {
-		pkgLog.Logger.ERROR("claim not found", map[string]interface{}{"claim_key": key})
-		return "", errorx.Internal(fmt.Sprintf("claim not found by: %v\n", key))
+		logx.Logger.ERROR("claim not found", map[string]interface{}{"claim_key": key})
+		return "", errorx.Internal(fmt.Sprintf("claim not found by: %v", key))
 	}
 
 	strValue, ok := value.(string)
 	if !ok {
-		pkgLog.Logger.ERROR(
+		logx.Logger.ERROR(
 			"claim value conversion error",
 			map[string]interface{}{"claim_key": key, "value": value},
 		)

@@ -2,16 +2,15 @@ package config
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 
 	"github.com/57blocks/auto-action/cli/internal/constant"
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/BurntSushi/toml"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 type (
@@ -22,7 +21,8 @@ type (
 	GlobalConfigOpt func(sc *GlobalConfig)
 
 	General struct {
-		Log string `toml:"log"`
+		Log    string `toml:"logx"`
+		Source string `toml:"source"`
 	}
 
 	BoundWith struct {
@@ -44,6 +44,12 @@ func Build(opts ...GlobalConfigOpt) *GlobalConfig {
 func WithLogLevel(logLevel string) GlobalConfigOpt {
 	return func(sc *GlobalConfig) {
 		sc.Log = logLevel
+	}
+}
+
+func WithTrackSource(source string) GlobalConfigOpt {
+	return func(sc *GlobalConfig) {
+		sc.Source = source
 	}
 }
 
@@ -75,6 +81,7 @@ func FindOrInit() (*GlobalConfig, string) {
 		WithCredential(util.DefaultCredPath()),
 		WithEndPoint(constant.Host.String()),
 		WithLogLevel(constant.GetLogLevel(constant.Info)),
+		WithTrackSource(string(constant.OFF)),
 	)
 
 	cobra.CheckErr(WriteConfig(cfg))
@@ -85,17 +92,13 @@ func FindOrInit() (*GlobalConfig, string) {
 func ReadConfig() (*GlobalConfig, error) {
 	data, err := os.ReadFile(util.DefaultPath())
 	if err != nil {
-		errMsg := fmt.Sprintf("read config error: %s\n", err.Error())
-		slog.Error(errMsg)
-		return nil, errors.Wrap(err, errMsg)
+		return nil, errorx.Internal(fmt.Sprintf("read config error: %s", err.Error()))
 	}
 
 	cfg := new(GlobalConfig)
 
 	if _, err := toml.Decode(string(data), cfg); err != nil {
-		errMsg := fmt.Sprintf("decode config error: %s\n", err.Error())
-		slog.Error(errMsg)
-		return nil, errors.Wrap(err, errMsg)
+		return nil, errorx.Internal(fmt.Sprintf("decode config error: %s", err.Error()))
 	}
 
 	return cfg, nil
@@ -104,15 +107,11 @@ func ReadConfig() (*GlobalConfig, error) {
 func WriteConfig(cfg *GlobalConfig) error {
 	tomlBytes, err := toml.Marshal(cfg)
 	if err != nil {
-		errMsg := fmt.Sprintf("marshal config error: %s\n", err)
-		slog.Error(errMsg)
-		return errors.Wrap(err, errMsg)
+		return errorx.Internal(fmt.Sprintf("marshal config error: %s", err))
 	}
 
 	if err := os.WriteFile(util.DefaultPath(), tomlBytes, 0666); err != nil {
-		errMsg := fmt.Sprintf("write config error: %s\n", err.Error())
-		slog.Error(errMsg)
-		return errors.Wrap(err, errMsg)
+		return errorx.Internal(fmt.Sprintf("write config error: %s", err.Error()))
 	}
 
 	return nil
@@ -121,23 +120,26 @@ func WriteConfig(cfg *GlobalConfig) error {
 func SyncConfigByFlags() error {
 	cfg, err := ReadConfig()
 	if err != nil {
-		errMsg := fmt.Sprintf("read config error: %s\n", err.Error())
-		slog.Error(errMsg)
-		return errors.New(errMsg)
+		return errorx.Internal(fmt.Sprintf("read config error: %s", err.Error()))
 	}
 
 	// Update fields if new values are provided
-	if newCred := viper.GetString(constant.FlagCredential.ValStr()); newCred != "" {
-		slog.Debug(fmt.Sprintf("newCredential: %v\n", newCred))
+	if newCred := Vp.GetString(constant.FlagCredential.ValStr()); newCred != "" {
+		logx.Logger.Debug("sync credential", "updated to", newCred)
 		cfg.Credential = newCred
 	}
-	if newEndPoint := viper.GetString(constant.FlagEndPoint.ValStr()); newEndPoint != "" {
-		slog.Debug(fmt.Sprintf("newEndPoint: %v\n", newEndPoint))
+	if newEndPoint := Vp.GetString(constant.FlagEndPoint.ValStr()); newEndPoint != "" {
+		logx.Logger.Debug("sync endpoint", "updated to", newEndPoint)
 		cfg.EndPoint = newEndPoint
 	}
-	if newLogLevel := viper.GetString(constant.FlagLog.ValStr()); newLogLevel != "" {
-		slog.Debug(fmt.Sprintf("newLogLevel: %v\n", newLogLevel))
+	if newLogLevel := Vp.GetString(constant.FlagLog.ValStr()); newLogLevel != "" {
+		logx.Logger.Debug("sync logx level", "updated to", newLogLevel)
 		cfg.Log = newLogLevel
+	}
+	if newSource := Vp.GetString(constant.FlagSource.ValStr()); newSource == string(constant.ON) ||
+		newSource == string(constant.OFF) {
+		logx.Logger.Debug("sync tracking source or not", "updated to", newSource)
+		cfg.Source = newSource
 	}
 
 	return WriteConfig(cfg)
@@ -146,9 +148,7 @@ func SyncConfigByFlags() error {
 func ResetConfigCredential() error {
 	cfg, err := ReadConfig()
 	if err != nil {
-		errMsg := fmt.Sprintf("read config error: %s\n", err.Error())
-		slog.Error(errMsg)
-		return errors.New(errMsg)
+		return errorx.Internal(fmt.Sprintf("read config error: %s", err.Error()))
 	}
 
 	cfg.Credential = ""

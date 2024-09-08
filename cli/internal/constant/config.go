@@ -1,50 +1,46 @@
 package constant
 
-import (
-	"fmt"
-	"strconv"
-)
-
+// Config is the type of strings in config
 type Config string
 
 const (
 	ConfigurationType Config = "toml"
 	ConfigName        Config = ".st3llar"
 	CredentialName    Config = ".st3llar-credential"
-
-	EnvPrefix Config = "ST3LLAR"
 )
 
 func (cc Config) ValStr() string {
 	return string(cc)
 }
 
-func (cc Config) ValInt() int {
-	intVal, err := strconv.Atoi(cc.ValStr())
-	if err != nil {
-		fmt.Printf("converting <%s> to int error: %s\n", cc.ValStr(), err.Error())
-		return 0
-	}
+// Log related types in config
+type (
+	LogLevelKey   int8
+	LogLevelValue string
+)
 
-	return intVal
+const (
+	Debug LogLevelKey = iota + 1
+	Info
+	Warn
+	Error
+)
+
+var LogLevelMap = map[LogLevelKey]LogLevelValue{
+	Debug: "Debug",
+	Info:  "Info",
+	Warn:  "Warn",
+	Error: "Error",
 }
 
-func (cc Config) ValFloat32() float32 {
-	floatValue, err := strconv.ParseFloat(cc.ValStr(), 32)
-	if err != nil {
-		fmt.Printf("Error converting <%s> to float32 error: %s\n", cc.ValStr(), err.Error())
-		return float32(0.0)
-	}
-
-	return float32(floatValue)
+func GetLogLevel(key LogLevelKey) string {
+	return string(LogLevelMap[key])
 }
 
-func (cc Config) ValFloat64() float64 {
-	floatValue, err := strconv.ParseFloat(cc.ValStr(), 64)
-	if err != nil {
-		fmt.Printf("Error converting <%s> to float64 error: %s\n", cc.ValStr(), err.Error())
-		return 0.0
-	}
+// TrackSource type in config
+type TrackSource string
 
-	return floatValue
-}
+const (
+	OFF TrackSource = "OFF"
+	ON  TrackSource = "ON"
+)

@@ -27,7 +27,7 @@ func Register(c *gin.Context) {
 }
 
 func Invoke(c *gin.Context) {
-	req := new(dto.ReqTrigger)
+	req := new(dto.ReqInvoke)
 
 	if err := c.BindUri(req); err != nil {
 		c.Error(errorx.BadRequest(err.Error()))

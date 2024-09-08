@@ -1,17 +1,16 @@
 package lambda
 
 import (
+	"encoding/json"
 	"fmt"
-	"log/slog"
 
-	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // info represents the info command
@@ -27,13 +26,11 @@ Note:
   - The results contains the essential info about VPC and Schedulers.
 `,
 	Args: cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return infoFunc(cmd, args)
-	},
+	RunE: infoFunc,
 }
 
 func init() {
-	command.Root.AddCommand(info)
+	lambdaGroup.AddCommand(info)
 }
 
 func infoFunc(_ *cobra.Command, args []string) error {
@@ -42,21 +39,29 @@ func infoFunc(_ *cobra.Command, args []string) error {
 		return err
 	}
 
+	URL := util.ParseReqPath(fmt.Sprintf("%s/lambda/%s/info", config.Vp.GetString("bound_with.endpoint"), args[0]))
+
 	response, err := restyx.Client.R().
 		EnableTrace().
 		SetHeaders(map[string]string{
 			"Content-Type":  "multipart/form-data",
 			"Authorization": token,
 		}).
-		Get(fmt.Sprintf("%s/lambda/%s/info", viper.GetString("bound_with.endpoint"), args[0]))
+		Get(URL)
 	if err != nil {
-		return errors.Wrap(err, fmt.Sprintf("resty error: %s\n", err.Error()))
+		return errorx.RestyError(err.Error())
 	}
-	if e := util.HasError(response); e != nil {
-		return errors.Wrap(e, fmt.Sprintf("supplier error: %s\n", e))
+	if response.IsError() {
+		return errorx.WithRestyResp(response)
 	}
 
-	slog.Debug(fmt.Sprintf("%v\n", response))
+	var respData map[string]interface{}
+	if err := json.Unmarshal(response.Body(), &respData); err != nil {
+		logx.Logger.Error("Error unmarshalling JSON", "error", err.Error())
+		return errorx.Internal(err.Error())
+	}
+
+	logx.Logger.Info("lambda info", "result", respData)
 
 	return nil
 }

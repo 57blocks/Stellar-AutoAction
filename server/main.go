@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/57blocks/auto-action/server/internal/pkg/restyx"
 	"log"
 	"net/http"
 	"os"
@@ -14,7 +13,8 @@ import (
 	"github.com/57blocks/auto-action/server/internal/boot"
 	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/db"
-	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
+	"github.com/57blocks/auto-action/server/internal/pkg/logx"
+	"github.com/57blocks/auto-action/server/internal/pkg/restyx"
 )
 
 var server *http.Server
@@ -22,15 +22,15 @@ var server *http.Server
 func main() {
 	if err := boot.Boots(
 		boot.Wrap(config.Setup),
-		boot.Wrap(pkgLog.Setup),
+		boot.Wrap(logx.Setup),
 		boot.Wrap(db.Setup),
 		boot.Wrap(api.Setup),
 		boot.Wrap(restyx.Setup),
 	); err != nil {
-		log.Panicf("boots components occurred error: %s\n", err.Error())
+		log.Panicf("boots components occurred error: %s", err.Error())
 	}
 
-	pkgLog.Logger.INFO("boots: server")
+	logx.Logger.INFO("boots: server")
 
 	server = &http.Server{
 		Addr:    ":8080",

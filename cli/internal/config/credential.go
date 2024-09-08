@@ -2,11 +2,11 @@ package config
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+
 	"github.com/BurntSushi/toml"
-	"github.com/pkg/errors"
 )
 
 type (
@@ -70,17 +70,13 @@ func WithRefresh(refresh string) CredOpt {
 func ReadCredential(path string) (*Credential, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		errMsg := fmt.Sprintf("read credential error: %s\n", err.Error())
-		slog.Error(errMsg)
-		return nil, errors.Wrap(err, errMsg)
+		return nil, errorx.Internal(fmt.Sprintf("read credential error: %s", err.Error()))
 	}
 
 	cred := new(Credential)
 
 	if _, err := toml.Decode(string(data), cred); err != nil {
-		errMsg := fmt.Sprintf("decode credential error: %s\n", err.Error())
-		slog.Error(errMsg)
-		return nil, errors.Wrap(err, errMsg)
+		return nil, errorx.Internal(fmt.Sprintf("decode credential error: %s", err.Error()))
 	}
 
 	return cred, nil
@@ -89,15 +85,11 @@ func ReadCredential(path string) (*Credential, error) {
 func WriteCredential(path string, cred *Credential) error {
 	tomlBytes, err := toml.Marshal(cred)
 	if err != nil {
-		errMsg := fmt.Sprintf("marshal credential error: %s\n", err)
-		slog.Error(errMsg)
-		return errors.Wrap(err, errMsg)
+		return errorx.Internal(fmt.Sprintf("marshal credential error: %s", err))
 	}
 
 	if err := os.WriteFile(path, tomlBytes, 0666); err != nil {
-		errMsg := fmt.Sprintf("write credential error: %s\n", err.Error())
-		slog.Error(errMsg)
-		return errors.Wrap(err, errMsg)
+		return errorx.Internal(fmt.Sprintf("write credential error: %s", err.Error()))
 	}
 
 	return nil
@@ -105,9 +97,7 @@ func WriteCredential(path string, cred *Credential) error {
 
 func RemoveCredential(path string) error {
 	if err := os.Remove(path); err != nil {
-		errMsg := fmt.Sprintf("remove credential error: %s\n", err.Error())
-		slog.Error(errMsg)
-		return errors.Wrap(err, errMsg)
+		return errorx.Internal(fmt.Sprintf("remove credential error: %s", err.Error()))
 	}
 
 	return nil

@@ -11,7 +11,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/config"
 	migs "github.com/57blocks/auto-action/server/internal/db/migration"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
+	"github.com/57blocks/auto-action/server/internal/pkg/logx"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -46,7 +46,7 @@ func connect() error {
 
 	sqlDB, err := sql.Open("postgres", dsn)
 	if err != nil {
-		return errorx.Internal(fmt.Sprintf("setup database error: %s\n", err.Error()))
+		return errorx.Internal(fmt.Sprintf("setup database error: %s", err.Error()))
 	}
 	sqlDB.SetMaxIdleConns(4) // by default: 2
 	sqlDB.SetMaxOpenConns(10)
@@ -68,7 +68,7 @@ func connect() error {
 		},
 	)
 	if err != nil {
-		return errorx.Internal(fmt.Sprintf("connecting to database error: %s\n", err.Error()))
+		return errorx.Internal(fmt.Sprintf("connecting to database error: %s", err.Error()))
 	}
 
 	return nil
@@ -77,19 +77,19 @@ func connect() error {
 func migrateDB(db *gorm.DB) error {
 	instance, err := db.DB()
 	if err != nil {
-		return errorx.Internal(fmt.Sprintf("new DB instance error: %s\n", err.Error()))
+		return errorx.Internal(fmt.Sprintf("new DB instance error: %s", err.Error()))
 	}
 
 	driver, err := postgres.WithInstance(instance, &postgres.Config{
 		MigrationsTable: "migration_version",
 	})
 	if err != nil {
-		return errorx.Internal(fmt.Sprintf("new driver instance error: %s\n", err.Error()))
+		return errorx.Internal(fmt.Sprintf("new driver instance error: %s", err.Error()))
 	}
 
 	source, err := httpfs.New(http.FS(migs.Migrations), ".")
 	if err != nil {
-		return errorx.Internal(fmt.Sprintf("new embed source error: %s\n", err.Error()))
+		return errorx.Internal(fmt.Sprintf("new embed source error: %s", err.Error()))
 	}
 
 	mig, err := migrate.NewWithInstance(
@@ -99,7 +99,7 @@ func migrateDB(db *gorm.DB) error {
 		driver,
 	)
 	if err != nil {
-		return errorx.Internal(fmt.Sprintf("new migration instance error: %s\n", err.Error()))
+		return errorx.Internal(fmt.Sprintf("new migration instance error: %s", err.Error()))
 	}
 
 	var migErr error
@@ -113,23 +113,23 @@ func migrateDB(db *gorm.DB) error {
 		lastSuccess := dirtyErr.Version - 1
 		if err := mig.Force(lastSuccess); err != nil {
 			return errorx.Internal(fmt.Sprintf(
-				"force dirty version failed: %s\n",
+				"force dirty version failed: %s",
 				err.Error(),
 			))
 		}
 		if err := mig.Up(); err != nil {
 			return errorx.Internal(fmt.Sprintf(
-				"re-migrate dirty version failed: %s\n",
+				"re-migrate dirty version failed: %s",
 				err.Error(),
 			))
 		}
-		pkgLog.Logger.DEBUG(fmt.Sprintf(
-			"re-migrate dirty version: %v successfully\n",
+		logx.Logger.DEBUG(fmt.Sprintf(
+			"re-migrate dirty version: %v successfully",
 			dirtyErr.Version,
 		))
 
 		return nil
 	}
 
-	return errorx.Internal(fmt.Sprintf("migrate error: %s\n", migErr.Error()))
+	return errorx.Internal(fmt.Sprintf("migrate error: %s", migErr.Error()))
 }

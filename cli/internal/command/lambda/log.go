@@ -2,7 +2,6 @@ package lambda
 
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -10,16 +9,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/gorilla/websocket"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-// logs represents the log command
+// logs represents the `log` command
 var logs = &cobra.Command{
 	Use:   "log <name/arn>",
 	Short: "Tracking execution logs of the lambda function",
@@ -33,13 +32,11 @@ TODO:
   - Add error events filer
 `,
 	Args: cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return logFunc(cmd, args)
-	},
+	RunE: logFunc,
 }
 
 func init() {
-	command.Root.AddCommand(logs)
+	lambdaGroup.AddCommand(logs)
 }
 
 func logFunc(_ *cobra.Command, args []string) error {
@@ -51,14 +48,14 @@ func logFunc(_ *cobra.Command, args []string) error {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	splits := strings.Split(viper.GetString("bound_with.endpoint"), "://")
+	splits := strings.Split(config.Vp.GetString("bound_with.endpoint"), "://")
 
 	u := url.URL{
 		Scheme: "ws",
 		Host:   splits[1],
-		Path:   fmt.Sprintf("/lambda/%s/logs", args[0]),
+		Path:   util.ParseReqPath(fmt.Sprintf("/lambda/%s/logs", args[0])),
 	}
-	slog.Info(fmt.Sprintf("dailing to %s\n", u.String()))
+	logx.Logger.Debug("ws", "dailing to", u.String())
 
 	// Add JWT token to the request headers
 	header := http.Header{}
@@ -66,8 +63,8 @@ func logFunc(_ *cobra.Command, args []string) error {
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), header)
 	if err != nil {
-		slog.Error(fmt.Sprintf("dialing error: %s\n", err.Error()))
-		return errors.Wrap(err, "failed to dial to websocket")
+		logx.Logger.Error("ws", "dialing error", err.Error())
+		return errorx.Internal(err.Error())
 	}
 	defer c.Close()
 
@@ -79,12 +76,12 @@ func logFunc(_ *cobra.Command, args []string) error {
 		for {
 			_, message, err := c.ReadMessage()
 			if err != nil {
-				slog.Error(fmt.Sprintf("read cloudwatch events error: %s", err.Error()))
+				logx.Logger.Error("ws", "read cloudwatch events error", err.Error())
 
 				return
 			}
 
-			slog.Info(fmt.Sprintf("%s", message))
+			logx.Logger.Info("CloudWatch Event", "detail", fmt.Sprintf("%s", message))
 		}
 	}()
 
@@ -98,16 +95,14 @@ func logFunc(_ *cobra.Command, args []string) error {
 		case t := <-ticker.C:
 			err := c.WriteMessage(websocket.TextMessage, []byte(t.String()))
 			if err != nil {
-				return errors.Wrap(err, "failed to write message to websocket")
+				return errorx.Internal(fmt.Sprintf("failed to write message to websocket: %s", err.Error()))
 			}
 		case <-interrupt:
-			slog.Info("interrupt")
-
 			// Cleanly close the connection by sending a close message and then
 			// waiting (with timeout) for the server to close the connection.
 			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
-				return errors.Wrap(err, "failed to write close message to websocket")
+				return errorx.Internal(fmt.Sprintf("failed to write close message to websocket: %s", err.Error()))
 			}
 			select {
 			case <-done:

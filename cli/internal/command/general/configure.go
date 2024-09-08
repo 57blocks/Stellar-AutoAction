@@ -2,15 +2,13 @@ package general
 
 import (
 	"fmt"
-	"log/slog"
 
-	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/constant"
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // configure represents the configure command
@@ -23,14 +21,24 @@ Description:
 
 Note:
   - When specifying other credentials, please confirm with that the
-    credential is match with the bound endpoint.
+    credential is matched with the bound endpoint and not expired.
+  - When specifying the log level, here are the options below:
+    - Debug
+    - Warn
+    - Error
+    - Info
+    If none matched, using **Info** as default.
+  - When specifying the tracking source, here are the options below:
+    - ON
+    - OFF
 `,
 	Args: cobra.NoArgs,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		if !cmd.Flags().Changed(constant.FlagCredential.ValStr()) &&
 			!cmd.Flags().Changed(constant.FlagEndPoint.ValStr()) &&
+			!cmd.Flags().Changed(constant.FlagSource.ValStr()) &&
 			!cmd.Flags().Changed(constant.FlagLog.ValStr()) {
-			return errors.New("at least one of the flags must be set")
+			return errorx.BadRequest("at least one of the flags must be set")
 		}
 
 		return nil
@@ -39,34 +47,43 @@ Note:
 }
 
 func init() {
-	command.Root.AddCommand(configure)
+	generalGroup.AddCommand(configure)
 
 	fCred := constant.FlagCredential.ValStr()
 	configure.Flags().StringP(
 		fCred,
 		"",
-		viper.GetString(fCred),
+		config.Vp.GetString(fCred),
 		"configure the credential file path")
 
 	fEndPoint := constant.FlagEndPoint.ValStr()
 	configure.Flags().StringP(
 		fEndPoint,
 		"",
-		viper.GetString(fEndPoint),
+		config.Vp.GetString(fEndPoint),
 		"configure the endpoint of the service")
 
 	fLogLevel := constant.FlagLog.ValStr()
 	configure.Flags().StringP(
 		fLogLevel,
 		"",
-		viper.GetString(fLogLevel),
-		"configure the log level")
+		config.Vp.GetString(fLogLevel),
+		"configure the logx level")
+
+	fSource := constant.FlagSource.ValStr()
+	configure.Flags().StringP(
+		fSource,
+		"s",
+		config.Vp.GetString(fSource),
+		"configure the tracking source or not")
 }
 
 func configureFunc(_ *cobra.Command, _ []string) error {
-	err := config.SyncConfigByFlags()
+	if err := config.SyncConfigByFlags(); err != nil {
+		return err
+	}
 
-	slog.Debug(fmt.Sprintf("synced config: %s\n", viper.ConfigFileUsed()))
+	logx.Logger.Info(fmt.Sprintf("synced config: %s", config.Vp.ConfigFileUsed()))
 
-	return err
+	return nil
 }
