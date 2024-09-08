@@ -26,12 +26,13 @@ func TabNameCSRoleAbbr() string {
 	return (&CubeSignerRole{}).TableNameWithAbbr()
 }
 
+// CubeSignerKey is a struct that represents the keys those are bound
+// to a Role in the CubeSigner.
 type CubeSignerKey struct {
 	ICU
 	RoleID uint64  `json:"role_id"`
 	Key    string  `json:"key"`
 	Scopes StrList `json:"scopes" gorm:"type:text[]"`
-	//Scopes         StrList `json:"scopes" gorm:"column:scopes;type:text[]"`
 }
 
 func (o *CubeSignerKey) TableName() string {
