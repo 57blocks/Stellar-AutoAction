@@ -21,7 +21,7 @@ DROP TABLE IF EXISTS "cube_signer_key";
 
 CREATE TABLE "cube_signer_key" (
     "id" serial PRIMARY KEY,
-    "role_id" varchar NOT NULL,
+    "role_id" int4 NOT NULL,
     "key" varchar UNIQUE NOT NULL,
     "scopes" varchar[] NOT NULL,
     "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL,

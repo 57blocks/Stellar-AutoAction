@@ -2,35 +2,21 @@ package cs
 
 import "github.com/57blocks/auto-action/server/internal/model"
 
-// Role model dto
-type Role struct {
-	ID uint64 `json:"id"`
-	//OrganizationID uint64 `json:"organization_id"`
-	//AccountID      uint64 `json:"account_id"`
-	Role string `json:"role"`
-	//Keys []RespToSignKey `json:"keys"`
-}
-
-//Key struct {
-//	//ID     uint64        `json:"id"`
-//	//RoleID uint64        `json:"role_id"`
-//	Key    string        `json:"key"`
-//	Scopes model.StrList `json:"scopes" gorm:"type:text[]"`
-//}
-
 type (
 	RespToSign struct {
 		_            struct{}
+		ID           uint64          `json:"-"`
 		Organization string          `json:"organization"`
 		Role         string          `json:"role"`
-		Keys         []RespToSignKey `json:"keys"`
+		Keys         []RespToSignKey `json:"keys" gorm:"foreignKey:role_id;references:id"`
 	}
 
 	RespToSignKey struct {
 		_      struct{}
-		ID     uint64        `json:"id"`
+		ID     uint64        `json:"-"`
+		RoleID uint64        `json:"-"`
 		Key    string        `json:"key"`
-		Scopes model.StrList `json:"scopes"`
+		Scopes model.StrList `json:"scopes" gorm:"type:text[]"`
 	}
 )
 

@@ -21,7 +21,7 @@ import (
 type (
 	Service interface {
 		APIKey(c context.Context) (string, error)
-		ToSign(c context.Context, req *dto.ReqToSign) (*dto.RespToSign, error)
+		ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespToSign, error)
 	}
 	conductor struct{}
 )
@@ -71,7 +71,7 @@ func (cd conductor) APIKey(c context.Context) (string, error) {
 	return resMap["api_key"].(string), nil
 }
 
-func (cd conductor) ToSign(c context.Context, req *dto.ReqToSign) (*dto.RespToSign, error) {
+func (cd conductor) ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespToSign, error) {
 	org := new(model.Organization)
 	if err := db.Conn(c).Table(org.TableName()).
 		Where(map[string]interface{}{
@@ -98,28 +98,43 @@ func (cd conductor) ToSign(c context.Context, req *dto.ReqToSign) (*dto.RespToSi
 		return nil, errorx.Internal(fmt.Sprintf("db error: %s", err.Error()))
 	}
 
-	role := new(dto.Role)
+	roles := make([]*dto.RespToSign, 0)
 	if err := db.Conn(c).
 		Table(model.TabNameCSRole()).
-		//Preload("Keys", func(db *gorm.DB) *gorm.DB {
-		//	return db.Table(model.TabNameCSKey())
-		//}).
+		Preload("Keys", func(db *gorm.DB) *gorm.DB {
+			return db.Table(model.TabNameCSKey())
+		}).
 		Where(map[string]interface{}{
 			"organization_id": org.ID,
 			"account_id":      account.ID,
 		}).
-		First(role).Error; err != nil {
-		if errors.As(err, &gorm.ErrRecordNotFound) {
-			return nil, errorx.NotFound("none role found to sign")
-		}
-
+		Find(&roles).Error; err != nil {
 		return nil, errorx.Internal(err.Error())
 	}
 
-	resp := &dto.RespToSign{
-		Organization: org.CubeSignerOrg,
-		Role:         role.Role,
-		//Keys:         role.Keys,
+	if len(roles) == 0 {
+		return nil, errorx.NotFound("none roles found to sign")
+	}
+
+	resp := make([]*dto.RespToSign, 0, len(roles))
+	for _, role := range roles {
+		if len(role.Keys) == 0 {
+			continue
+		}
+
+		keys := make([]dto.RespToSignKey, 0, len(role.Keys))
+		for _, key := range role.Keys {
+			keys = append(keys, dto.RespToSignKey{
+				Key:    key.Key,
+				Scopes: key.Scopes,
+			})
+		}
+
+		resp = append(resp, &dto.RespToSign{
+			Organization: org.CubeSignerOrg,
+			Role:         role.Role,
+			Keys:         keys,
+		})
 	}
 
 	return resp, nil
