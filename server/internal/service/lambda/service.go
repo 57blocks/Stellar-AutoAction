@@ -13,7 +13,7 @@ import (
 
 	configx "github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/db"
-	"github.com/57blocks/auto-action/server/internal/model"
+	model "github.com/57blocks/auto-action/server/internal/model/lambda"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/pkg/logx"
 	"github.com/57blocks/auto-action/server/internal/pkg/util"

@@ -1,10 +1,14 @@
-package model
+package lambda
 
-import "github.com/aws/aws-sdk-go-v2/service/lambda"
+import (
+	"github.com/57blocks/auto-action/server/internal/model"
+	
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
+)
 
 // Lambda model
 type Lambda struct {
-	ICU
+	model.ICU
 	FunctionName string `json:"function_name"`
 	FunctionArn  string `json:"function_arn"`
 	Runtime      string `json:"runtime"`
@@ -35,7 +39,7 @@ func TabNameLambdaAbbr() string {
 
 // LambdaScheduler model
 type LambdaScheduler struct {
-	ICU
+	model.ICU
 	LambdaID    uint64 `json:"lambda_id"`
 	ScheduleArn string `json:"schedule_arn"`
 	Expression  string `json:"expression"`
