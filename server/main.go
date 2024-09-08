@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/57blocks/auto-action/server/internal/pkg/restyx"
 	"log"
 	"net/http"
 	"os"
@@ -15,6 +14,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/pkg/logx"
+	"github.com/57blocks/auto-action/server/internal/pkg/restyx"
 )
 
 var server *http.Server
