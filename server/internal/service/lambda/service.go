@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -15,7 +14,9 @@ import (
 	configx "github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/model"
+	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
+	"github.com/57blocks/auto-action/server/internal/pkg/util"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/lambda"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -34,7 +35,7 @@ import (
 type (
 	Service interface {
 		Register(c context.Context, r *http.Request) (*dto.RespRegister, error)
-		Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrigger, error)
+		Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error)
 		Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error)
 		Logs(c context.Context, r *dto.ReqLogs) error
 	}
@@ -250,7 +251,7 @@ func persist(c context.Context, pairs []toPersistPair) {
 	}
 }
 
-func (cd *conductor) Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrigger, error) {
+func (cd *conductor) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error) {
 	var err error
 
 	awsConfig, err = config.LoadDefaultConfig(
@@ -285,29 +286,36 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqTrigger) (*dto.RespTrig
 	if err != nil {
 		return nil, err
 	}
-
-	var inputPayload map[string]interface{}
-	if err := json.Unmarshal([]byte(r.Payload), &inputPayload); err != nil {
-		return nil, err
+	payload := map[string]interface{}{
+		"organization": stdPayload.Organization,
+		"account":      stdPayload.Account,
 	}
-	inputPayload["organization"] = stdPayload.Organization
-	inputPayload["account"] = stdPayload.Account
-	payload, err := json.Marshal(inputPayload)
+
+	if len([]byte(r.Payload)) > 0 {
+		var inputPayload map[string]interface{}
+		if err := json.Unmarshal([]byte(r.Payload), &inputPayload); err != nil {
+			return nil, errorx.Internal(fmt.Sprintf("failed to unmarshal input payload: %s", err.Error()))
+		}
+
+		payload = util.MergeMaps(payload, inputPayload)
+	}
+
+	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		return nil, err
+		return nil, errorx.Internal(fmt.Sprintf("failed to marshal payload: %s", err.Error()))
 	}
 
 	// invoke
 	invokeOutput, err := lambdaClient.Invoke(c, &lambda.InvokeInput{
 		FunctionName: aws.String(l.FunctionName),
 		LogType:      lambTypes.LogTypeTail,
-		Payload:      payload,
+		Payload:      payloadBytes,
 	})
 	if err != nil {
 		return nil, errorx.Internal(fmt.Sprintf("failed to invoke lambda: %s", l.FunctionName))
 	}
 
-	return dto.BuildRespTrigger(dto.WithTriggerResp(invokeOutput)), nil
+	return dto.BuildRespInvoke(dto.WithInvokeResp(invokeOutput)), nil
 }
 
 func (cd *conductor) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error) {

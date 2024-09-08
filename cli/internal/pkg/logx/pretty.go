@@ -31,27 +31,72 @@ const (
 	white        = 97
 )
 
-func colorize(colorCode int, v string) string {
-	return fmt.Sprintf("\033[%sm%s%s", strconv.Itoa(colorCode), v, reset)
-}
-
-type Handler struct {
-	h slog.Handler
-	b *bytes.Buffer
-	m *sync.Mutex
-}
-
 const (
 	//timeFormat = "[15:04:05.000]"
 	timeFormat = "[2006-01-02T15:04:05Z07:00]"
 )
 
-func NewHandler(opts *slog.HandlerOptions) *Handler {
+type PrettyHandler struct {
+	h slog.Handler
+	b *bytes.Buffer
+	m *sync.Mutex
+}
+
+func (h *PrettyHandler) Handle(ctx context.Context, r slog.Record) error {
+
+	level := r.Level.String() + ":"
+
+	switch r.Level {
+	case slog.LevelDebug:
+		level = colorize(darkGray, level)
+	case slog.LevelInfo:
+		level = colorize(cyan, level)
+	case slog.LevelWarn:
+		level = colorize(lightYellow, level)
+	case slog.LevelError:
+		level = colorize(lightRed, level)
+	}
+
+	attrs, err := h.computeAttrs(ctx, r)
+	if err != nil {
+		return err
+	}
+
+	attrBytes, err := json.MarshalIndent(attrs, "", "  ")
+	if err != nil {
+		return fmt.Errorf("error when marshaling attrs: %w", err)
+	}
+
+	fmt.Println(
+		colorize(lightGray, r.Time.Format(timeFormat)),
+		level,
+		colorize(white, r.Message),
+	)
+	fmt.Println(
+		colorize(darkGray, string(attrBytes)),
+	)
+
+	return nil
+}
+
+func (h *PrettyHandler) Enabled(ctx context.Context, level slog.Level) bool {
+	return h.h.Enabled(ctx, level)
+}
+
+func (h *PrettyHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return &PrettyHandler{h: h.h.WithAttrs(attrs), b: h.b, m: h.m}
+}
+
+func (h *PrettyHandler) WithGroup(name string) slog.Handler {
+	return &PrettyHandler{h: h.h.WithGroup(name), b: h.b, m: h.m}
+}
+
+func NewHandler(opts *slog.HandlerOptions) *PrettyHandler {
 	if opts == nil {
 		opts = &slog.HandlerOptions{}
 	}
 	b := &bytes.Buffer{}
-	return &Handler{
+	return &PrettyHandler{
 		b: b,
 		h: slog.NewJSONHandler(b, &slog.HandlerOptions{
 			Level:       opts.Level,
@@ -78,54 +123,11 @@ func suppressDefaults(
 	}
 }
 
-func (h *Handler) Handle(ctx context.Context, r slog.Record) error {
-
-	level := r.Level.String() + ":"
-
-	switch r.Level {
-	case slog.LevelDebug:
-		level = colorize(darkGray, level)
-	case slog.LevelInfo:
-		level = colorize(cyan, level)
-	case slog.LevelWarn:
-		level = colorize(lightYellow, level)
-	case slog.LevelError:
-		level = colorize(lightRed, level)
-	}
-
-	attrs, err := h.computeAttrs(ctx, r)
-	if err != nil {
-		return err
-	}
-
-	bytes, err := json.MarshalIndent(attrs, "", "  ")
-	if err != nil {
-		return fmt.Errorf("error when marshaling attrs: %w", err)
-	}
-
-	fmt.Println(
-		colorize(lightGray, r.Time.Format(timeFormat)),
-		level,
-		colorize(white, r.Message),
-		colorize(darkGray, string(bytes)),
-	)
-
-	return nil
+func colorize(colorCode int, v string) string {
+	return fmt.Sprintf("\033[%sm%s%s", strconv.Itoa(colorCode), v, reset)
 }
 
-func (h *Handler) Enabled(ctx context.Context, level slog.Level) bool {
-	return h.h.Enabled(ctx, level)
-}
-
-func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	return &Handler{h: h.h.WithAttrs(attrs), b: h.b, m: h.m}
-}
-
-func (h *Handler) WithGroup(name string) slog.Handler {
-	return &Handler{h: h.h.WithGroup(name), b: h.b, m: h.m}
-}
-
-func (h *Handler) computeAttrs(
+func (h *PrettyHandler) computeAttrs(
 	ctx context.Context,
 	r slog.Record,
 ) (map[string]any, error) {

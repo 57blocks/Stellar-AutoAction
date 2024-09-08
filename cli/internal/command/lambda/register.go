@@ -2,7 +2,6 @@ package lambda
 
 import (
 	"fmt"
-	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 	"strings"
 
 	"github.com/57blocks/auto-action/cli/internal/config"
@@ -10,6 +9,7 @@ import (
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/spf13/cobra"
@@ -50,9 +50,7 @@ Note:
 		return nil
 	},
 	Args: cobra.MinimumNArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return registerFunc(cmd, args)
-	},
+	RunE: registerFunc,
 }
 
 func init() {
@@ -124,14 +122,14 @@ func supplierRegister(args []string) (*resty.Response, error) {
 	for _, key := range flagKeys {
 		if value := strings.TrimSpace(config.Vp.GetString(key)); value != "" {
 			flagMap["expression"] = value
-			logx.Logger.Debug("register lambda", "trigger expression", value)
+			logx.Logger.Info("register lambda", "invoke expression", value)
 			break
 		}
 	}
 
 	if len(flagMap) == 0 {
 		flagMap["expression"] = ""
-		logx.Logger.Debug("register lambda", "trigger expression", "lambda will be triggered manually")
+		logx.Logger.Info("register lambda", "invoke expression", "manually")
 	}
 
 	request = request.SetFormData(flagMap)

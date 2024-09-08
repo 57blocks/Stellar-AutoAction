@@ -1,6 +1,7 @@
 package lambda
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/57blocks/auto-action/cli/internal/config"
@@ -25,9 +26,7 @@ Note:
   - The results contains the essential info about VPC and Schedulers.
 `,
 	Args: cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return infoFunc(cmd, args)
-	},
+	RunE: infoFunc,
 }
 
 func init() {
@@ -56,7 +55,13 @@ func infoFunc(_ *cobra.Command, args []string) error {
 		return errorx.WithRestyResp(response)
 	}
 
-	logx.Logger.Info("lambda info", "result", string(response.Body()))
+	var respData map[string]interface{}
+	if err := json.Unmarshal(response.Body(), &respData); err != nil {
+		logx.Logger.Error("Error unmarshalling JSON", "error", err.Error())
+		return errorx.Internal(err.Error())
+	}
+
+	logx.Logger.Info("lambda info", "result", respData)
 
 	return nil
 }

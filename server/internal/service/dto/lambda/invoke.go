@@ -7,12 +7,12 @@ import (
 )
 
 type (
-	ReqTrigger struct {
+	ReqInvoke struct {
 		Lambda  string `uri:"lambda"`
 		Payload string `json:"payload"`
 	}
 
-	RespTrigger struct {
+	RespInvoke struct {
 		ExecutedVersion *string
 
 		// If present, indicates that an error occurred during function execution. Details
@@ -34,11 +34,11 @@ type (
 		// Metadata pertaining to the operation's result.
 		ResultMetadata middleware.Metadata
 	}
-	RespTrgOpt func(respTrigger *RespTrigger)
+	RespInvokeOpt func(respTrigger *RespInvoke)
 )
 
-func BuildRespTrigger(opts ...RespTrgOpt) *RespTrigger {
-	respTrigger := &RespTrigger{}
+func BuildRespInvoke(opts ...RespInvokeOpt) *RespInvoke {
+	respTrigger := &RespInvoke{}
 
 	for _, opt := range opts {
 		opt(respTrigger)
@@ -47,8 +47,8 @@ func BuildRespTrigger(opts ...RespTrgOpt) *RespTrigger {
 	return respTrigger
 }
 
-func WithTriggerResp(resp *lambda.InvokeOutput) RespTrgOpt {
-	return func(respTrigger *RespTrigger) {
+func WithInvokeResp(resp *lambda.InvokeOutput) RespInvokeOpt {
+	return func(respTrigger *RespInvoke) {
 		respTrigger.ExecutedVersion = resp.ExecutedVersion
 		respTrigger.FunctionError = resp.FunctionError
 		respTrigger.LogResult = resp.LogResult

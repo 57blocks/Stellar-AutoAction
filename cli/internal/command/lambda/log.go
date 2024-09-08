@@ -2,7 +2,6 @@ package lambda
 
 import (
 	"fmt"
-	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 	"net/http"
 	"net/url"
 	"os"
@@ -13,6 +12,7 @@ import (
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/gorilla/websocket"
 	"github.com/spf13/cobra"
@@ -32,9 +32,7 @@ TODO:
   - Add error events filer
 `,
 	Args: cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return logFunc(cmd, args)
-	},
+	RunE: logFunc,
 }
 
 func init() {
@@ -83,7 +81,7 @@ func logFunc(_ *cobra.Command, args []string) error {
 				return
 			}
 
-			logx.Logger.Info("CloudWatchEvent", "detail", fmt.Sprintf("%s", message))
+			logx.Logger.Info("CloudWatch Event", "detail", fmt.Sprintf("%s", message))
 		}
 	}()
 

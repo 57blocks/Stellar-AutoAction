@@ -2,8 +2,10 @@ package oauth
 
 import (
 	"fmt"
+
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 	"log/slog"
@@ -73,6 +75,8 @@ func logoutFunc(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
+	logx.Logger.Info("you've logged out")
+
 	return nil
 }
 
@@ -84,7 +88,7 @@ func supplierLogout(token string) (*resty.Response, error) {
 		SetBody(ReqLogout{Token: token}).
 		Delete(URL)
 	if err != nil {
-		return nil, errorx.WithRestyResp(response)
+		return nil, errorx.RestyError(err.Error())
 	}
 	if response.IsError() {
 		return nil, errorx.WithRestyResp(response)

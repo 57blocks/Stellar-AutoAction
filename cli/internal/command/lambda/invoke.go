@@ -1,6 +1,7 @@
 package lambda
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/57blocks/auto-action/cli/internal/config"
@@ -30,9 +31,7 @@ Note:
     For example: -p '{"key": "value"}'
 `,
 	Args: cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return invokeFunc(cmd, args)
-	},
+	RunE: invokeFunc,
 }
 
 func init() {
@@ -74,7 +73,13 @@ func invokeFunc(_ *cobra.Command, args []string) error {
 		return errorx.WithRestyResp(response)
 	}
 
-	logx.Logger.Info("invoke lambda success", "result", response.String())
+	var respData map[string]interface{}
+	if err := json.Unmarshal(response.Body(), &respData); err != nil {
+		logx.Logger.Error("Error unmarshalling JSON", "error", err.Error())
+		return errorx.Internal(err.Error())
+	}
+
+	logx.Logger.Info("invoke lambda success", "result", respData)
 
 	return nil
 }

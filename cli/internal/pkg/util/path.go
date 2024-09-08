@@ -1,7 +1,6 @@
 package util
 
 import (
-	"net/url"
 	"os"
 	"strings"
 
@@ -29,9 +28,5 @@ func DefaultCredPath() string {
 }
 
 func ParseReqPath(input string) string {
-	path := url.QueryEscape(input)
-
-	path = strings.ReplaceAll(input, "#", "%23")
-
-	return path
+	return strings.ReplaceAll(input, "#", "%23")
 }

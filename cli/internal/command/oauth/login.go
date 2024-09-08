@@ -3,13 +3,13 @@ package oauth
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 	"os"
 
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/constant"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/spf13/cobra"
@@ -116,7 +116,7 @@ func supplierLogin(cryptPwdBytes []byte) (*resty.Response, error) {
 		}).
 		Post(URL)
 	if err != nil {
-		return nil, errorx.WithRestyResp(response)
+		return nil, errorx.RestyError(err.Error())
 	}
 	if response.IsError() {
 		return nil, errorx.WithRestyResp(response)

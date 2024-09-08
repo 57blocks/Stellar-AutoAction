@@ -3,8 +3,10 @@ package oauth
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
@@ -45,7 +47,7 @@ func refreshFunc(_ *cobra.Command, _ []string) error {
 
 	// logout check
 	if cfg.Credential == "" {
-		errorx.BadRequest("you've already logged out")
+		return errorx.BadRequest("you've logged out already")
 	}
 
 	// credential does not exist
@@ -75,7 +77,7 @@ func supplierRefresh(refresh string) (*resty.Response, error) {
 		SetBody(ReqRefresh{Refresh: refresh}).
 		Post(URL)
 	if err != nil {
-		return nil, errorx.WithRestyResp(response)
+		return nil, errorx.RestyError(err.Error())
 	}
 	if response.IsError() {
 		return nil, errorx.WithRestyResp(response)
@@ -93,6 +95,8 @@ func syncRefresh(cfg *config.GlobalConfig, resp *resty.Response) error {
 	if err := config.WriteCredential(cfg.Credential, cred); err != nil {
 		return err
 	}
+
+	logx.Logger.Info("refreshed")
 
 	return nil
 }
