@@ -1,13 +1,6 @@
 package constant
 
-import (
-	"fmt"
-	"os"
-	"strconv"
-
-	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
-)
-
+// Config is the type of strings in config
 type Config string
 
 const (
@@ -20,32 +13,34 @@ func (cc Config) ValStr() string {
 	return string(cc)
 }
 
-func (cc Config) ValInt() int {
-	intVal, err := strconv.Atoi(cc.ValStr())
-	if err != nil {
-		logx.Logger.Error(fmt.Sprintf("converting <%s> to int error: %s", cc.ValStr(), err.Error()))
-		os.Exit(1)
-	}
+// Log related types in config
+type (
+	LogLevelKey   int8
+	LogLevelValue string
+)
 
-	return intVal
+const (
+	Debug LogLevelKey = iota + 1
+	Info
+	Warn
+	Error
+)
+
+var LogLevelMap = map[LogLevelKey]LogLevelValue{
+	Debug: "Debug",
+	Info:  "Info",
+	Warn:  "Warn",
+	Error: "Error",
 }
 
-func (cc Config) ValFloat32() float32 {
-	floatValue, err := strconv.ParseFloat(cc.ValStr(), 32)
-	if err != nil {
-		logx.Logger.Error(fmt.Sprintf("Error converting <%s> to float32 error: %s", cc.ValStr(), err.Error()))
-		os.Exit(1)
-	}
-
-	return float32(floatValue)
+func GetLogLevel(key LogLevelKey) string {
+	return string(LogLevelMap[key])
 }
 
-func (cc Config) ValFloat64() float64 {
-	floatValue, err := strconv.ParseFloat(cc.ValStr(), 64)
-	if err != nil {
-		logx.Logger.Error(fmt.Sprintf("Error converting <%s> to float64 error: %s", cc.ValStr(), err.Error()))
-		os.Exit(1)
-	}
+// TrackSource type in config
+type TrackSource string
 
-	return floatValue
-}
+const (
+	OFF TrackSource = "OFF"
+	ON  TrackSource = "ON"
+)

@@ -8,7 +8,6 @@ import (
 	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
-	"log/slog"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/spf13/cobra"
@@ -47,13 +46,17 @@ func logoutFunc(_ *cobra.Command, _ []string) error {
 
 	// logout already
 	if cfg.Credential == "" {
-		slog.Info("you've already logged out")
+		logx.Logger.Info("you've already logged out", "status", "out")
 		return nil
 	}
 
 	// credential does not exist
 	if !util.IsExists(cfg.Credential) {
-		slog.Info("credential not found, reset the config directly.")
+		logx.Logger.Info(
+			"credential not found, reset config directly.",
+			"config",
+			config.Vp.ConfigFileUsed(),
+		)
 		return config.ResetConfigCredential()
 	}
 

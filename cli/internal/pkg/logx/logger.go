@@ -12,16 +12,12 @@ func SetupLogger(level string, addSource bool) {
 	var logLevel slog.Level
 	switch level {
 	case constant.GetLogLevel(constant.Debug):
-		//slog.SetLogLoggerLevel(slog.LevelDebug)
 		logLevel = slog.LevelDebug
 	case constant.GetLogLevel(constant.Warn):
-		//slog.SetLogLoggerLevel(slog.LevelWarn)
 		logLevel = slog.LevelWarn
 	case constant.GetLogLevel(constant.Error):
-		//slog.SetLogLoggerLevel(slog.LevelError)
 		logLevel = slog.LevelError
 	default:
-		//slog.SetLogLoggerLevel(slog.LevelInfo)
 		logLevel = slog.LevelInfo
 	}
 

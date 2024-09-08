@@ -20,7 +20,7 @@ import (
 
 // logs represents the logx command
 var logs = &cobra.Command{
-	Use:   "logx <name/arn>",
+	Use:   "log <name/arn>",
 	Short: "Tracking execution logs of the lambda function",
 	Long: `
 Description:

@@ -47,6 +47,12 @@ func WithLogLevel(logLevel string) GlobalConfigOpt {
 	}
 }
 
+func WithTrackSource(source string) GlobalConfigOpt {
+	return func(sc *GlobalConfig) {
+		sc.Source = source
+	}
+}
+
 func WithCredential(credential string) GlobalConfigOpt {
 	return func(sc *GlobalConfig) {
 		sc.Credential = credential
@@ -75,6 +81,7 @@ func FindOrInit() (*GlobalConfig, string) {
 		WithCredential(util.DefaultCredPath()),
 		WithEndPoint(constant.Host.String()),
 		WithLogLevel(constant.GetLogLevel(constant.Info)),
+		WithTrackSource(string(constant.OFF)),
 	)
 
 	cobra.CheckErr(WriteConfig(cfg))
@@ -129,7 +136,8 @@ func SyncConfigByFlags() error {
 		logx.Logger.Debug("sync logx level", "updated to", newLogLevel)
 		cfg.Log = newLogLevel
 	}
-	if newSource := Vp.GetString(constant.FlagSource.ValStr()); newSource != "" {
+	if newSource := Vp.GetString(constant.FlagSource.ValStr()); newSource == string(constant.ON) ||
+		newSource == string(constant.OFF) {
 		logx.Logger.Debug("sync tracking source or not", "updated to", newSource)
 		cfg.Source = newSource
 	}
