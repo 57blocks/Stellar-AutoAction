@@ -46,13 +46,13 @@ func Authentication() gin.HandlerFunc {
 
 		jwtToken, err := jwtx.ParseToken(token)
 		if err != nil {
-			c.Error(errorx.UnauthorizedWithMsg("invalid token"))
+			c.Error(err)
 			return
 		}
 
 		claimMap, ok := jwtToken.Claims.(jwt.MapClaims) // TODO: remove the type conversion after testing
 		if !ok {
-			c.Error(errors.New("invalid token"))
+			c.Error(errorx.UnauthorizedWithMsg("invalid token"))
 			return
 		}
 
