@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/57blocks/auto-action/server/internal/api/middleware"
+	"github.com/57blocks/auto-action/server/internal/service/cs"
 	"github.com/57blocks/auto-action/server/internal/service/lambda"
 	"github.com/57blocks/auto-action/server/internal/service/oauth"
-	"github.com/57blocks/auto-action/server/internal/service/organization"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,7 +29,7 @@ func RegisterHandlers(g *gin.Engine) http.Handler {
 
 	sdkGroup := g.Group("/sign", middleware.SecretKey())
 	{
-		sdkGroup.POST("/keys", organization.Keys)
+		sdkGroup.POST("/keys", cs.ToSign)
 	}
 
 	return g

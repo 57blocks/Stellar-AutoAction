@@ -1,1 +1,2 @@
-DROP TABLE IF EXISTS "organization_role_key";
+DROP TABLE IF EXISTS "cube_signer_role";
+DROP TABLE IF EXISTS "cube_signer_key";

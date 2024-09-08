@@ -7,7 +7,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
 	"github.com/57blocks/auto-action/server/internal/pkg/logx"
-	svcOrg "github.com/57blocks/auto-action/server/internal/service/organization"
+	"github.com/57blocks/auto-action/server/internal/service/cs"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -17,18 +17,18 @@ func SecretKey() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := c.GetHeader("API-Key")
 		if key == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "missing secret key"})
+			c.Error(errorx.UnauthorizedWithMsg("missing api key"))
 			return
 		}
 
-		secret, err := svcOrg.Conductor.OrgSecret(c)
+		apiKey, err := cs.Conductor.APIKey(c)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			c.Error(err)
 			return
 		}
 
-		if secret != key {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "invalid secret key"})
+		if apiKey != key {
+			c.Error(errorx.UnauthorizedWithMsg("invalid api key"))
 			return
 		}
 
@@ -40,19 +40,19 @@ func Authentication() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.GetHeader("Authorization")
 		if token == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "missing token"})
+			c.Error(errorx.UnauthorizedWithMsg("missing token"))
 			return
 		}
 
 		jwtToken, err := jwtx.ParseToken(token)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "invalid token"})
+			c.Error(err)
 			return
 		}
 
 		claimMap, ok := jwtToken.Claims.(jwt.MapClaims) // TODO: remove the type conversion after testing
 		if !ok {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "invalid token"})
+			c.Error(errorx.UnauthorizedWithMsg("invalid token"))
 			return
 		}
 
