@@ -23,6 +23,7 @@ type (
 		JWT    `mapstructure:"jwt"`
 		Amazon `mapstructure:"aws"`
 		RDS    `mapstructure:"rds"`
+		CS     `mapstructure:"cs"`
 	}
 
 	Bound struct {
@@ -58,6 +59,11 @@ type (
 		Password string `mapstructure:"password"`
 		Database string `mapstructure:"database"`
 		SSLMode  string `mapstructure:"sslmode"`
+	}
+
+	CS struct {
+		_        struct{}
+		Endpoint string `mapstructure:"endpoint"`
 	}
 )
 

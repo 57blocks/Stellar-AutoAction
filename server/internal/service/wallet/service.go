@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/db"
 	dto "github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/model"
@@ -53,7 +54,7 @@ func (cd conductor) Create(c context.Context, r *http.Request) (*dto.CreateWalle
 			"name": jwtOrg,
 		}).
 		First(org).Error; err != nil {
-		if errors.As(err, &gorm.ErrRecordNotFound) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errorx.NotFound("none organization found")
 		}
 
@@ -68,7 +69,7 @@ func (cd conductor) Create(c context.Context, r *http.Request) (*dto.CreateWalle
 			"organization_id": org.ID,
 		}).
 		First(user).Error; err != nil {
-		if errors.As(err, &gorm.ErrRecordNotFound) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errorx.NotFound("none account found")
 		}
 		return nil, errorx.Internal(fmt.Sprintf("find account by name: %s, occurred error: %s", jwtAccount, err.Error()))
@@ -82,7 +83,7 @@ func (cd conductor) Create(c context.Context, r *http.Request) (*dto.CreateWalle
 			"account_id":      user.ID,
 		}).
 		First(role).Error; err != nil {
-		if errors.As(err, &gorm.ErrRecordNotFound) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errorx.NotFound("none role found")
 		}
 		return nil, errorx.Internal(fmt.Sprintf("find role by org_id: %d and account_id: %d, occurred error: %s", org.ID, user.ID, err.Error()))
@@ -116,8 +117,8 @@ func (cd conductor) Create(c context.Context, r *http.Request) (*dto.CreateWalle
 }
 
 func addCsKey(org *model.Organization, csToken string, user *model.User) (string, error) {
-	URL := fmt.Sprintf("https://gamma.signer.cubist.dev/v0/org/%s/keys", url.PathEscape(org.CubeSignerOrg))
-	var keyResp dto.KeyResponse
+	URL := fmt.Sprintf("%s/v0/org/%s/keys", config.GlobalConfig.CS.Endpoint, url.PathEscape(org.CubeSignerOrg))
+	var keyResp dto.AddCsKeyResponse
 	resp, err := restyx.Client.R().
 		SetHeader("Authorization", csToken).
 		SetHeader("Content-Type", "application/json").
@@ -141,7 +142,7 @@ func addCsKey(org *model.Organization, csToken string, user *model.User) (string
 }
 
 func addKeyToRole(org *model.Organization, role *model.CubeSignerRole, csToken string, keyId string) error {
-	URL := fmt.Sprintf("https://gamma.signer.cubist.dev/v0/org/%s/roles/%s/add_keys", url.PathEscape(org.CubeSignerOrg), url.PathEscape(role.Role))
+	URL := fmt.Sprintf("%s/v0/org/%s/roles/%s/add_keys", config.GlobalConfig.CS.Endpoint, url.PathEscape(org.CubeSignerOrg), url.PathEscape(role.Role))
 	resp, err := restyx.Client.R().
 		SetHeader("Authorization", csToken).
 		SetHeader("Content-Type", "application/json").
