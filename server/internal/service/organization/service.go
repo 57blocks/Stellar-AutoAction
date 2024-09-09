@@ -42,7 +42,7 @@ func (cd conductor) Organization(c context.Context) (*oauth.Organization, error)
 			"name": jwtOrg,
 		}).
 		First(org).Error; err != nil {
-		if errors.As(err, &gorm.ErrRecordNotFound) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errorx.NotFound("none organization found")
 		}
 

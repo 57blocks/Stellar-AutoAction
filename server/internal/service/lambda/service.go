@@ -274,7 +274,7 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvok
 			"function_name": genLambdaFuncName(c, r.Lambda),
 		}).
 		First(l).Error; err != nil {
-		if errors.As(err, &gorm.ErrRecordNotFound) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errorx.NotFound(fmt.Sprintf("none lambda found by: %s", r.Lambda))
 		}
 
@@ -332,7 +332,7 @@ func (cd *conductor) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, err
 			"function_name": genLambdaFuncName(c, r.Lambda),
 		}).
 		First(resp).Error; err != nil {
-		if errors.As(err, &gorm.ErrRecordNotFound) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errorx.NotFound(fmt.Sprintf("none lambda found by: %s", r.Lambda))
 		}
 
