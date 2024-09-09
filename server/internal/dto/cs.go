@@ -1,8 +1,6 @@
 package dto
 
-import (
-	"github.com/57blocks/auto-action/server/internal/model"
-)
+import "github.com/57blocks/auto-action/server/internal/model"
 
 // CubeSigner
 type (
@@ -34,5 +32,19 @@ type (
 		Keys []struct {
 			KeyID string `json:"key_id"`
 		} `json:"keys"`
+	}
+)
+
+type (
+	ReqCSRole struct {
+		OrgID uint64 `json:"org_id"`
+		AcnID uint64 `json:"acn_id"`
+	}
+
+	RespCSRole struct {
+		ID             uint64 `json:"-"`
+		OrganizationID uint64 `json:"organization_id"`
+		AccountID      uint64 `json:"account_id"`
+		Role           string `json:"role"`
 	}
 )

@@ -35,6 +35,10 @@ type (
 			c context.Context,
 			input *cloudwatchlogs.GetLogEventsInput,
 		) (*cloudwatchlogs.GetLogEventsOutput, error)
+		GetSecretValue(
+			c context.Context,
+			input *secretsmanager.GetSecretValueInput,
+		) (*secretsmanager.GetSecretValueOutput, error)
 	}
 
 	amazon struct {
@@ -114,4 +118,11 @@ func (a *amazon) GetLogEvents(
 	input *cloudwatchlogs.GetLogEventsInput,
 ) (*cloudwatchlogs.GetLogEventsOutput, error) {
 	return a.cloudWatchLogsClient.GetLogEvents(c, input)
+}
+
+func (a *amazon) GetSecretValue(
+	c context.Context,
+	input *secretsmanager.GetSecretValueInput,
+) (*secretsmanager.GetSecretValueOutput, error) {
+	return a.secretManagerClient.GetSecretValue(c, input)
 }

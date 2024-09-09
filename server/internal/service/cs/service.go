@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	configx "github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/repo"
+	"github.com/57blocks/auto-action/server/internal/third-party/amazonx"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 )
 
@@ -23,14 +22,11 @@ type (
 	}
 	conductor struct {
 		csRepo repo.CubeSigner
+		amazon amazonx.Amazon
 	}
 )
 
-var (
-	Conductor Service
-	awsConfig aws.Config
-	smClient  *secretsmanager.Client
-)
+var Conductor Service
 
 func NewCubeSignerService() {
 	if Conductor == nil {
@@ -38,29 +34,18 @@ func NewCubeSignerService() {
 
 		Conductor = &conductor{
 			csRepo: repo.CubeSignerImpl,
+			amazon: amazonx.Conductor,
 		}
 	}
 }
 
 func (cd conductor) APIKey(c context.Context) (string, error) {
-	var err error
-
-	awsConfig, err = config.LoadDefaultConfig(
-		c,
-		config.WithRegion(configx.GlobalConfig.Region),
-	)
-	if err != nil {
-		return "", errorx.AmazonConfig(err.Error())
-	}
-
-	smClient = secretsmanager.NewFromConfig(awsConfig)
-
 	input := &secretsmanager.GetSecretValueInput{
 		SecretId:     aws.String("AA_API_KEY"),
 		VersionStage: aws.String("AWSCURRENT"),
 	}
 
-	resp, err := smClient.GetSecretValue(c, input)
+	secretResp, err := cd.amazon.GetSecretValue(c, input)
 	if err != nil {
 		// For a list of exceptions thrown, see
 		// https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
@@ -68,7 +53,7 @@ func (cd conductor) APIKey(c context.Context) (string, error) {
 	}
 
 	resMap := make(map[string]interface{})
-	if err := json.Unmarshal([]byte(*resp.SecretString), &resMap); err != nil {
+	if err := json.Unmarshal([]byte(*secretResp.SecretString), &resMap); err != nil {
 		return "", errorx.Internal(fmt.Sprintf("json unmarshal error when parse secret value: %s", err.Error()))
 	}
 
@@ -109,24 +94,12 @@ func (cd conductor) ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespTo
 }
 
 func (cd conductor) CubeSignerToken(c context.Context) (string, error) {
-	var err error
-
-	awsConfig, err = config.LoadDefaultConfig(
-		c,
-		config.WithRegion(configx.GlobalConfig.Region),
-	)
-	if err != nil {
-		return "", errorx.AmazonConfig(err.Error())
-	}
-
-	smClient = secretsmanager.NewFromConfig(awsConfig)
-
 	input := &secretsmanager.GetSecretValueInput{
 		SecretId:     aws.String("AA_CS_Token"),
 		VersionStage: aws.String("AWSCURRENT"),
 	}
 
-	resp, err := smClient.GetSecretValue(c, input)
+	resp, err := cd.amazon.GetSecretValue(c, input)
 	if err != nil {
 		// For a list of exceptions thrown, see
 		// https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
