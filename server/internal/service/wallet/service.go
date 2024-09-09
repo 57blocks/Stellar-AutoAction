@@ -54,7 +54,7 @@ func (cd conductor) Create(c context.Context, r *http.Request) (*dto.CreateWalle
 			"name": jwtOrg,
 		}).
 		First(org).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if errors.As(err, &gorm.ErrRecordNotFound) {
 			return nil, errorx.NotFound("none organization found")
 		}
 
