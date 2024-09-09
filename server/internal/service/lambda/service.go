@@ -13,10 +13,11 @@ import (
 
 	configx "github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/db"
-	model "github.com/57blocks/auto-action/server/internal/model/lambda"
+	"github.com/57blocks/auto-action/server/internal/dto"
+	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/pkg/util"
-	dto "github.com/57blocks/auto-action/server/internal/service/dto/lambda"
+	"github.com/57blocks/auto-action/server/internal/repo"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -39,7 +40,9 @@ type (
 		Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error)
 		Logs(c context.Context, r *dto.ReqLogs) error
 	}
-	conductor struct{}
+	conductor struct {
+		lambdaRepo repo.Lambda
+	}
 )
 
 var (
@@ -53,7 +56,9 @@ var (
 
 func init() {
 	if Conductor == nil {
-		Conductor = &conductor{}
+		Conductor = &conductor{
+			lambdaRepo: repo.CDLambda,
+		}
 	}
 }
 
@@ -158,7 +163,7 @@ func registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.Create
 			Code: &lambTypes.FunctionCode{
 				ZipFile: fileBytes,
 			},
-			FunctionName: aws.String(genLambdaFuncName(c, fileName)),
+			FunctionName: aws.String(util.GenLambdaFuncName(c, fileName)),
 			// TODO: put into env when the infrastructure is ready, the same as `VpcConfig` below.
 			Environment: &lambTypes.Environment{Variables: map[string]string{"ENV_AWS_REGION": "us-east-2"}},
 			// This execution role has full access of CloudWatch and Lambda execution access.
@@ -188,7 +193,7 @@ func boundScheduler(
 
 	schClient := scheduler.NewFromConfig(awsConfig)
 
-	event, err := genEventPayload(c)
+	event, err := util.GenEventPayload(c)
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +276,7 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvok
 			"function_arn": r.Lambda,
 		}).
 		Or(map[string]interface{}{
-			"function_name": genLambdaFuncName(c, r.Lambda),
+			"function_name": util.GenLambdaFuncName(c, r.Lambda),
 		}).
 		First(l).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -282,7 +287,7 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvok
 	}
 
 	// generate merged payload with orgSecretKey key
-	stdPayload, err := genEventPayload(c)
+	stdPayload, err := util.GenEventPayload(c)
 	if err != nil {
 		return nil, err
 	}
@@ -319,27 +324,12 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvok
 }
 
 func (cd *conductor) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error) {
-	resp := new(dto.RespInfo)
-
-	if err := db.Conn(c).Table("lambda").
-		Preload("Schedulers", func(db *gorm.DB) *gorm.DB {
-			return db.Table("lambda_scheduler")
-		}).
-		Where(map[string]interface{}{
-			"function_arn": r.Lambda,
-		}).
-		Or(map[string]interface{}{
-			"function_name": genLambdaFuncName(c, r.Lambda),
-		}).
-		First(resp).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errorx.NotFound(fmt.Sprintf("none lambda found by: %s", r.Lambda))
-		}
-
-		return nil, errorx.Internal(fmt.Sprintf("failed to query lambda: %s, err: %s", r.Lambda, err.Error()))
+	info, err := cd.lambdaRepo.Info(c, r)
+	if err != nil {
+		return nil, err
 	}
 
-	return resp, nil
+	return info, nil
 }
 
 func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
@@ -375,7 +365,7 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 	}
 	defer wsConn.Close()
 
-	logGroupName := "/aws/lambda/" + genLambdaFuncName(c, req.Lambda)
+	logGroupName := "/aws/lambda/" + util.GenLambdaFuncName(c, req.Lambda)
 
 	describeInput := &cloudwatchlogs.DescribeLogStreamsInput{
 		LogGroupName: &logGroupName,

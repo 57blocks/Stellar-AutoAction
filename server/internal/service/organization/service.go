@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/57blocks/auto-action/server/internal/model"
 
 	"github.com/57blocks/auto-action/server/internal/db"
-	model "github.com/57blocks/auto-action/server/internal/model/oauth"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 
 	"github.com/gin-gonic/gin"

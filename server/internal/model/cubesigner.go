@@ -1,12 +1,10 @@
-package cs
-
-import "github.com/57blocks/auto-action/server/internal/model"
+package model
 
 // CubeSignerRole is a struct that represents the organization roles in
 // the CubeSigner.
 // Each account will host one Role only, with it named by the account.
 type CubeSignerRole struct {
-	model.ICU
+	ICU
 	OrganizationID uint64 `json:"organization_id"`
 	AccountID      uint64 `json:"account_id"`
 	Role           string `json:"role"`
@@ -31,10 +29,10 @@ func TabNamCSRoleAbbr() string {
 // CubeSignerKey is a struct that represents the keys those are bound
 // to a Role in the CubeSigner.
 type CubeSignerKey struct {
-	model.ICU
-	RoleID uint64        `json:"role_id"`
-	Key    string        `json:"key"`
-	Scopes model.StrList `json:"scopes" gorm:"type:text[]"`
+	ICU
+	RoleID uint64  `json:"role_id"`
+	Key    string  `json:"key"`
+	Scopes StrList `json:"scopes" gorm:"type:text[]"`
 }
 
 func (o *CubeSignerKey) TableName() string {

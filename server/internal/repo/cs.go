@@ -1,45 +1,45 @@
-package cs
+package repo
 
 import (
 	"context"
 
 	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/dto"
-	"github.com/57blocks/auto-action/server/internal/model/oauth"
+	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 
 	"gorm.io/gorm"
 )
 
-//go:generate mockgen -destination ./repo_mock.go -package cs -source repo.go Repo
+//go:generate mockgen -destination ./cs_mock.go -package repo -source cs.go CubeSigner
 type (
-	Repo interface {
+	CubeSigner interface {
 		ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespToSign, error)
 	}
-	conductor struct{}
+	cubeSigner struct{}
 )
 
-var Conductor Repo
+var CDCubeSigner CubeSigner
 
 func init() {
-	if Conductor == nil {
+	if CDCubeSigner == nil {
 	}
-	Conductor = &conductor{}
+	CDCubeSigner = &cubeSigner{}
 }
-func (cs *conductor) ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespToSign, error) {
+func (cs *cubeSigner) ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespToSign, error) {
 	roles := make([]*dto.RespToSign, 0)
 	if err := db.Conn(c).
-		Table(TabNamCSRoleAbbr()).
+		Table(model.TabNamCSRoleAbbr()).
 		Joins("LEFT JOIN organization AS o ON o.id = csr.organization_id").
 		Joins("LEFT JOIN \"user\" AS u ON u.id = csr.account_id").
 		Preload("Organization", func(db *gorm.DB) *gorm.DB {
-			return db.Table(oauth.TabNamOrg())
+			return db.Table(model.TabNamOrg())
 		}).
 		Preload("Account", func(db *gorm.DB) *gorm.DB {
-			return db.Table(oauth.TabNamUser())
+			return db.Table(model.TabNamUser())
 		}).
 		Preload("Keys", func(db *gorm.DB) *gorm.DB {
-			return db.Table(TabNameCSKey())
+			return db.Table(model.TabNameCSKey())
 		}).
 		Where(map[string]interface{}{
 			"o.name":    req.Organization,

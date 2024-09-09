@@ -1,42 +1,44 @@
-package oauth
+package repo
 
 import (
 	"context"
 	"errors"
 
 	"github.com/57blocks/auto-action/server/internal/db"
+	"github.com/57blocks/auto-action/server/internal/dto"
+	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
-//go:generate mockgen -destination ./repo_mock.go -package oauth -source repo.go Repo
+//go:generate mockgen -destination ./oauth_mock.go -package repo -source oauth.go OAuth
 type (
-	Repo interface {
-		FindUserByAcn(c context.Context, acn string) (*RespUser, error)
-		FindUserByOrgAcn(c context.Context, req ReqOrgAcn) (*RespUser, error)
+	OAuth interface {
+		FindUserByAcn(c context.Context, acn string) (*dto.RespUser, error)
+		FindUserByOrgAcn(c context.Context, req dto.ReqOrgAcn) (*dto.RespUser, error)
 
-		FindOrg(c context.Context, id uint64) (*RespOrg, error)
-		FindOrgByName(c context.Context, name string) (*RespOrg, error)
+		FindOrg(c context.Context, id uint64) (*dto.RespOrg, error)
+		FindOrgByName(c context.Context, name string) (*dto.RespOrg, error)
 
-		SyncToken(c context.Context, token *Token) error
+		SyncToken(c context.Context, token *model.Token) error
 	}
 
-	conductor struct{}
+	oauth struct{}
 )
 
-var Conductor Repo
+var CDOAuth OAuth
 
 func init() {
-	if Conductor == nil {
+	if CDOAuth == nil {
 	}
-	Conductor = &conductor{}
+	CDOAuth = &oauth{}
 }
 
-func (cd *conductor) FindUserByAcn(c context.Context, acn string) (*RespUser, error) {
-	u := new(RespUser)
-	if err := db.Conn(c).Table(TabNamUser()).
+func (o *oauth) FindUserByAcn(c context.Context, acn string) (*dto.RespUser, error) {
+	u := new(dto.RespUser)
+	if err := db.Conn(c).Table(model.TabNamUser()).
 		Where(map[string]interface{}{
 			"account": acn,
 		}).
@@ -51,9 +53,9 @@ func (cd *conductor) FindUserByAcn(c context.Context, acn string) (*RespUser, er
 	return u, nil
 }
 
-func (cd *conductor) FindUserByOrgAcn(c context.Context, req ReqOrgAcn) (*RespUser, error) {
-	u := new(RespUser)
-	if err := db.Conn(c).Table(TabNamUserAbbr()).
+func (o *oauth) FindUserByOrgAcn(c context.Context, req dto.ReqOrgAcn) (*dto.RespUser, error) {
+	u := new(dto.RespUser)
+	if err := db.Conn(c).Table(model.TabNamUserAbbr()).
 		Joins("LEFT JOIN organization AS o ON u.organization_id = o.id").
 		Where(map[string]interface{}{
 			"u.account": req.AcnName,
@@ -70,13 +72,13 @@ func (cd *conductor) FindUserByOrgAcn(c context.Context, req ReqOrgAcn) (*RespUs
 	return u, nil
 }
 
-func (cd *conductor) FindOrg(c context.Context, id uint64) (*RespOrg, error) {
-	o := new(RespOrg)
-	if err := db.Conn(c).Table(TabNamOrg()).
+func (o *oauth) FindOrg(c context.Context, id uint64) (*dto.RespOrg, error) {
+	org := new(dto.RespOrg)
+	if err := db.Conn(c).Table(model.TabNamOrg()).
 		Where(map[string]interface{}{
 			"id": id,
 		}).
-		First(o).Error; err != nil {
+		First(org).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errorx.NotFound("organization not found")
 		}
@@ -84,16 +86,16 @@ func (cd *conductor) FindOrg(c context.Context, id uint64) (*RespOrg, error) {
 		return nil, errorx.Internal(err.Error())
 	}
 
-	return o, nil
+	return org, nil
 }
 
-func (cd *conductor) FindOrgByName(c context.Context, name string) (*RespOrg, error) {
-	o := new(RespOrg)
-	if err := db.Conn(c).Table(TabNamOrg()).
+func (o *oauth) FindOrgByName(c context.Context, name string) (*dto.RespOrg, error) {
+	org := new(dto.RespOrg)
+	if err := db.Conn(c).Table(model.TabNamOrg()).
 		Where(map[string]interface{}{
 			"name": name,
 		}).
-		First(o).Error; err != nil {
+		First(org).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errorx.NotFound("organization not found")
 		}
@@ -101,10 +103,10 @@ func (cd *conductor) FindOrgByName(c context.Context, name string) (*RespOrg, er
 		return nil, errorx.Internal(err.Error())
 	}
 
-	return o, nil
+	return org, nil
 }
 
-func (cd *conductor) SyncToken(c context.Context, token *Token) error {
+func (o *oauth) SyncToken(c context.Context, token *model.Token) error {
 	if err := db.Conn(c).
 		Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "user_id"}},

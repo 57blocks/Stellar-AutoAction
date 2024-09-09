@@ -7,8 +7,9 @@ import (
 
 	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/dto"
-	model "github.com/57blocks/auto-action/server/internal/model/oauth"
+	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/server/internal/repo"
 	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
 
 	"github.com/dgrijalva/jwt-go"
@@ -23,7 +24,7 @@ type (
 		Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogout, error)
 	}
 	conductor struct {
-		oauthRepo model.Repo
+		oauthRepo repo.OAuth
 	}
 )
 
@@ -32,13 +33,13 @@ var Conductor Service
 func init() {
 	if Conductor == nil {
 		Conductor = &conductor{
-			oauthRepo: model.Conductor,
+			oauthRepo: repo.CDOAuth,
 		}
 	}
 }
 
 func (cd *conductor) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredential, error) {
-	u, err := cd.oauthRepo.FindUserByOrgAcn(c, model.ReqOrgAcn{
+	u, err := cd.oauthRepo.FindUserByOrgAcn(c, dto.ReqOrgAcn{
 		OrgName: req.Organization,
 		AcnName: req.Account,
 	})

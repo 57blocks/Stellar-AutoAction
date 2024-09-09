@@ -5,27 +5,26 @@ import (
 	"testing"
 
 	"github.com/57blocks/auto-action/server/internal/dto"
-	model "github.com/57blocks/auto-action/server/internal/model/cs"
-	"github.com/57blocks/auto-action/server/internal/model/oauth"
+	"github.com/57blocks/auto-action/server/internal/repo"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_ToSign_Success(t *testing.T) {
+func TestToSignSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := model.NewMockRepo(ctrl)
+	mockRepo := repo.NewMockCubeSigner(ctrl)
 
-	ctx := context.Background()
+	ctx := context.TODO()
 	request := &dto.ReqToSign{Account: "v3n", Organization: "epic"}
 
 	mockRepo.EXPECT().ToSign(ctx, request).Times(1).
 		Return(
 			[]*dto.RespToSign{{
-				Organization: oauth.RespOrg{},
-				Account:      oauth.RespUser{},
+				Organization: dto.RespOrg{},
+				Account:      dto.RespUser{},
 				Role:         "Role#_",
 				Keys: []dto.RespCSKey{{
 					Key:    "Key#_St3llar_",
@@ -42,13 +41,13 @@ func Test_ToSign_Success(t *testing.T) {
 	assert.Equal(t, "Key#_St3llar_", roles[0].Keys[0].Key)
 }
 
-func Test_ToSign_With_Empty_Roles(t *testing.T) {
+func TestToSignWithEmptyRoles(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := model.NewMockRepo(ctrl)
+	mockRepo := repo.NewMockCubeSigner(ctrl)
 
-	ctx := context.Background()
+	ctx := context.TODO()
 	request := &dto.ReqToSign{Account: "v3n", Organization: "epic"}
 
 	mockRepo.EXPECT().ToSign(ctx, request).Times(1).
@@ -63,13 +62,13 @@ func Test_ToSign_With_Empty_Roles(t *testing.T) {
 	assert.Empty(t, roles)
 }
 
-func Test_ToSign_With_Error(t *testing.T) {
+func TestToSignWithError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := model.NewMockRepo(ctrl)
+	mockRepo := repo.NewMockCubeSigner(ctrl)
 
-	ctx := context.Background()
+	ctx := context.TODO()
 	request := &dto.ReqToSign{Account: "v3n", Organization: "epic"}
 
 	mockRepo.EXPECT().ToSign(ctx, request).Times(1).
