@@ -3,7 +3,7 @@ package middleware
 import (
 	"fmt"
 
-	"github.com/57blocks/auto-action/server/internal/pkg/logx"
+	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 
 	"github.com/gin-gonic/gin"
 )

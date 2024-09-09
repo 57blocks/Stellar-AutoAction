@@ -1,13 +1,11 @@
-package oauth
+package model
 
 import (
 	"time"
-
-	"github.com/57blocks/auto-action/server/internal/model"
 )
 
 type Organization struct {
-	model.ICU
+	ICU
 	Name          string `json:"name"`
 	CubeSignerOrg string `json:"cube_signer_org"`
 	Description   string `json:"description"`
@@ -30,7 +28,7 @@ func TabNamOrgAbbr() string {
 }
 
 type User struct {
-	model.ICU
+	ICU
 	Account        string `json:"account"`
 	Password       string `json:"password"`
 	Description    string `json:"description"`
@@ -54,7 +52,7 @@ func TabNamUserAbbr() string {
 }
 
 type Token struct {
-	model.ICU
+	ICU
 	Access         string    `json:"access"`
 	Refresh        string    `json:"refresh"`
 	UserId         uint64    `json:"user_id"`

@@ -6,9 +6,9 @@ import (
 	"fmt"
 
 	configx "github.com/57blocks/auto-action/server/internal/config"
-	dto "github.com/57blocks/auto-action/server/internal/dto/cs"
-	model "github.com/57blocks/auto-action/server/internal/model/cs"
+	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/server/internal/repo"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -21,7 +21,7 @@ type (
 		ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespToSign, error)
 	}
 	conductor struct {
-		csRepo model.Repo
+		csRepo repo.CubeSigner
 	}
 )
 
@@ -34,7 +34,7 @@ var (
 func init() {
 	if Conductor == nil {
 		Conductor = &conductor{
-			csRepo: model.Conductor,
+			csRepo: repo.CDCubeSigner,
 		}
 	}
 }

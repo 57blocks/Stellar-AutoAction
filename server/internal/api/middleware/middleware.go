@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
-	"github.com/57blocks/auto-action/server/internal/pkg/logx"
 	"github.com/57blocks/auto-action/server/internal/service/cs"
+	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
+	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -114,7 +114,7 @@ func PostHandleErr() gin.HandlerFunc {
 		e := c.Errors.Last()
 
 		err := new(errorx.Errorx)
-		if errors.As(e.Err, &err) {
+		if errors.Is(e.Err, err) {
 			c.JSON(err.Status(), &struct{ Error interface{} }{Error: err})
 			return
 		}

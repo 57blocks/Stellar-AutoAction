@@ -6,7 +6,7 @@ import (
 
 	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	"github.com/57blocks/auto-action/server/internal/pkg/logx"
+	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 
 	"github.com/dgrijalva/jwt-go"
 )

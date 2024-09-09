@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	
+
 	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 
 	"github.com/go-resty/resty/v2"
@@ -50,7 +50,7 @@ func CatchAndWrap(err error) {
 	}
 
 	er := new(ErrResponse)
-	if errors.As(err, &er) {
+	if errors.Is(err, er) {
 		code := http.StatusInternalServerError
 		if er.Code() != 0 {
 			code = er.Code()
@@ -65,7 +65,7 @@ func CatchAndWrap(err error) {
 	}
 
 	erx := new(Errorx)
-	if errors.As(err, &erx) {
+	if errors.Is(err, erx) {
 		logx.Logger.Error(
 			"error occurred",
 			fmt.Sprintf("error_code_%v", erx.Code()),

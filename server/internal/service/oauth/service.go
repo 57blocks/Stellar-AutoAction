@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/57blocks/auto-action/server/internal/db"
-	model "github.com/57blocks/auto-action/server/internal/model/oauth"
+	"github.com/57blocks/auto-action/server/internal/dto"
+	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
-	dto "github.com/57blocks/auto-action/server/internal/service/dto/oauth"
+	"github.com/57blocks/auto-action/server/internal/repo"
+	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
@@ -23,7 +24,7 @@ type (
 		Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogout, error)
 	}
 	conductor struct {
-		oauthRepo model.Repo
+		oauthRepo repo.OAuth
 	}
 )
 
@@ -32,13 +33,13 @@ var Conductor Service
 func init() {
 	if Conductor == nil {
 		Conductor = &conductor{
-			oauthRepo: model.Conductor,
+			oauthRepo: repo.CDOAuth,
 		}
 	}
 }
 
 func (cd *conductor) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredential, error) {
-	u, err := cd.oauthRepo.FindUserByOrgAcn(c, model.ReqOrgAcn{
+	u, err := cd.oauthRepo.FindUserByOrgAcn(c, dto.ReqOrgAcn{
 		OrgName: req.Organization,
 		AcnName: req.Account,
 	})

@@ -3,8 +3,8 @@ package lambda
 import (
 	"net/http"
 
+	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	dto "github.com/57blocks/auto-action/server/internal/service/dto/lambda"
 
 	"github.com/gin-gonic/gin"
 )
