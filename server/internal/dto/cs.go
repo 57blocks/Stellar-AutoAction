@@ -29,4 +29,10 @@ type (
 		Key    string        `json:"key"`
 		Scopes model.StrList `json:"scopes" gorm:"type:text[]"`
 	}
+
+	AddCsKeyResponse struct {
+		Keys []struct {
+			KeyID string `json:"key_id"`
+		} `json:"keys"`
+	}
 )

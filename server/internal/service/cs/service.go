@@ -19,6 +19,7 @@ type (
 	Service interface {
 		APIKey(c context.Context) (string, error)
 		ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespToSign, error)
+		CubeSignerToken(c context.Context) (string, error)
 	}
 	conductor struct {
 		csRepo repo.CubeSigner
@@ -103,4 +104,37 @@ func (cd conductor) ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespTo
 	}
 
 	return resp, nil
+}
+
+func (cd conductor) CubeSignerToken(c context.Context) (string, error) {
+	var err error
+
+	awsConfig, err = config.LoadDefaultConfig(
+		c,
+		config.WithRegion(configx.GlobalConfig.Region),
+	)
+	if err != nil {
+		return "", errorx.AmazonConfig(err.Error())
+	}
+
+	smClient = secretsmanager.NewFromConfig(awsConfig)
+
+	input := &secretsmanager.GetSecretValueInput{
+		SecretId:     aws.String("AA_CS_Token"),
+		VersionStage: aws.String("AWSCURRENT"),
+	}
+
+	resp, err := smClient.GetSecretValue(c, input)
+	if err != nil {
+		// For a list of exceptions thrown, see
+		// https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+		return "", errorx.Internal(err.Error())
+	}
+
+	resMap := make(map[string]interface{})
+	if err := json.Unmarshal([]byte(*resp.SecretString), &resMap); err != nil {
+		return "", errorx.Internal(fmt.Sprintf("json unmarshal error when parse secret value: %s", err.Error()))
+	}
+
+	return resMap["token"].(string), nil
 }

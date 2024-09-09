@@ -1,8 +1,10 @@
 package wallet
 
 import (
-	"errors"
 	"fmt"
+
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 
 	"github.com/spf13/cobra"
 )
@@ -20,7 +22,7 @@ Description:
 func init() {
 	wallet.AddCommand(verify)
 
-	remove.SetUsageTemplate(`
+	verify.SetUsageTemplate(`
 Usage:
   wallet verify [wallet-address]
 
@@ -30,11 +32,11 @@ Flags:
 
 func verifyFunc(_ *cobra.Command, args []string) error {
 	walletAddress := args[0]
-	fmt.Printf("Verifying wallet with address: %s\n", walletAddress)
+	logx.Logger.Info(fmt.Sprintf("Verifying wallet with address: %s\n", walletAddress))
 	if true {
-		fmt.Println("verify wallet success")
+		logx.Logger.Info("verify wallet success")
 		return nil
 	}
-	fmt.Println("verify wallet failed")
-	return errors.New("verify wallet failed")
+	logx.Logger.Info("verify wallet failed")
+	return errorx.BadRequest("verify wallet failed")
 }

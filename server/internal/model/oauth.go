@@ -31,6 +31,7 @@ type User struct {
 	ICU
 	Account        string `json:"account"`
 	Password       string `json:"password"`
+	UserKey        string `json:"user_key"`
 	Description    string `json:"description"`
 	OrganizationId int32  `json:"organization_id"`
 }

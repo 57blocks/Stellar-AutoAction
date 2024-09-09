@@ -25,3 +25,6 @@ user = "RDS_USER"
 password = "RDS_PASSWORD"
 database = "RDS_DATABASE"
 sslmode = "disable"
+
+[cs]
+endpoint = "CS_ENDPOINT"
