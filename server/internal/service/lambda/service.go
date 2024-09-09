@@ -45,10 +45,12 @@ type (
 
 var Conductor Service
 
-func init() {
+func NewLambdaService() {
 	if Conductor == nil {
+		repo.NewLambda()
+
 		Conductor = &conductor{
-			lambdaRepo: repo.CDLambda,
+			lambdaRepo: repo.LambdaImpl,
 			amazon:     amazonx.Conductor,
 		}
 	}

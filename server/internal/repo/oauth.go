@@ -22,23 +22,29 @@ type (
 		FindOrg(c context.Context, id uint64) (*dto.RespOrg, error)
 		FindOrgByName(c context.Context, name string) (*dto.RespOrg, error)
 
+		FindTokenByRefresh(c context.Context, refresh string) (*model.Token, error)
 		SyncToken(c context.Context, token *model.Token) error
+		DeleteTokenByAccess(c context.Context, access string) error
 	}
 
-	oauth struct{}
+	oauth struct {
+		Instance *db.Instance
+	}
 )
 
-var CDOAuth OAuth
+var OAuthImpl OAuth
 
-func init() {
-	if CDOAuth == nil {
+func NewOAuth() {
+	if OAuthImpl == nil {
+		OAuthImpl = &oauth{
+			Instance: db.Inst,
+		}
 	}
-	CDOAuth = &oauth{}
 }
 
 func (o *oauth) FindUserByAcn(c context.Context, acn string) (*dto.RespUser, error) {
 	u := new(dto.RespUser)
-	if err := db.Conn(c).Table(model.TabNamUser()).
+	if err := db.Inst.Conn(c).Table(model.TabNamUser()).
 		Where(map[string]interface{}{
 			"account": acn,
 		}).
@@ -55,7 +61,7 @@ func (o *oauth) FindUserByAcn(c context.Context, acn string) (*dto.RespUser, err
 
 func (o *oauth) FindUserByOrgAcn(c context.Context, req dto.ReqOrgAcn) (*dto.RespUser, error) {
 	u := new(dto.RespUser)
-	if err := db.Conn(c).Table(model.TabNamUserAbbr()).
+	if err := o.Instance.Conn(c).Table(model.TabNamUserAbbr()).
 		Joins("LEFT JOIN organization AS o ON u.organization_id = o.id").
 		Where(map[string]interface{}{
 			"u.account": req.AcnName,
@@ -74,7 +80,7 @@ func (o *oauth) FindUserByOrgAcn(c context.Context, req dto.ReqOrgAcn) (*dto.Res
 
 func (o *oauth) FindOrg(c context.Context, id uint64) (*dto.RespOrg, error) {
 	org := new(dto.RespOrg)
-	if err := db.Conn(c).Table(model.TabNamOrg()).
+	if err := o.Instance.Conn(c).Table(model.TabNamOrg()).
 		Where(map[string]interface{}{
 			"id": id,
 		}).
@@ -91,7 +97,7 @@ func (o *oauth) FindOrg(c context.Context, id uint64) (*dto.RespOrg, error) {
 
 func (o *oauth) FindOrgByName(c context.Context, name string) (*dto.RespOrg, error) {
 	org := new(dto.RespOrg)
-	if err := db.Conn(c).Table(model.TabNamOrg()).
+	if err := o.Instance.Conn(c).Table(model.TabNamOrg()).
 		Where(map[string]interface{}{
 			"name": name,
 		}).
@@ -106,14 +112,45 @@ func (o *oauth) FindOrgByName(c context.Context, name string) (*dto.RespOrg, err
 	return org, nil
 }
 
+func (o *oauth) FindTokenByRefresh(c context.Context, refresh string) (*model.Token, error) {
+	t := new(model.Token)
+	if err := o.Instance.Conn(c).Table(t.TableName()).
+		Where(map[string]interface{}{
+			"refresh": refresh,
+		}).
+		First(t).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errorx.NotFound("none refresh token found")
+		}
+
+		return nil, errorx.Internal(err.Error())
+	}
+
+	return t, nil
+}
+
 func (o *oauth) SyncToken(c context.Context, token *model.Token) error {
-	if err := db.Conn(c).
+	if err := o.Instance.Conn(c).
+		Table(token.TableName()).
 		Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "user_id"}},
 			UpdateAll: true,
 		}).
 		Create(token).
 		Error; err != nil {
+		return errorx.Internal(err.Error())
+	}
+
+	return nil
+}
+
+func (o *oauth) DeleteTokenByAccess(c context.Context, access string) error {
+	if err := o.Instance.Conn(c).
+		Table(model.TabNamToken()).
+		Where(map[string]interface{}{
+			"access": access,
+		}).
+		Delete(&model.Token{}).Error; err != nil {
 		return errorx.Internal(err.Error())
 	}
 

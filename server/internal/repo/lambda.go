@@ -22,21 +22,25 @@ type (
 		LambdaInfo(c context.Context, req *dto.ReqInfo) (*dto.RespInfo, error)
 		PersistRegResult(c context.Context, fc func(tx *gorm.DB) error, opts ...*sql.TxOptions) error
 	}
-	lambda struct{}
+	lambda struct {
+		Instance *db.Instance
+	}
 )
 
-var CDLambda Lambda
+var LambdaImpl Lambda
 
-func init() {
-	if CDLambda == nil {
-		CDLambda = &lambda{}
+func NewLambda() {
+	if LambdaImpl == nil {
+		LambdaImpl = &lambda{
+			Instance: db.Inst,
+		}
 	}
 }
 
 func (l *lambda) FindByNameOrARN(c context.Context, input string) (*dto.RespInfo, error) {
 	lamb := new(dto.RespInfo)
 
-	if err := db.Conn(c).Table("lambda").
+	if err := l.Instance.Conn(c).Table("lambda").
 		Where(map[string]interface{}{
 			"function_arn": input,
 		}).
@@ -57,7 +61,7 @@ func (l *lambda) FindByNameOrARN(c context.Context, input string) (*dto.RespInfo
 func (l *lambda) LambdaInfo(c context.Context, req *dto.ReqInfo) (*dto.RespInfo, error) {
 	resp := new(dto.RespInfo)
 
-	if err := db.Conn(c).Table("lambda").
+	if err := l.Instance.Conn(c).Table("lambda").
 		Preload("Schedulers", func(db *gorm.DB) *gorm.DB {
 			return db.Table("lambda_scheduler")
 		}).
@@ -79,7 +83,7 @@ func (l *lambda) LambdaInfo(c context.Context, req *dto.ReqInfo) (*dto.RespInfo,
 }
 
 func (l *lambda) PersistRegResult(c context.Context, fc func(tx *gorm.DB) error, opts ...*sql.TxOptions) error {
-	if err := db.Conn(c).Transaction(fc, opts...); err != nil {
+	if err := l.Instance.Conn(c).Transaction(fc, opts...); err != nil {
 		logx.Logger.ERROR(err.Error())
 		return errorx.Internal("failed to persist lambda registration result")
 	}

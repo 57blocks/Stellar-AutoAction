@@ -37,7 +37,7 @@ func (cd conductor) Organization(c context.Context) (*model.Organization, error)
 	jwtOrg, _ := ctx.Get("jwt_organization")
 
 	org := new(model.Organization)
-	if err := db.Conn(c).Table(org.TableName()).
+	if err := db.Inst.Conn(c).Table(org.TableName()).
 		Where(map[string]interface{}{
 			"name": jwtOrg,
 		}).
