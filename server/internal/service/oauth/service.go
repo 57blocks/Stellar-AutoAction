@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/57blocks/auto-action/server/internal/db"
-	"github.com/57blocks/auto-action/server/internal/model/oauth"
+	model "github.com/57blocks/auto-action/server/internal/model/oauth"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/oauth"
@@ -23,7 +23,7 @@ type (
 		Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogout, error)
 	}
 	conductor struct {
-		oauthRepo oauth.Repo
+		oauthRepo model.Repo
 	}
 )
 
@@ -32,13 +32,13 @@ var Conductor Service
 func init() {
 	if Conductor == nil {
 		Conductor = &conductor{
-			oauthRepo: oauth.Conductor,
+			oauthRepo: model.Conductor,
 		}
 	}
 }
 
 func (cd *conductor) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredential, error) {
-	u, err := cd.oauthRepo.FindUserByOrgAcn(c, oauth.ReqOrgAcn{
+	u, err := cd.oauthRepo.FindUserByOrgAcn(c, model.ReqOrgAcn{
 		OrgName: req.Organization,
 		AcnName: req.Account,
 	})
@@ -82,7 +82,7 @@ func (cd *conductor) Login(c context.Context, req dto.ReqLogin) (*dto.RespCreden
 	}
 
 	// sync token pairs
-	token := &oauth.Token{
+	token := &model.Token{
 		Access:         access,
 		Refresh:        refresh,
 		UserId:         u.ID,
@@ -108,7 +108,7 @@ func (cd *conductor) Login(c context.Context, req dto.ReqLogin) (*dto.RespCreden
 }
 
 func (cd *conductor) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCredential, error) {
-	token := new(oauth.Token)
+	token := new(model.Token)
 	if err := db.Conn(c).
 		Where(map[string]interface{}{
 			"refresh": req.Refresh,
@@ -195,7 +195,7 @@ func (cd *conductor) Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogo
 		Where(map[string]interface{}{
 			"access": req.Token,
 		}).
-		Delete(&oauth.Token{}).Error; err != nil {
+		Delete(&model.Token{}).Error; err != nil {
 		return nil, errorx.Internal(err.Error())
 	}
 

@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/57blocks/auto-action/server/internal/db"
-	"github.com/57blocks/auto-action/server/internal/model/oauth"
+	model "github.com/57blocks/auto-action/server/internal/model/oauth"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +15,7 @@ import (
 
 type (
 	Service interface {
-		Organization(c context.Context) (*oauth.Organization, error)
+		Organization(c context.Context) (*model.Organization, error)
 	}
 	conductor struct{}
 )
@@ -28,7 +28,7 @@ func init() {
 	}
 }
 
-func (cd conductor) Organization(c context.Context) (*oauth.Organization, error) {
+func (cd conductor) Organization(c context.Context) (*model.Organization, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errorx.GinContextConv()
@@ -36,7 +36,7 @@ func (cd conductor) Organization(c context.Context) (*oauth.Organization, error)
 
 	jwtOrg, _ := ctx.Get("jwt_organization")
 
-	org := new(oauth.Organization)
+	org := new(model.Organization)
 	if err := db.Conn(c).Table(org.TableName()).
 		Where(map[string]interface{}{
 			"name": jwtOrg,

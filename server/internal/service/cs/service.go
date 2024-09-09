@@ -7,7 +7,7 @@ import (
 
 	configx "github.com/57blocks/auto-action/server/internal/config"
 	dto "github.com/57blocks/auto-action/server/internal/dto/cs"
-	"github.com/57blocks/auto-action/server/internal/model/cs"
+	model "github.com/57blocks/auto-action/server/internal/model/cs"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,7 +21,7 @@ type (
 		ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespToSign, error)
 	}
 	conductor struct {
-		csRepo cs.Repo
+		csRepo model.Repo
 	}
 )
 
@@ -34,7 +34,7 @@ var (
 func init() {
 	if Conductor == nil {
 		Conductor = &conductor{
-			csRepo: cs.Conductor,
+			csRepo: model.Conductor,
 		}
 	}
 }

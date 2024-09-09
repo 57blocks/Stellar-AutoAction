@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	dto "github.com/57blocks/auto-action/server/internal/dto/cs"
-	"github.com/57blocks/auto-action/server/internal/model/cs"
+	model "github.com/57blocks/auto-action/server/internal/model/cs"
 	"github.com/57blocks/auto-action/server/internal/model/oauth"
 
 	"github.com/golang/mock/gomock"
@@ -16,7 +16,7 @@ func Test_ToSign_Success(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := cs.NewMockRepo(ctrl)
+	mockRepo := model.NewMockRepo(ctrl)
 
 	ctx := context.Background()
 	request := &dto.ReqToSign{Account: "v3n", Organization: "epic"}
@@ -46,7 +46,7 @@ func Test_ToSign_With_Empty_Roles(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := cs.NewMockRepo(ctrl)
+	mockRepo := model.NewMockRepo(ctrl)
 
 	ctx := context.Background()
 	request := &dto.ReqToSign{Account: "v3n", Organization: "epic"}
@@ -67,7 +67,7 @@ func Test_ToSign_With_Error(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := cs.NewMockRepo(ctrl)
+	mockRepo := model.NewMockRepo(ctrl)
 
 	ctx := context.Background()
 	request := &dto.ReqToSign{Account: "v3n", Organization: "epic"}
