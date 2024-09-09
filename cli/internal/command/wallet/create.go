@@ -1,7 +1,7 @@
 package wallet
 
 import (
-	"fmt"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 
 	"github.com/spf13/cobra"
 )
@@ -20,7 +20,7 @@ func init() {
 }
 
 func createFunc(_ *cobra.Command, _ []string) error {
-	fmt.Println("create wallet success, address: 0x1234567890123456789012345678901234567890")
-	fmt.Println("PS: Should deposit 1 XML to the new address to activate it.")
+	logx.Logger.Info("create wallet success, address: 0x1234567890123456789012345678901234567890")
+	logx.Logger.Info("PS: Should deposit 1 XML to the new address to activate it.")
 	return nil
 }

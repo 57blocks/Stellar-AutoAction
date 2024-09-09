@@ -1,7 +1,7 @@
 package wallet
 
 import (
-	"fmt"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 
 	"github.com/spf13/cobra"
 )
@@ -20,6 +20,6 @@ func init() {
 }
 
 func listFunc(_ *cobra.Command, _ []string) error {
-	fmt.Println("list called")
+	logx.Logger.Info("list called")
 	return nil
 }
