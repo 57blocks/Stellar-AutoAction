@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/57blocks/auto-action/server/internal/db"
+	"github.com/57blocks/auto-action/server/internal/dto"
 	model "github.com/57blocks/auto-action/server/internal/model/oauth"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	dto "github.com/57blocks/auto-action/server/internal/service/dto/oauth"
 	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
 
 	"github.com/dgrijalva/jwt-go"

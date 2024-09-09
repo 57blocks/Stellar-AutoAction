@@ -1,4 +1,4 @@
-package cs
+package dto
 
 import (
 	"github.com/57blocks/auto-action/server/internal/model"

@@ -1,9 +1,10 @@
-package oauth
+package dto
 
 import (
 	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
 )
 
+// Login related dto
 type (
 	ReqLogin struct {
 		_            struct{}
@@ -56,4 +57,20 @@ func WithTokenPair(tokens jwtx.Tokens) RespCredOpt {
 	return func(resp *RespCredential) {
 		resp.Tokens = tokens
 	}
+}
+
+// Logout related dto
+type (
+	ReqLogout struct {
+		_     struct{}
+		Token string `json:"token"`
+	}
+
+	RespLogout struct{}
+)
+
+// ReqRefresh related dto
+type ReqRefresh struct {
+	_       struct{}
+	Refresh string `json:"refresh"`
 }

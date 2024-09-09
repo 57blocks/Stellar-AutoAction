@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	cs "github.com/57blocks/auto-action/server/internal/dto/cs"
+	dto "github.com/57blocks/auto-action/server/internal/dto"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -36,10 +36,10 @@ func (m *MockRepo) EXPECT() *MockRepoMockRecorder {
 }
 
 // ToSign mocks base method.
-func (m *MockRepo) ToSign(c context.Context, req *cs.ReqToSign) ([]*cs.RespToSign, error) {
+func (m *MockRepo) ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespToSign, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ToSign", c, req)
-	ret0, _ := ret[0].([]*cs.RespToSign)
+	ret0, _ := ret[0].([]*dto.RespToSign)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

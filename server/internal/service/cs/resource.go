@@ -3,7 +3,7 @@ package cs
 import (
 	"net/http"
 
-	dto "github.com/57blocks/auto-action/server/internal/dto/cs"
+	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 
 	"github.com/gin-gonic/gin"

@@ -3,8 +3,8 @@ package oauth
 import (
 	"net/http"
 
+	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	dto "github.com/57blocks/auto-action/server/internal/service/dto/oauth"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 
 	"github.com/gin-gonic/gin"

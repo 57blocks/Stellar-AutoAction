@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	dto "github.com/57blocks/auto-action/server/internal/dto/cs"
+	"github.com/57blocks/auto-action/server/internal/dto"
 	model "github.com/57blocks/auto-action/server/internal/model/cs"
 	"github.com/57blocks/auto-action/server/internal/model/oauth"
 
