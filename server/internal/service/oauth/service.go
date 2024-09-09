@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/57blocks/auto-action/server/internal/db"
-	"github.com/57blocks/auto-action/server/internal/model"
+	model "github.com/57blocks/auto-action/server/internal/model/oauth"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/oauth"
@@ -14,7 +14,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type (
@@ -23,33 +22,31 @@ type (
 		Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCredential, error)
 		Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogout, error)
 	}
-	conductor struct{}
+	conductor struct {
+		oauthRepo model.Repo
+	}
 )
 
 var Conductor Service
 
 func init() {
 	if Conductor == nil {
-		Conductor = &conductor{}
+		Conductor = &conductor{
+			oauthRepo: model.Conductor,
+		}
 	}
 }
 
 func (cd *conductor) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredential, error) {
-	user := new(model.User)
-	if err := db.Conn(c).Table(user.TableNameWithAbbr()).
-		Joins("LEFT JOIN organization AS o ON u.organization_id = o.id").
-		Where(map[string]interface{}{
-			"u.account": req.Account,
-			"o.name":    req.Organization,
-		}).
-		First(user).Error; err != nil {
-		if errors.As(err, &gorm.ErrRecordNotFound) {
-			return nil, errorx.NotFound("user/organization not found")
-		}
-		return nil, errorx.Internal(err.Error())
+	u, err := cd.oauthRepo.FindUserByOrgAcn(c, model.ReqOrgAcn{
+		OrgName: req.Organization,
+		AcnName: req.Account,
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), req.Password); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), req.Password); err != nil {
 		return nil, errorx.BadRequest("password not match")
 	}
 
@@ -88,18 +85,12 @@ func (cd *conductor) Login(c context.Context, req dto.ReqLogin) (*dto.RespCreden
 	token := &model.Token{
 		Access:         access,
 		Refresh:        refresh,
-		UserId:         user.ID,
+		UserId:         u.ID,
 		AccessExpires:  tokenExp,
 		RefreshExpires: refreshExp,
 	}
-	if err := db.Conn(c).
-		Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "user_id"}},
-			UpdateAll: true,
-		}).
-		Create(token).
-		Error; err != nil {
-		return nil, errorx.Internal(err.Error())
+	if err := cd.oauthRepo.SyncToken(c, token); err != nil {
+		return nil, err
 	}
 
 	// build response
@@ -123,7 +114,7 @@ func (cd *conductor) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCr
 			"refresh": req.Refresh,
 		}).
 		First(token).Error; err != nil {
-		if errors.As(err, &gorm.ErrRecordNotFound) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errorx.NotFound("none refresh token found")
 		}
 

@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/57blocks/auto-action/server/internal/db"
-	"github.com/57blocks/auto-action/server/internal/model"
+	model "github.com/57blocks/auto-action/server/internal/model/oauth"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 
 	"github.com/gin-gonic/gin"
@@ -42,7 +42,7 @@ func (cd conductor) Organization(c context.Context) (*model.Organization, error)
 			"name": jwtOrg,
 		}).
 		First(org).Error; err != nil {
-		if errors.As(err, &gorm.ErrRecordNotFound) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errorx.NotFound("none organization found")
 		}
 
