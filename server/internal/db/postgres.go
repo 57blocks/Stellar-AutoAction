@@ -108,8 +108,8 @@ func migrateDB(db *gorm.DB) error {
 		return nil
 	}
 
-	dirtyErr := migrate.ErrDirty{}
-	if errors.As(migErr, &dirtyErr) {
+	dirtyErr := new(migrate.ErrDirty)
+	if errors.Is(migErr, dirtyErr) {
 		lastSuccess := dirtyErr.Version - 1
 		if err := mig.Force(lastSuccess); err != nil {
 			return errorx.Internal(fmt.Sprintf(

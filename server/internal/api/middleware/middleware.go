@@ -114,7 +114,7 @@ func PostHandleErr() gin.HandlerFunc {
 		e := c.Errors.Last()
 
 		err := new(errorx.Errorx)
-		if errors.As(e.Err, &err) {
+		if errors.Is(e.Err, err) {
 			c.JSON(err.Status(), &struct{ Error interface{} }{Error: err})
 			return
 		}
