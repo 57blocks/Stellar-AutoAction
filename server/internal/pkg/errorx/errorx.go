@@ -2,9 +2,10 @@ package errorx
 
 import (
 	"fmt"
-	"net/http"
 
-	"github.com/57blocks/auto-action/server/internal/pkg/logx"
+	"github.com/57blocks/auto-action/server/internal/third-party/logx"
+	
+	"net/http"
 )
 
 type Errorx struct {

@@ -8,8 +8,8 @@ import (
 	"github.com/57blocks/auto-action/server/internal/db"
 	model "github.com/57blocks/auto-action/server/internal/model/oauth"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/oauth"
+	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"

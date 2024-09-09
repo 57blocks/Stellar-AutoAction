@@ -5,14 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 	"net/http"
 	"time"
 
 	"github.com/57blocks/auto-action/server/internal/config"
 	migs "github.com/57blocks/auto-action/server/internal/db/migration"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	"github.com/57blocks/auto-action/server/internal/pkg/logx"
-
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -108,8 +107,8 @@ func migrateDB(db *gorm.DB) error {
 		return nil
 	}
 
-	dirtyErr := new(migrate.ErrDirty)
-	if errors.Is(migErr, dirtyErr) {
+	dirtyErr := migrate.ErrDirty{}
+	if errors.As(migErr, &dirtyErr) {
 		lastSuccess := dirtyErr.Version - 1
 		if err := mig.Force(lastSuccess); err != nil {
 			return errorx.Internal(fmt.Sprintf(

@@ -15,9 +15,9 @@ import (
 	"github.com/57blocks/auto-action/server/internal/db"
 	model "github.com/57blocks/auto-action/server/internal/model/lambda"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	"github.com/57blocks/auto-action/server/internal/pkg/logx"
 	"github.com/57blocks/auto-action/server/internal/pkg/util"
 	dto "github.com/57blocks/auto-action/server/internal/service/dto/lambda"
+	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"

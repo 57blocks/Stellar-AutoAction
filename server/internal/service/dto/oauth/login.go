@@ -1,7 +1,7 @@
 package oauth
 
 import (
-	"github.com/57blocks/auto-action/server/internal/pkg/jwtx"
+	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
 )
 
 type (
