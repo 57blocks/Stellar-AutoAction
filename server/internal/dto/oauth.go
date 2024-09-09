@@ -1,8 +1,9 @@
 package dto
 
 import (
-	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
 	"time"
+
+	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
 )
 
 // Login related dto
@@ -97,6 +98,7 @@ type (
 		Account        string   `json:"account"`
 		Password       string   `json:"-"`
 		Description    string   `json:"description"`
+		UserKey        string   `json:"user_key"`
 		OrganizationId int32    `json:"-"`
 		Organization   *RespOrg `json:"organization,omitempty" gorm:"foreignKey:organization_id"`
 	}

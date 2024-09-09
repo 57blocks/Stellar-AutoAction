@@ -11,6 +11,7 @@ import (
 	cloudwatchlogs "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	lambda "github.com/aws/aws-sdk-go-v2/service/lambda"
 	scheduler "github.com/aws/aws-sdk-go-v2/service/scheduler"
+	secretsmanager "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -85,6 +86,21 @@ func (m *MockAmazon) GetLogEvents(c context.Context, input *cloudwatchlogs.GetLo
 func (mr *MockAmazonMockRecorder) GetLogEvents(c, input interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLogEvents", reflect.TypeOf((*MockAmazon)(nil).GetLogEvents), c, input)
+}
+
+// GetSecretValue mocks base method.
+func (m *MockAmazon) GetSecretValue(c context.Context, input *secretsmanager.GetSecretValueInput) (*secretsmanager.GetSecretValueOutput, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSecretValue", c, input)
+	ret0, _ := ret[0].(*secretsmanager.GetSecretValueOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSecretValue indicates an expected call of GetSecretValue.
+func (mr *MockAmazonMockRecorder) GetSecretValue(c, input interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSecretValue", reflect.TypeOf((*MockAmazon)(nil).GetSecretValue), c, input)
 }
 
 // InvokeLambda mocks base method.
