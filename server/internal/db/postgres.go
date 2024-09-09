@@ -22,30 +22,18 @@ import (
 	"gorm.io/gorm"
 )
 
-var DB *DataBase
-
-type DataBase struct {
-	gormDB *gorm.DB
-}
+var db *gorm.DB
 
 func Conn(c context.Context) *gorm.DB {
-	return DB.gormDB.WithContext(c)
-}
-
-func (db *DataBase) Conn(c context.Context) *DataBase {
-	db.gormDB = db.gormDB.WithContext(c)
-
-	return db
+	return db.WithContext(c)
 }
 
 func Setup() error {
-	DB = &DataBase{}
-
 	if err := connect(); err != nil {
 		return err
 	}
 
-	return migrateDB(DB.gormDB)
+	return migrateDB(db)
 }
 
 func connect() error {
@@ -67,7 +55,7 @@ func connect() error {
 
 	// db: *gorm.DB
 	// db.ConnPool: {gorm.ConnPool | *gorm.PreparedStmtDB}
-	gormDB, err := gorm.Open(
+	db, err = gorm.Open(
 		pgDriver.Open(dsn),
 		&gorm.Config{
 			DisableAutomaticPing:   false,
@@ -79,7 +67,6 @@ func connect() error {
 			ConnPool: sqlDB,
 		},
 	)
-	DB.gormDB = gormDB
 	if err != nil {
 		return errorx.Internal(fmt.Sprintf("connecting to database error: %s", err.Error()))
 	}
