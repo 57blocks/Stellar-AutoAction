@@ -1,8 +1,6 @@
 package wallet
 
 import (
-	"fmt"
-
 	"github.com/57blocks/auto-action/cli/internal/command"
 
 	"github.com/spf13/cobra"
@@ -16,7 +14,7 @@ Description:
   The wallet address management command is used to 
   create, delete, verify, and list wallet addresses.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("wallet called")
+		cmd.Usage()
 	},
 }
 

@@ -1,8 +1,10 @@
 package wallet
 
 import (
-	"errors"
 	"fmt"
+
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 
 	"github.com/spf13/cobra"
 )
@@ -30,11 +32,11 @@ Flags:
 
 func removeFunc(_ *cobra.Command, args []string) error {
 	walletAddress := args[0]
-	fmt.Printf("Removing wallet with address: %s\n", walletAddress)
+	logx.Logger.Info(fmt.Sprintf("Removing wallet with address: %s\n", walletAddress))
 	if true {
-		fmt.Println("remove wallet success")
+		logx.Logger.Info("remove wallet success")
 		return nil
 	}
-	fmt.Println("remove wallet failed")
-	return errors.New("remove wallet failed")
+	logx.Logger.Info("remove wallet failed")
+	return errorx.BadRequest("remove wallet failed")
 }
