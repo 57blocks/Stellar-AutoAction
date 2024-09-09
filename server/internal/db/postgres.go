@@ -5,13 +5,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 	"net/http"
 	"time"
 
 	"github.com/57blocks/auto-action/server/internal/config"
 	migs "github.com/57blocks/auto-action/server/internal/db/migration"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/server/internal/third-party/logx"
+
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -21,18 +22,30 @@ import (
 	"gorm.io/gorm"
 )
 
-var db *gorm.DB
+var DB *DataBase
+
+type DataBase struct {
+	gormDB *gorm.DB
+}
 
 func Conn(c context.Context) *gorm.DB {
-	return db.WithContext(c)
+	return DB.gormDB.WithContext(c)
+}
+
+func (db *DataBase) Conn(c context.Context) *DataBase {
+	db.gormDB = db.gormDB.WithContext(c)
+
+	return db
 }
 
 func Setup() error {
+	DB = &DataBase{}
+
 	if err := connect(); err != nil {
 		return err
 	}
 
-	return migrateDB(db)
+	return migrateDB(DB.gormDB)
 }
 
 func connect() error {
@@ -54,7 +67,7 @@ func connect() error {
 
 	// db: *gorm.DB
 	// db.ConnPool: {gorm.ConnPool | *gorm.PreparedStmtDB}
-	db, err = gorm.Open(
+	gormDB, err := gorm.Open(
 		pgDriver.Open(dsn),
 		&gorm.Config{
 			DisableAutomaticPing:   false,
@@ -66,6 +79,7 @@ func connect() error {
 			ConnPool: sqlDB,
 		},
 	)
+	DB.gormDB = gormDB
 	if err != nil {
 		return errorx.Internal(fmt.Sprintf("connecting to database error: %s", err.Error()))
 	}

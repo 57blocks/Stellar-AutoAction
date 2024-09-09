@@ -3,25 +3,23 @@ package lambda
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"gorm.io/gorm"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"strings"
 	"time"
 
-	configx "github.com/57blocks/auto-action/server/internal/config"
-	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/pkg/util"
 	"github.com/57blocks/auto-action/server/internal/repo"
+	"github.com/57blocks/auto-action/server/internal/third-party/amazonx"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -30,7 +28,6 @@ import (
 	scheTypes "github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"gorm.io/gorm"
 )
 
 type (
@@ -42,22 +39,17 @@ type (
 	}
 	conductor struct {
 		lambdaRepo repo.Lambda
+		amazon     amazonx.Amazon
 	}
 )
 
-var (
-	Conductor Service
-
-	// TODO: init them for once
-	awsConfig    aws.Config
-	lambdaClient *lambda.Client
-	cwClient     *cloudwatchlogs.Client
-)
+var Conductor Service
 
 func init() {
 	if Conductor == nil {
 		Conductor = &conductor{
 			lambdaRepo: repo.CDLambda,
+			amazon:     amazonx.Conductor,
 		}
 	}
 }
@@ -68,16 +60,6 @@ type toPersistPair struct {
 }
 
 func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegister, error) {
-	var err error
-
-	awsConfig, err = config.LoadDefaultConfig(
-		c,
-		config.WithRegion(configx.GlobalConfig.Region),
-	)
-	if err != nil {
-		return nil, errorx.AmazonConfig(err.Error())
-	}
-
 	fileHeaders := r.MultipartForm.File
 	expression := r.Form.Get("expression")
 
@@ -91,7 +73,7 @@ func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegi
 	for _, fhs := range r.MultipartForm.File {
 		fh := fhs[0]
 
-		newLamResp, err := registerLambda(c, fh)
+		newLamResp, err := cd.registerLambda(c, fh)
 		if err != nil {
 			return nil, err
 		}
@@ -110,7 +92,7 @@ func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegi
 		}
 
 		if strings.TrimSpace(expression) != "" {
-			newSchResp, err := boundScheduler(c, newLamResp, expression)
+			newSchResp, err := cd.boundScheduler(c, newLamResp, expression)
 			if err != nil {
 				return nil, err
 			}
@@ -131,7 +113,7 @@ func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegi
 		toPersists = append(toPersists, tpp)
 	}
 
-	go persist(c, toPersists)
+	go cd.persist(c, toPersists)
 
 	return &dto.RespRegister{
 		Lambdas:    lsBrief,
@@ -139,7 +121,7 @@ func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegi
 	}, nil
 }
 
-func registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.CreateFunctionOutput, error) {
+func (cd *conductor) registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.CreateFunctionOutput, error) {
 	file, err := fh.Open()
 	if err != nil {
 		return nil, err
@@ -154,10 +136,8 @@ func registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.Create
 	splits := strings.Split(fh.Filename, ".")
 	fileName := splits[0]
 
-	lambdaClient = lambda.NewFromConfig(awsConfig)
-
 	// register lambda
-	lambdaFun, err := lambdaClient.CreateFunction(
+	lambdaFun, err := cd.amazon.RegisterLambda(
 		c,
 		&lambda.CreateFunctionInput{
 			Code: &lambTypes.FunctionCode{
@@ -184,14 +164,12 @@ func registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.Create
 	return lambdaFun, nil
 }
 
-func boundScheduler(
+func (cd *conductor) boundScheduler(
 	c context.Context,
 	lambdaFun *lambda.CreateFunctionOutput,
 	expression string,
 ) (*scheduler.CreateScheduleOutput, error) {
 	logx.Logger.DEBUG(fmt.Sprintf("scheduler expression found: %s", expression))
-
-	schClient := scheduler.NewFromConfig(awsConfig)
 
 	event, err := util.GenEventPayload(c)
 	if err != nil {
@@ -202,7 +180,7 @@ func boundScheduler(
 		return nil, err
 	}
 
-	newSchResp, err := schClient.CreateSchedule(c, &scheduler.CreateScheduleInput{
+	newSchResp, err := cd.amazon.BoundScheduler(c, &scheduler.CreateScheduleInput{
 		FlexibleTimeWindow: &scheTypes.FlexibleTimeWindow{
 			Mode: scheTypes.FlexibleTimeWindowModeOff,
 		},
@@ -228,10 +206,9 @@ func boundScheduler(
 	return newSchResp, nil
 }
 
-func persist(c context.Context, pairs []toPersistPair) {
-	if err := db.Conn(c).Transaction(func(tx *gorm.DB) error {
+func (cd *conductor) persist(c context.Context, pairs []toPersistPair) {
+	if err := cd.lambdaRepo.PersistRegResult(c, func(tx *gorm.DB) error {
 		for _, pair := range pairs {
-			//l := pair.Lambda
 			newLambda := tx.Table("lambda").Create(pair.Lambda)
 			if err := newLambda.Error; err != nil {
 				return errorx.Internal(fmt.Sprintf("failed to create lambda: %s", pair.Lambda.FunctionArn))
@@ -241,7 +218,6 @@ func persist(c context.Context, pairs []toPersistPair) {
 				continue
 			}
 
-			//s := pair.Scheduler
 			pair.Scheduler.LambdaID = pair.Lambda.ID
 
 			if err := tx.Table("lambda_scheduler").Create(pair.Scheduler).Error; err != nil {
@@ -252,39 +228,12 @@ func persist(c context.Context, pairs []toPersistPair) {
 
 		return nil
 	}); err != nil {
-		logx.Logger.ERROR(err.Error())
+		logx.Logger.ERROR("failed to persist lambda related data", map[string]interface{}{"error": err.Error()})
 	}
 }
 
 func (cd *conductor) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error) {
-	var err error
-
-	awsConfig, err = config.LoadDefaultConfig(
-		c,
-		config.WithRegion(configx.GlobalConfig.Region),
-	)
-	if err != nil {
-		return nil, errorx.AmazonConfig(err.Error())
-	}
-
-	lambdaClient = lambda.NewFromConfig(awsConfig)
-
-	l := new(model.Lambda)
-
-	if err := db.Conn(c).Table("lambda").
-		Where(map[string]interface{}{
-			"function_arn": r.Lambda,
-		}).
-		Or(map[string]interface{}{
-			"function_name": util.GenLambdaFuncName(c, r.Lambda),
-		}).
-		First(l).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errorx.NotFound(fmt.Sprintf("none lambda found by: %s", r.Lambda))
-		}
-
-		return nil, errorx.Internal(fmt.Sprintf("failed to query lambda: %s, err: %s", r.Lambda, err.Error()))
-	}
+	lamb, err := cd.lambdaRepo.FindByNameOrARN(c, r.Lambda)
 
 	// generate merged payload with orgSecretKey key
 	stdPayload, err := util.GenEventPayload(c)
@@ -311,20 +260,20 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvok
 	}
 
 	// invoke
-	invokeOutput, err := lambdaClient.Invoke(c, &lambda.InvokeInput{
-		FunctionName: aws.String(l.FunctionName),
+	invokeOutput, err := cd.amazon.InvokeLambda(c, &lambda.InvokeInput{
+		FunctionName: aws.String(lamb.FunctionName),
 		LogType:      lambTypes.LogTypeTail,
 		Payload:      payloadBytes,
 	})
 	if err != nil {
-		return nil, errorx.Internal(fmt.Sprintf("failed to invoke lambda: %s", l.FunctionName))
+		return nil, errorx.Internal(fmt.Sprintf("failed to invoke lambda: %s", lamb.FunctionName))
 	}
 
 	return dto.BuildRespInvoke(dto.WithInvokeResp(invokeOutput)), nil
 }
 
 func (cd *conductor) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error) {
-	info, err := cd.lambdaRepo.Info(c, r)
+	info, err := cd.lambdaRepo.LambdaInfo(c, r)
 	if err != nil {
 		return nil, err
 	}
@@ -333,18 +282,6 @@ func (cd *conductor) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, err
 }
 
 func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
-	var err error
-
-	awsConfig, err = config.LoadDefaultConfig(
-		c,
-		config.WithRegion(configx.GlobalConfig.Region),
-	)
-	if err != nil {
-		return errorx.AmazonConfig(err.Error())
-	}
-
-	cwClient = cloudwatchlogs.NewFromConfig(awsConfig)
-
 	// websocket
 	ctx, ok := c.(*gin.Context)
 	if !ok {
@@ -373,7 +310,7 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 		Descending:   aws.Bool(true),
 	}
 
-	describeOutput, err := cwClient.DescribeLogStreams(c, describeInput)
+	describeOutput, err := cd.amazon.DescribeLogStreams(c, describeInput)
 	if err != nil {
 		return errorx.Internal(fmt.Sprintf("failed to describe log streams: %s", err.Error()))
 	}
@@ -396,7 +333,7 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 			input.NextToken = nextToken
 		}
 
-		output, err := cwClient.GetLogEvents(c, input)
+		output, err := cd.amazon.GetLogEvents(c, input)
 		if err != nil {
 			return errorx.Internal(fmt.Sprintf("failed to get log events: %s", err.Error()))
 		}

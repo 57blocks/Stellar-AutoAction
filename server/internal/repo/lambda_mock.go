@@ -6,10 +6,12 @@ package repo
 
 import (
 	context "context"
+	sql "database/sql"
 	reflect "reflect"
 
 	dto "github.com/57blocks/auto-action/server/internal/dto"
 	gomock "github.com/golang/mock/gomock"
+	gorm "gorm.io/gorm"
 )
 
 // MockLambda is a mock of Lambda interface.
@@ -35,17 +37,51 @@ func (m *MockLambda) EXPECT() *MockLambdaMockRecorder {
 	return m.recorder
 }
 
-// Info mocks base method.
-func (m *MockLambda) Info(c context.Context, req *dto.ReqInfo) (*dto.RespInfo, error) {
+// FindByNameOrARN mocks base method.
+func (m *MockLambda) FindByNameOrARN(c context.Context, input string) (*dto.RespInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Info", c, req)
+	ret := m.ctrl.Call(m, "FindByNameOrARN", c, input)
 	ret0, _ := ret[0].(*dto.RespInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Info indicates an expected call of Info.
-func (mr *MockLambdaMockRecorder) Info(c, req interface{}) *gomock.Call {
+// FindByNameOrARN indicates an expected call of FindByNameOrARN.
+func (mr *MockLambdaMockRecorder) FindByNameOrARN(c, input interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Info", reflect.TypeOf((*MockLambda)(nil).Info), c, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByNameOrARN", reflect.TypeOf((*MockLambda)(nil).FindByNameOrARN), c, input)
+}
+
+// LambdaInfo mocks base method.
+func (m *MockLambda) LambdaInfo(c context.Context, req *dto.ReqInfo) (*dto.RespInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "LambdaInfo", c, req)
+	ret0, _ := ret[0].(*dto.RespInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LambdaInfo indicates an expected call of LambdaInfo.
+func (mr *MockLambdaMockRecorder) LambdaInfo(c, req interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LambdaInfo", reflect.TypeOf((*MockLambda)(nil).LambdaInfo), c, req)
+}
+
+// PersistRegResult mocks base method.
+func (m *MockLambda) PersistRegResult(c context.Context, fc func(*gorm.DB) error, opts ...*sql.TxOptions) error {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{c, fc}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "PersistRegResult", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// PersistRegResult indicates an expected call of PersistRegResult.
+func (mr *MockLambdaMockRecorder) PersistRegResult(c, fc interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{c, fc}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PersistRegResult", reflect.TypeOf((*MockLambda)(nil).PersistRegResult), varargs...)
 }
