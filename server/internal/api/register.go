@@ -7,6 +7,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/service/cs"
 	"github.com/57blocks/auto-action/server/internal/service/lambda"
 	"github.com/57blocks/auto-action/server/internal/service/oauth"
+	"github.com/57blocks/auto-action/server/internal/service/wallet"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,6 +26,11 @@ func RegisterHandlers(g *gin.Engine) http.Handler {
 		lambdaGroup.POST("/:lambda", lambda.Invoke)
 		lambdaGroup.GET("/:lambda/info", lambda.Info)
 		lambdaGroup.GET("/:lambda/logs", lambda.Logs)
+	}
+
+	walletGroup := g.Group("/wallet", middleware.Authentication(), middleware.Authorization())
+	{
+		walletGroup.PUT("", wallet.Create)
 	}
 
 	sdkGroup := g.Group("/sign", middleware.SecretKey())

@@ -24,6 +24,11 @@ type (
 		Token   string `toml:"token" json:"token"`
 		Refresh string `toml:"refresh" json:"refresh"`
 	}
+
+	Wallet struct {
+		_       struct{}
+		Address string `json:"address"`
+	}
 )
 
 // BuildCred build the credential pair
