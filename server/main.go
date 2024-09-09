@@ -13,6 +13,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/boot"
 	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/db"
+	"github.com/57blocks/auto-action/server/internal/service"
 	"github.com/57blocks/auto-action/server/internal/third-party/amazonx"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 	"github.com/57blocks/auto-action/server/internal/third-party/restyx"
@@ -26,8 +27,9 @@ func main() {
 		boot.Wrap(logx.Setup),
 		boot.Wrap(db.Setup),
 		boot.Wrap(api.Setup),
-		boot.Wrap(restyx.Setup),
 		boot.Wrap(amazonx.Setup),
+		boot.Wrap(restyx.Setup),
+		boot.Wrap(service.Setup),
 	); err != nil {
 		log.Panicf("boots components occurred error: %s", err.Error())
 	}

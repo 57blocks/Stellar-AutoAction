@@ -32,10 +32,12 @@ var (
 	smClient  *secretsmanager.Client
 )
 
-func init() {
+func NewCubeSignerService() {
 	if Conductor == nil {
+		repo.NewCubeSigner()
+
 		Conductor = &conductor{
-			csRepo: repo.CDCubeSigner,
+			csRepo: repo.CubeSignerImpl,
 		}
 	}
 }

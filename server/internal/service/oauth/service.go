@@ -2,10 +2,8 @@ package oauth
 
 import (
 	"context"
-	"errors"
 	"time"
 
-	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
@@ -14,7 +12,6 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 type (
@@ -30,10 +27,12 @@ type (
 
 var Conductor Service
 
-func init() {
+func NewOAuthService() {
 	if Conductor == nil {
+		repo.NewOAuth()
+
 		Conductor = &conductor{
-			oauthRepo: repo.CDOAuth,
+			oauthRepo: repo.OAuthImpl,
 		}
 	}
 }
@@ -109,17 +108,9 @@ func (cd *conductor) Login(c context.Context, req dto.ReqLogin) (*dto.RespCreden
 }
 
 func (cd *conductor) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCredential, error) {
-	token := new(model.Token)
-	if err := db.Conn(c).
-		Where(map[string]interface{}{
-			"refresh": req.Refresh,
-		}).
-		First(token).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errorx.NotFound("none refresh token found")
-		}
-
-		return nil, errorx.Internal(err.Error())
+	token, err := cd.oauthRepo.FindTokenByRefresh(c, req.Refresh)
+	if err != nil {
+		return nil, errorx.UnauthorizedWithMsg("invalid refresh token")
 	}
 
 	jwtToken, _ := jwtx.ParseToken(token.Access)
@@ -174,8 +165,8 @@ func (cd *conductor) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCr
 	token.AccessExpires = tokenExp
 	token.UpdatedAt = &now
 
-	if err := db.Conn(c).Save(token).Error; err != nil {
-		return nil, errorx.Internal(err.Error())
+	if err := cd.oauthRepo.SyncToken(c, token); err != nil {
+		return nil, err
 	}
 
 	resp := dto.BuildRespCred(
@@ -192,12 +183,8 @@ func (cd *conductor) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCr
 }
 
 func (cd *conductor) Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogout, error) {
-	if err := db.Conn(c).
-		Where(map[string]interface{}{
-			"access": req.Token,
-		}).
-		Delete(&model.Token{}).Error; err != nil {
-		return nil, errorx.Internal(err.Error())
+	if err := cd.oauthRepo.DeleteTokenByAccess(c, req.Token); err != nil {
+		return nil, err
 	}
 
 	return new(dto.RespLogout), nil

@@ -16,19 +16,23 @@ type (
 	CubeSigner interface {
 		ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespToSign, error)
 	}
-	cubeSigner struct{}
+	cubeSigner struct {
+		Instance *db.Instance
+	}
 )
 
-var CDCubeSigner CubeSigner
+var CubeSignerImpl CubeSigner
 
-func init() {
-	if CDCubeSigner == nil {
+func NewCubeSigner() {
+	if CubeSignerImpl == nil {
+		CubeSignerImpl = &cubeSigner{
+			Instance: db.Inst,
+		}
 	}
-	CDCubeSigner = &cubeSigner{}
 }
 func (cs *cubeSigner) ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespToSign, error) {
 	roles := make([]*dto.RespToSign, 0)
-	if err := db.Conn(c).
+	if err := cs.Instance.Conn(c).
 		Table(model.TabNamCSRoleAbbr()).
 		Joins("LEFT JOIN organization AS o ON o.id = csr.organization_id").
 		Joins("LEFT JOIN \"user\" AS u ON u.id = csr.account_id").

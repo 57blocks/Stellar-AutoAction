@@ -1,6 +1,7 @@
 package lambda
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -85,12 +86,18 @@ For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-t
 }
 
 func registerFunc(_ *cobra.Command, args []string) error {
-	resp, err := supplierRegister(args)
+	response, err := supplierRegister(args)
 	if err != nil {
 		return err
 	}
 
-	logx.Logger.Info("register lambda", "result", resp.String())
+	var respData map[string]interface{}
+	if err := json.Unmarshal(response.Body(), &respData); err != nil {
+		logx.Logger.Error("Error unmarshalling JSON", "error", err.Error())
+		return errorx.Internal(err.Error())
+	}
+
+	logx.Logger.Info("lambda info", "result", respData)
 
 	return nil
 }

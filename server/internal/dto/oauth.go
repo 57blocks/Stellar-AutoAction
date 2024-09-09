@@ -2,6 +2,7 @@ package dto
 
 import (
 	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
+	"time"
 )
 
 // Login related dto
@@ -103,8 +104,20 @@ type (
 
 // RespOrg organization related dto
 type RespOrg struct {
-	ID            uint64 `json:"-"`
+	ID            uint64 `json:"json"`
 	Name          string `json:"name"`
 	CubeSignerOrg string `json:"cube_signer_org"`
 	Description   string `json:"description"`
 }
+
+type (
+	RespToken struct {
+		ID             uint64     `json:"json"`
+		Access         string     `json:"access"`
+		Refresh        string     `json:"refresh"`
+		UserId         uint64     `json:"user_id"`
+		AccessExpires  time.Time  `json:"access_expires"`
+		RefreshExpires time.Time  `json:"refresh_expires"`
+		UpdatedAt      *time.Time `json:"updated_at"`
+	}
+)

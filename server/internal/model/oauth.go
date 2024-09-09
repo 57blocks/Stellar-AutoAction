@@ -69,10 +69,10 @@ func (t *Token) TableNameWithAbbr() string {
 	return "token AS t"
 }
 
-func TabNameToken() string {
+func TabNamToken() string {
 	return (&Token{}).TableName()
 }
 
-func TabNameTokenAbbr() string {
+func TabNamTokenAbbr() string {
 	return (&Token{}).TableNameWithAbbr()
 }
