@@ -11,69 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//func TestRegisterSuccess(t *testing.T) {
-//	ctrl := gomock.NewController(t)
-//	defer ctrl.Finish()
-//
-//	mockRepo := repo.NewMockLambda(ctrl)
-//	mockAmazon := amazonx.NewMockAmazon(ctrl)
-//
-//	ctx := context.TODO()
-//
-//	request := &http.Request{
-//		Method: "POST",
-//		URL:    nil,
-//		Header: map[string][]string{
-//			"Content-Type":  {"multipart/form-data"},
-//			"Authorization": {"token"},
-//		},
-//		Body:             nil,
-//		GetBody:          nil,
-//		ContentLength:    0,
-//		TransferEncoding: nil,
-//		Close:            false,
-//		Host:             "",
-//		Form:             nil,
-//		PostForm:         nil,
-//		//MultipartForm: &multipart.Form{
-//		//	Value: map[string][]string{"file"},
-//		//	File:  map[string][]*multipart.FileHeader{{"file": []*multipart.FileHeader{fileHeader}}},
-//		//},
-//	}
-//
-//	mockAmazon.EXPECT().RegisterLambda(ctx, request).
-//		Times(1).
-//		Return(
-//			&lambda.CreateFunctionOutput{
-//				Architectures: []types.Architecture{
-//					types.ArchitectureX8664,
-//					types.ArchitectureArm64,
-//				},
-//				FunctionArn:  aws.String("FunctionArn"),
-//				FunctionName: aws.String("FunctionName"),
-//				CodeSha256:   aws.String("CodeSha256"),
-//				CodeSize:     0,
-//				Description:  aws.String("Description"),
-//				Runtime:      types.RuntimeNodejs20x,
-//				Version:      aws.String("$LATEST"),
-//				Handler:      aws.String("handler.handler"),
-//			}, nil,
-//		)
-//	//mockRepo.EXPECT().PersistRegResult(ctx, func(tx *gorm.DB) error { return nil }).
-//	mockRepo.EXPECT().PersistRegResult(ctx, nil).
-//		Times(1).
-//		Return(nil)
-//
-//	cd := &conductor{
-//		lambdaRepo: mockRepo,
-//		amazon:     mockAmazon,
-//	}
-//	register, err := cd.Register(ctx, request)
-//	fmt.Println(register)
-//	assert.NoError(t, err)
-//	//assert.Equal(t, register, "")
-//}
-
 func TestInfoSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -110,7 +47,7 @@ func TestInfoSuccess(t *testing.T) {
 			}, nil,
 		)
 
-	cd := &conductor{
+	cd := &service{
 		lambdaRepo: mockRepo,
 	}
 	info, err := cd.Info(ctx, request)

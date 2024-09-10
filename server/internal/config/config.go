@@ -62,8 +62,10 @@ type (
 	}
 
 	CS struct {
-		_        struct{}
-		Endpoint string `mapstructure:"endpoint"`
+		_            struct{}
+		Endpoint     string `mapstructure:"endpoint"`
+		Organization string `mapstructure:"organization"`
+		Role         string `mapstructure:"role"`
 	}
 )
 

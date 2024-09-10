@@ -36,6 +36,20 @@ func (m *MockOAuth) EXPECT() *MockOAuthMockRecorder {
 	return m.recorder
 }
 
+// DeleteTokenByAccess mocks base method.
+func (m *MockOAuth) DeleteTokenByAccess(c context.Context, access string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteTokenByAccess", c, access)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteTokenByAccess indicates an expected call of DeleteTokenByAccess.
+func (mr *MockOAuthMockRecorder) DeleteTokenByAccess(c, access interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTokenByAccess", reflect.TypeOf((*MockOAuth)(nil).DeleteTokenByAccess), c, access)
+}
+
 // FindOrg mocks base method.
 func (m *MockOAuth) FindOrg(c context.Context, id uint64) (*dto.RespOrg, error) {
 	m.ctrl.T.Helper()
@@ -66,6 +80,21 @@ func (mr *MockOAuthMockRecorder) FindOrgByName(c, name interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOrgByName", reflect.TypeOf((*MockOAuth)(nil).FindOrgByName), c, name)
 }
 
+// FindTokenByRefresh mocks base method.
+func (m *MockOAuth) FindTokenByRefresh(c context.Context, refresh string) (*model.Token, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindTokenByRefresh", c, refresh)
+	ret0, _ := ret[0].(*model.Token)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindTokenByRefresh indicates an expected call of FindTokenByRefresh.
+func (mr *MockOAuthMockRecorder) FindTokenByRefresh(c, refresh interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindTokenByRefresh", reflect.TypeOf((*MockOAuth)(nil).FindTokenByRefresh), c, refresh)
+}
+
 // FindUserByAcn mocks base method.
 func (m *MockOAuth) FindUserByAcn(c context.Context, acn string) (*dto.RespUser, error) {
 	m.ctrl.T.Helper()
@@ -82,7 +111,7 @@ func (mr *MockOAuthMockRecorder) FindUserByAcn(c, acn interface{}) *gomock.Call 
 }
 
 // FindUserByOrgAcn mocks base method.
-func (m *MockOAuth) FindUserByOrgAcn(c context.Context, req dto.ReqOrgAcn) (*dto.RespUser, error) {
+func (m *MockOAuth) FindUserByOrgAcn(c context.Context, req *dto.ReqOrgAcn) (*dto.RespUser, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindUserByOrgAcn", c, req)
 	ret0, _ := ret[0].(*dto.RespUser)

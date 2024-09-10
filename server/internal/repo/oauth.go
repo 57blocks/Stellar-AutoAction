@@ -17,7 +17,7 @@ import (
 type (
 	OAuth interface {
 		FindUserByAcn(c context.Context, acn string) (*dto.RespUser, error)
-		FindUserByOrgAcn(c context.Context, req dto.ReqOrgAcn) (*dto.RespUser, error)
+		FindUserByOrgAcn(c context.Context, req *dto.ReqOrgAcn) (*dto.RespUser, error)
 
 		FindOrg(c context.Context, id uint64) (*dto.RespOrg, error)
 		FindOrgByName(c context.Context, name string) (*dto.RespOrg, error)
@@ -32,11 +32,11 @@ type (
 	}
 )
 
-var OAuthImpl OAuth
+var OAuthRepo OAuth
 
 func NewOAuth() {
-	if OAuthImpl == nil {
-		OAuthImpl = &oauth{
+	if OAuthRepo == nil {
+		OAuthRepo = &oauth{
 			Instance: db.Inst,
 		}
 	}
@@ -59,7 +59,7 @@ func (o *oauth) FindUserByAcn(c context.Context, acn string) (*dto.RespUser, err
 	return u, nil
 }
 
-func (o *oauth) FindUserByOrgAcn(c context.Context, req dto.ReqOrgAcn) (*dto.RespUser, error) {
+func (o *oauth) FindUserByOrgAcn(c context.Context, req *dto.ReqOrgAcn) (*dto.RespUser, error) {
 	u := new(dto.RespUser)
 	if err := o.Instance.Conn(c).Table(model.TabNamUserAbbr()).
 		Joins("LEFT JOIN organization AS o ON u.organization_id = o.id").

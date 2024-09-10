@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/model"
@@ -16,9 +17,8 @@ import (
 //go:generate mockgen -destination ./cs_mock.go -package repo -source cs.go CubeSigner
 type (
 	CubeSigner interface {
-		ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespToSign, error)
+		ToSign(c context.Context, userID uint64, from string) (*dto.RespCSKey, error)
 
-		FindCSByOrgAcn(c context.Context, req *dto.ReqCSRole) (*dto.RespCSRole, error)
 		SyncCSKey(c context.Context, key *model.CubeSignerKey) error
 	}
 	cubeSigner struct {
@@ -26,61 +26,36 @@ type (
 	}
 )
 
-var CubeSignerImpl CubeSigner
+var CubeSignerRepo CubeSigner
 
 func NewCubeSigner() {
-	if CubeSignerImpl == nil {
-		CubeSignerImpl = &cubeSigner{
+	if CubeSignerRepo == nil {
+		CubeSignerRepo = &cubeSigner{
 			Instance: db.Inst,
 		}
 	}
 }
-func (cs *cubeSigner) ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespToSign, error) {
-	roles := make([]*dto.RespToSign, 0)
+func (cs *cubeSigner) ToSign(c context.Context, userID uint64, from string) (*dto.RespCSKey, error) {
+	csKey := new(dto.RespCSKey)
 	if err := cs.Instance.Conn(c).
-		Table(model.TabNamCSRoleAbbr()).
-		Joins("LEFT JOIN organization AS o ON o.id = csr.organization_id").
-		Joins("LEFT JOIN \"user\" AS u ON u.id = csr.account_id").
-		Preload("Organization", func(db *gorm.DB) *gorm.DB {
-			return db.Table(model.TabNamOrg())
+		Table(model.TabNameCSKey()).
+		Where(map[string]interface{}{
+			"account_id": userID,
+			"key":        from,
 		}).
 		Preload("Account", func(db *gorm.DB) *gorm.DB {
 			return db.Table(model.TabNamUser())
 		}).
-		Preload("Keys", func(db *gorm.DB) *gorm.DB {
-			return db.Table(model.TabNameCSKey())
-		}).
-		Where(map[string]interface{}{
-			"o.name":    req.Organization,
-			"u.account": req.Account,
-		}).
-		Find(&roles).Error; err != nil {
-		return nil, errorx.Internal(err.Error())
-	}
-
-	if len(roles) == 0 {
-		return nil, errorx.NotFound("none roles found to sign")
-	}
-
-	return roles, nil
-}
-
-func (cs *cubeSigner) FindCSByOrgAcn(c context.Context, req *dto.ReqCSRole) (*dto.RespCSRole, error) {
-	role := new(dto.RespCSRole)
-	if err := cs.Instance.Conn(c).
-		Table(model.TabNamCSRole()).
-		Where(map[string]interface{}{
-			"organization_id": req.OrgID,
-			"account_id":      req.AcnID,
-		}).
-		First(role).Error; err != nil {
+		First(csKey).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errorx.NotFound("role not found")
+			return nil, errorx.NotFound("cube signer key not found")
 		}
 		return nil, errorx.Internal(err.Error())
 	}
 
-	return role, nil
+	csKey.Organization = config.GlobalConfig.CS.Organization
+
+	return csKey, nil
 }
 
 func (cs *cubeSigner) SyncCSKey(c context.Context, key *model.CubeSignerKey) error {

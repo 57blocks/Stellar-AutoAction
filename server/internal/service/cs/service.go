@@ -17,35 +17,36 @@ import (
 type (
 	Service interface {
 		APIKey(c context.Context) (string, error)
-		ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespToSign, error)
+		ToSign(c context.Context, req *dto.ReqToSign) (*dto.RespCSKey, error)
 		CubeSignerToken(c context.Context) (string, error)
 	}
-	conductor struct {
-		csRepo repo.CubeSigner
-		amazon amazonx.Amazon
+	service struct {
+		csRepo    repo.CubeSigner
+		oauthRepo repo.OAuth
+		amazon    amazonx.Amazon
 	}
 )
 
-var Conductor Service
-
 func NewCubeSignerService() {
-	if Conductor == nil {
+	if ServiceImpl == nil {
 		repo.NewCubeSigner()
+		repo.NewOAuth()
 
-		Conductor = &conductor{
-			csRepo: repo.CubeSignerImpl,
-			amazon: amazonx.Conductor,
+		ServiceImpl = &service{
+			csRepo:    repo.CubeSignerRepo,
+			oauthRepo: repo.OAuthRepo,
+			amazon:    amazonx.Conductor,
 		}
 	}
 }
 
-func (cd conductor) APIKey(c context.Context) (string, error) {
+func (svc *service) APIKey(c context.Context) (string, error) {
 	input := &secretsmanager.GetSecretValueInput{
 		SecretId:     aws.String("AA_API_KEY"),
 		VersionStage: aws.String("AWSCURRENT"),
 	}
 
-	secretResp, err := cd.amazon.GetSecretValue(c, input)
+	secretResp, err := svc.amazon.GetSecretValue(c, input)
 	if err != nil {
 		// For a list of exceptions thrown, see
 		// https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
@@ -60,46 +61,31 @@ func (cd conductor) APIKey(c context.Context) (string, error) {
 	return resMap["api_key"].(string), nil
 }
 
-func (cd conductor) ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespToSign, error) {
-	toSigns, err := cd.csRepo.ToSign(c, &dto.ReqToSign{
-		Organization: req.Organization,
-		Account:      req.Account,
+func (svc *service) ToSign(c context.Context, req *dto.ReqToSign) (*dto.RespCSKey, error) {
+	user, err := svc.oauthRepo.FindUserByOrgAcn(c, &dto.ReqOrgAcn{
+		OrgName: req.Organization,
+		AcnName: req.Account,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	resp := make([]*dto.RespToSign, 0, len(toSigns))
-	for _, toSign := range toSigns {
-		if len(toSign.Keys) == 0 {
-			continue
-		}
-
-		ks := make([]dto.RespCSKey, 0, len(toSign.Keys))
-		for _, k := range toSign.Keys {
-			ks = append(ks, dto.RespCSKey{
-				Key:    k.Key,
-				Scopes: k.Scopes,
-			})
-		}
-		resp = append(resp, &dto.RespToSign{
-			Organization: toSign.Organization,
-			Account:      toSign.Account,
-			Role:         toSign.Role,
-			Keys:         ks,
-		})
+	// Key sample: Key#Stellar_ABCDEFG
+	forSign, err := svc.csRepo.ToSign(c, user.ID, fmt.Sprintf("Key#Stellar_%s", req.From))
+	if err != nil {
+		return nil, err
 	}
 
-	return resp, nil
+	return forSign, nil
 }
 
-func (cd conductor) CubeSignerToken(c context.Context) (string, error) {
+func (svc *service) CubeSignerToken(c context.Context) (string, error) {
 	input := &secretsmanager.GetSecretValueInput{
 		SecretId:     aws.String("AA_CS_Token"),
 		VersionStage: aws.String("AWSCURRENT"),
 	}
 
-	resp, err := cd.amazon.GetSecretValue(c, input)
+	resp, err := svc.amazon.GetSecretValue(c, input)
 	if err != nil {
 		// For a list of exceptions thrown, see
 		// https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html

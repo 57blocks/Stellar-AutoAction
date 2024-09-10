@@ -17,7 +17,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	resp, err := Conductor.Register(c, r)
+	resp, err := ServiceImpl.Register(c, r)
 	if err != nil {
 		c.Error(err)
 		return
@@ -39,7 +39,7 @@ func Invoke(c *gin.Context) {
 		return
 	}
 
-	resp, err := Conductor.Invoke(c, req)
+	resp, err := ServiceImpl.Invoke(c, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -56,7 +56,7 @@ func Info(c *gin.Context) {
 		return
 	}
 
-	resp, err := Conductor.Info(c, req)
+	resp, err := ServiceImpl.Info(c, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -73,7 +73,7 @@ func Logs(c *gin.Context) {
 		return
 	}
 
-	if err := Conductor.Logs(c, req); err != nil {
+	if err := ServiceImpl.Logs(c, req); err != nil {
 		c.Error(err)
 		return
 	}

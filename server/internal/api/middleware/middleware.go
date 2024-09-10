@@ -21,7 +21,7 @@ func SecretKey() gin.HandlerFunc {
 			return
 		}
 
-		apiKey, err := cs.Conductor.APIKey(c)
+		apiKey, err := cs.ServiceImpl.APIKey(c)
 		if err != nil {
 			c.Error(err)
 			return
