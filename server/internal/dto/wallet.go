@@ -16,4 +16,14 @@ type (
 	ListWalletsResponse struct {
 		Data []ListWalletRespInfo `json:"data"`
 	}
+
+	VerifyWalletReqInfo struct {
+		Address string `uri:"address"`
+		Env     string `json:"env"`
+	}
+
+	VerifyWalletRespInfo struct {
+		Address string `json:"address"`
+		IsValid bool   `json:"is_valid"`
+	}
 )

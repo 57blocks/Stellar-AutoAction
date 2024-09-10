@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/57blocks/auto-action/server/internal/config"
+	"github.com/57blocks/auto-action/server/internal/constant"
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
@@ -16,6 +17,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/third-party/restyx"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stellar/go/clients/horizonclient"
 )
 
 type (
@@ -23,6 +25,7 @@ type (
 		Create(c context.Context) (*dto.CreateWalletRespInfo, error)
 		Remove(c context.Context, r *dto.RemoveWalletReqInfo) error
 		List(c context.Context) (*dto.ListWalletsResponse, error)
+		Verify(c context.Context, req *dto.VerifyWalletReqInfo) (*dto.VerifyWalletRespInfo, error)
 	}
 	service struct {
 		oauthRepo repo.OAuth
@@ -161,6 +164,55 @@ func (svc *service) List(c context.Context) (*dto.ListWalletsResponse, error) {
 	}
 
 	return response, nil
+}
+
+func (svc *service) Verify(c context.Context, req *dto.VerifyWalletReqInfo) (*dto.VerifyWalletRespInfo, error) {
+	ctx, ok := c.(*gin.Context)
+	if !ok {
+		return nil, errorx.GinContextConv()
+	}
+
+	jwtOrg, _ := ctx.Get("jwt_organization")
+	jwtAccount, _ := ctx.Get("jwt_account")
+
+	user, err := svc.oauthRepo.FindUserByOrgAcn(c, &dto.ReqOrgAcn{
+		OrgName: jwtOrg.(string),
+		AcnName: jwtAccount.(string),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	keyId := util.GetCSKeyFromAddress(req.Address)
+	// check key is existed in the database
+	csKey, err := svc.csRepo.FindCSKey(c, keyId, user.ID)
+	if err != nil {
+		return nil, err
+	}
+	if csKey == nil {
+		return &dto.VerifyWalletRespInfo{
+			Address: req.Address,
+			IsValid: false,
+		}, nil
+	}
+
+	horizon := horizonclient.DefaultTestNetClient
+	if req.Env == constant.StellarNetworkType.MainNet {
+		horizon = horizonclient.DefaultPublicNetClient
+	}
+	_, err = horizon.AccountDetail(horizonclient.AccountRequest{AccountID: req.Address})
+	if err != nil {
+		logx.Logger.ERROR(fmt.Sprintf("verify wallet address %s occurred error: %s", req.Address, err.Error()))
+		return &dto.VerifyWalletRespInfo{
+			Address: req.Address,
+			IsValid: false,
+		}, nil
+	}
+
+	return &dto.VerifyWalletRespInfo{
+		Address: req.Address,
+		IsValid: true,
+	}, nil
 }
 
 func (svc *service) addCSKey(csToken string, user *dto.RespUser) (string, error) {
