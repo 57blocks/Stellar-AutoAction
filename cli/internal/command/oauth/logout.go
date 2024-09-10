@@ -44,9 +44,9 @@ func logoutFunc(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// logout already
 	if cfg.Credential == "" {
 		logx.Logger.Info("you've already logged out", "status", "out")
+
 		return nil
 	}
 
@@ -66,7 +66,7 @@ func logoutFunc(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if _, err := supplierLogout(credential.Token); err != nil {
+	if _, err := supplierLogout(credential.Access); err != nil {
 		return err
 	}
 

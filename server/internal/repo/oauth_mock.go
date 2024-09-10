@@ -80,19 +80,19 @@ func (mr *MockOAuthMockRecorder) FindOrgByName(c, name interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOrgByName", reflect.TypeOf((*MockOAuth)(nil).FindOrgByName), c, name)
 }
 
-// FindTokenByRefresh mocks base method.
-func (m *MockOAuth) FindTokenByRefresh(c context.Context, refresh string) (*model.Token, error) {
+// FindTokenByRefreshID mocks base method.
+func (m *MockOAuth) FindTokenByRefreshID(c context.Context, refresh string) (*model.Token, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindTokenByRefresh", c, refresh)
+	ret := m.ctrl.Call(m, "FindTokenByRefreshID", c, refresh)
 	ret0, _ := ret[0].(*model.Token)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindTokenByRefresh indicates an expected call of FindTokenByRefresh.
-func (mr *MockOAuthMockRecorder) FindTokenByRefresh(c, refresh interface{}) *gomock.Call {
+// FindTokenByRefreshID indicates an expected call of FindTokenByRefreshID.
+func (mr *MockOAuthMockRecorder) FindTokenByRefreshID(c, refresh interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindTokenByRefresh", reflect.TypeOf((*MockOAuth)(nil).FindTokenByRefresh), c, refresh)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindTokenByRefreshID", reflect.TypeOf((*MockOAuth)(nil).FindTokenByRefreshID), c, refresh)
 }
 
 // FindUserByAcn mocks base method.

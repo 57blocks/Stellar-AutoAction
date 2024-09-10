@@ -5,18 +5,17 @@ DROP TABLE IF EXISTS "user";
 
 CREATE TABLE "user" (
     "id" serial PRIMARY KEY,
-    "account" varchar UNIQUE NOT NULL,
+    "account" varchar NOT NULL,
     "password" text NOT NULL,
     "description" text NULL,
     "organization_id" integer NOT NULL,
     "cube_signer_user" varchar NOT NULL,
     "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL,
-    "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL
+    "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL,
+    UNIQUE ("account", "organization_id")
 );
 
 CREATE INDEX ON "user" ("account");
-
-CREATE INDEX "user_id_account_idx" ON "user" ("id", "account");
 
 -- organization
 DROP TABLE IF EXISTS "organization";
@@ -38,15 +37,18 @@ CREATE TABLE "token" (
     "id" serial PRIMARY KEY,
     "user_id" integer UNIQUE NOT NULL,
     "access" varchar UNIQUE NOT NULL,
-    "refresh" varchar UNIQUE NOT NULL,
+    "access_id" varchar UNIQUE NOT NULL,
     "access_expires" timestamptz NOT NULL,
+    "refresh" varchar UNIQUE NOT NULL,
+    "refresh_id" varchar UNIQUE NOT NULL,
     "refresh_expires" timestamptz NOT NULL,
     "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL,
-    "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL
+    "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL,
+    UNIQUE ("user_id", "access")
 );
 
 CREATE INDEX ON "token" ("user_id");
-CREATE INDEX ON "token" ("access");
-CREATE INDEX "token_user_access_idx" ON "token" ("user_id", "access");
+CREATE INDEX ON "token" ("access_id");
+CREATE INDEX ON "token" ("refresh_id");
 
 COMMIT;

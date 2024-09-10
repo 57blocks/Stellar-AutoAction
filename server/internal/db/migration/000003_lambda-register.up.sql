@@ -16,14 +16,12 @@ CREATE TABLE "lambda" (
     "version" varchar NOT NULL,
     "revision_id" varchar UNIQUE NOT NULL,
     "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL,
-    "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL
+    "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL,
+    UNIQUE ("function_arn", "function_name")
 );
 
 CREATE INDEX ON "lambda" ("function_name");
 CREATE INDEX ON "lambda" ("function_arn");
-
-CREATE INDEX "lambda_name_arn_idx" ON "lambda" ("function_name", "function_arn");
-CREATE INDEX "lambda_name_version_idx" ON "lambda" ("function_name", "version");
 
 -- lambda scheduler info
 DROP TABLE IF EXISTS "lambda_scheduler";

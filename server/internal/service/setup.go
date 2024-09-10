@@ -9,15 +9,11 @@ import (
 )
 
 func Setup() error {
-	setupServices()
-
-	return nil
-}
-
-func setupServices() {
 	cs.NewCubeSignerService()
 	lambda.NewLambdaService()
 	oauth.NewOAuthService()
 	wallet.NewWalletService()
 	organization.NewOrgService()
+
+	return nil
 }

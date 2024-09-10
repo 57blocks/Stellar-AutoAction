@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
@@ -21,6 +22,7 @@ type (
 		Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogout, error)
 	}
 	service struct {
+		jwtx      jwtx.JWT
 		oauthRepo repo.OAuth
 	}
 )
@@ -30,6 +32,7 @@ func NewOAuthService() {
 		repo.NewOAuth()
 
 		ServiceImpl = &service{
+			jwtx:      jwtx.RS256,
 			oauthRepo: repo.OAuthRepo,
 		}
 	}
@@ -50,30 +53,37 @@ func (svc *service) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredent
 
 	// tokens assignment
 	now := time.Now().UTC()
-	tokenExp := now.AddDate(0, 1, 0)
-	refreshExp := now.AddDate(0, 3, 0)
+	accessID := svc.jwtx.GenerateID()
+	accessExp := now.AddDate(0, 0, 7)
+	refreshID := svc.jwtx.GenerateID()
+	refreshExp := now.AddDate(0, 1, 0)
 
-	access, err := jwtx.AssignAccess(jwtx.AccessClaims{
-		StandardClaims: jwt.StandardClaims{
-			Issuer:    "v3nooom", // TODO
-			IssuedAt:  time.Now().UTC().Unix(),
-			Subject:   "st3llar",
-			ExpiresAt: tokenExp.Unix(),
+	access, err := svc.jwtx.Assign(&jwtx.AAClaims{
+		StdJWTClaims: jwt.StandardClaims{
+			Audience:  config.GlobalConfig.EndPoint,
+			ExpiresAt: accessExp.Unix(),
+			Id:        accessID,
+			IssuedAt:  now.Unix(),
+			Issuer:    req.Organization,
+			NotBefore: now.Unix(),
+			Subject:   u.Account,
 		},
-		Account:      req.Account,
-		Organization: req.Organization,
-		Environment:  req.Environment,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	refresh, err := jwtx.AssignRefresh(jwt.StandardClaims{
-		// TODO: make `iss` and `sub` as env vars
-		Issuer:    "v3nooom",
-		IssuedAt:  time.Now().UTC().Unix(),
-		Subject:   "st3llar",
-		ExpiresAt: refreshExp.Unix(),
+	refresh, err := svc.jwtx.Assign(&jwtx.AAClaims{
+		StdJWTClaims: jwt.StandardClaims{
+			Audience:  config.GlobalConfig.EndPoint,
+			ExpiresAt: refreshExp.Unix(),
+			Id:        refreshID,
+			IssuedAt:  now.Unix(),
+			Issuer:    req.Organization,
+			NotBefore: now.Unix(), // won't be valid until access token expires
+			//NotBefore: accessExp.Unix(), // won't be valid until access token expires
+			Subject: u.Account,
+		},
 	})
 	if err != nil {
 		return nil, err
@@ -81,10 +91,12 @@ func (svc *service) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredent
 
 	// sync token pairs
 	token := &model.Token{
-		Access:         access,
-		Refresh:        refresh,
 		UserId:         u.ID,
-		AccessExpires:  tokenExp,
+		Access:         access,
+		AccessID:       accessID,
+		AccessExpires:  accessExp,
+		Refresh:        refresh,
+		RefreshID:      refreshID,
 		RefreshExpires: refreshExp,
 	}
 	if err := svc.oauthRepo.SyncToken(c, token); err != nil {
@@ -96,8 +108,8 @@ func (svc *service) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredent
 		dto.WithAccount(req.Account),
 		dto.WithOrganization(req.Organization),
 		dto.WithEnvironment(req.Environment),
-		dto.WithTokenPair(jwtx.Tokens{
-			Token:   access,
+		dto.WithTokenPair(jwtx.TokenPair{
+			Access:  access,
 			Refresh: refresh,
 		}),
 	)
@@ -106,61 +118,44 @@ func (svc *service) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredent
 }
 
 func (svc *service) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCredential, error) {
-	token, err := svc.oauthRepo.FindTokenByRefresh(c, req.Refresh)
+	jwtClaims, err := svc.jwtx.Parse(req.Refresh)
+	if err != nil {
+		return nil, err
+	}
+
+	aaClaims, ok := jwtClaims.(*jwtx.AAClaims)
+	if !ok {
+		return nil, errorx.Internal("failed to assert JWT claims as AAClaims")
+	}
+
+	token, err := svc.oauthRepo.FindTokenByRefreshID(c, aaClaims.StdJWTClaims.Id) // use refresh id
 	if err != nil {
 		return nil, errorx.UnauthorizedWithMsg("invalid refresh token")
 	}
 
-	jwtToken, _ := jwtx.ParseToken(token.Access)
-	claims, ok := jwtToken.Claims.(jwt.MapClaims)
-	if !ok {
-		return nil, errorx.Internal("failed to assert JWT claims as MapClaims")
-	}
-
-	refreshExp := token.RefreshExpires.UTC()
-	if refreshExp.Before(time.Now().UTC()) {
-		return nil, errorx.UnauthorizedWithMsg("refresh token expired, please login again")
-	}
-
 	now := time.Now().UTC()
-	tokenExp := now.AddDate(0, 1, 0)
+	accessID := svc.jwtx.GenerateID()
+	accessExp := now.AddDate(0, 0, 7)
 
-	iss, err := jwtx.GetStrClaim(claims, "iss")
-	if err != nil {
-		return nil, err
-	}
-	sub, err := jwtx.GetStrClaim(claims, "sub")
-	if err != nil {
-		return nil, err
-	}
-	account, err := jwtx.GetStrClaim(claims, "account")
-	if err != nil {
-		return nil, err
-	}
-	organization, err := jwtx.GetStrClaim(claims, "organization")
-	if err != nil {
-		return nil, err
-	}
-
-	ac := jwtx.AccessClaims{
-		StandardClaims: jwt.StandardClaims{
-			Issuer:    iss,
-			Subject:   sub,
+	access, err := svc.jwtx.Assign(&jwtx.AAClaims{
+		StdJWTClaims: jwt.StandardClaims{
+			Audience:  config.GlobalConfig.EndPoint,
+			ExpiresAt: accessExp.Unix(),
+			Id:        accessID,
 			IssuedAt:  now.Unix(),
-			ExpiresAt: tokenExp.Unix(),
+			Issuer:    aaClaims.StdJWTClaims.Issuer,
+			NotBefore: now.Unix(),
+			Subject:   aaClaims.StdJWTClaims.Subject,
 		},
-		Account:      account,
-		Organization: organization,
-	}
-
-	access, err := jwtx.AssignAccess(ac)
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	// save tokens association
 	token.Access = access
-	token.AccessExpires = tokenExp
+	token.AccessID = accessID
+	token.AccessExpires = accessExp
 	token.UpdatedAt = &now
 
 	if err := svc.oauthRepo.SyncToken(c, token); err != nil {
@@ -168,11 +163,11 @@ func (svc *service) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCre
 	}
 
 	resp := dto.BuildRespCred(
-		dto.WithAccount(claims["account"].(string)),
-		dto.WithOrganization(claims["organization"].(string)),
-		dto.WithEnvironment(claims["environment"].(string)),
-		dto.WithTokenPair(jwtx.Tokens{
-			Token:   access,
+		dto.WithAccount(aaClaims.StdJWTClaims.Subject),
+		dto.WithOrganization(aaClaims.StdJWTClaims.Issuer),
+		dto.WithEnvironment(config.GlobalConfig.Name),
+		dto.WithTokenPair(jwtx.TokenPair{
+			Access:  access,
 			Refresh: req.Refresh,
 		}),
 	)

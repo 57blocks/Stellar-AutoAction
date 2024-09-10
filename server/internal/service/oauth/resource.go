@@ -5,7 +5,6 @@ import (
 
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 
 	"github.com/gin-gonic/gin"
 )
@@ -37,10 +36,6 @@ func Logout(c *gin.Context) {
 		return
 	}
 
-	logx.Logger.DEBUG("oauth logout", map[string]interface{}{
-		"logout_token": req.Token,
-	})
-
 	resp, err := ServiceImpl.Logout(c, *req)
 	if err != nil {
 		c.Error(err)
@@ -57,10 +52,6 @@ func Refresh(c *gin.Context) {
 		c.Error(errorx.BadRequest(err.Error()))
 		return
 	}
-
-	logx.Logger.DEBUG("oauth refresh", map[string]interface{}{
-		"refresh_token": req.Refresh,
-	})
 
 	resp, err := ServiceImpl.Refresh(c, *req)
 	if err != nil {

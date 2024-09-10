@@ -45,14 +45,21 @@ func refreshFunc(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// logout check
 	if cfg.Credential == "" {
-		return errorx.BadRequest("you've logged out already")
+		logx.Logger.Info("you've already logged out", "status", "out")
+
+		return nil
 	}
 
 	// credential does not exist
 	if !util.IsExists(cfg.Credential) {
-		return errorx.BadRequest("credential file does not exist")
+		logx.Logger.Info(
+			"credential not found, reset config directly.",
+			"config",
+			config.Vp.ConfigFileUsed(),
+		)
+
+		return config.ResetConfigCredential()
 	}
 
 	// refresh

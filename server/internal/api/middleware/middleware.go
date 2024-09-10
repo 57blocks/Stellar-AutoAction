@@ -9,7 +9,6 @@ import (
 	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
@@ -44,28 +43,22 @@ func Authentication() gin.HandlerFunc {
 			return
 		}
 
-		jwtToken, err := jwtx.ParseToken(token)
+		jwtClaims, err := jwtx.RS256.Parse(token)
 		if err != nil {
 			c.Error(err)
 			return
 		}
 
-		claimMap, ok := jwtToken.Claims.(jwt.MapClaims) // TODO: remove the type conversion after testing
+		claimMap, ok := jwtClaims.(*jwtx.AAClaims) // TODO: remove the type conversion after testing
 		if !ok {
 			c.Error(errorx.UnauthorizedWithMsg("invalid token"))
 			return
 		}
 
-		// TODO: make the keys into constant type
-		// TODO: confirm that if all standard claims should be included
-		c.Set("jwt_raw", jwtToken.Raw)
-		//c.Set("jwt_sub", claimMap["sub"])
-		//c.Set("jwt_iat", claimMap["iat"])
-		//c.Set("jwt_iss", claimMap["iss"])
-		c.Set("jwt_exp", claimMap["exp"])
-		c.Set("jwt_account", claimMap["account"])
-		c.Set("jwt_organization", claimMap["organization"])
-		c.Set("jwt_environment", claimMap["environment"])
+		c.Set("jwt_exp", claimMap.StdJWTClaims.ExpiresAt)
+		c.Set("jwt_account", claimMap.StdJWTClaims.Subject)
+		c.Set("jwt_organization", claimMap.StdJWTClaims.Issuer)
+		c.Set("jwt_environment", "Horizon") // TODO: add mapping between `Aud` and env
 
 		logx.Logger.DEBUG("authentication success")
 
