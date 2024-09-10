@@ -77,10 +77,6 @@ func (svc *service) Create(c context.Context, r *http.Request) (*dto.CreateWalle
 		return nil, err
 	}
 
-	if err = svc.saveCSKey(c, user.ID, keyId); err != nil {
-		return nil, err
-	}
-
 	// parse key_id(format: Key#Stellar_<address>) to get the address
 	address := strings.Split(keyId, "_")[1]
 
