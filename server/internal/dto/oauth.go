@@ -94,11 +94,11 @@ type (
 	}
 
 	RespUser struct {
-		ID             uint64   `json:"id"`
+		ID             uint64   `json:"-"`
 		Account        string   `json:"account"`
 		Password       string   `json:"-"`
-		Description    string   `json:"description"`
-		UserKey        string   `json:"user_key"`
+		Description    string   `json:"-"`
+		CubeSignerUser string   `json:"cube_signer_user"`
 		OrganizationId int32    `json:"-"`
 		Organization   *RespOrg `json:"organization,omitempty" gorm:"foreignKey:organization_id"`
 	}
@@ -106,15 +106,14 @@ type (
 
 // RespOrg organization related dto
 type RespOrg struct {
-	ID            uint64 `json:"json"`
-	Name          string `json:"name"`
-	CubeSignerOrg string `json:"cube_signer_org"`
-	Description   string `json:"description"`
+	ID          uint64 `json:"-"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 type (
 	RespToken struct {
-		ID             uint64     `json:"json"`
+		ID             uint64     `json:"-"`
 		Access         string     `json:"access"`
 		Refresh        string     `json:"refresh"`
 		UserId         uint64     `json:"user_id"`

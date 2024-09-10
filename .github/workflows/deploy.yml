@@ -94,6 +94,9 @@ jobs:
             RDS_PASSWORD=${{ secrets.RDS_PASSWORD }}
             RDS_DATABASE=${{ vars.RDS_DATABASE }}
             RDS_SSLMODE=${{ vars.RDS_SSLMODE }}
+            CS_ENDPOINT=${{ vars.CS_ENDPOINT }}
+            CS_ORGANIZATION=${{ secrets.CS_ORGANIZATION }}
+            CS_ROLE=${{ secrets.CS_ROLE }}
 
       - name: Deploy to Amazon ECS task definition
         id: deploy-task-def

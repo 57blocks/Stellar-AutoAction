@@ -6,10 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var ServiceImpl Service
+
 func Create(c *gin.Context) {
 	r := c.Request
 
-	resp, err := Conductor.Create(c, r)
+	resp, err := ServiceImpl.Create(c, r)
 	if err != nil {
 		c.Error(err)
 		return

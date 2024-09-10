@@ -12,7 +12,7 @@ import (
 )
 
 func GenLambdaFuncName(c context.Context, name string) string {
-	org, _ := svcOrg.Conductor.Organization(c)
+	org, _ := svcOrg.ServiceImpl.Organization(c)
 
 	ctx := c.(*gin.Context)
 	account, _ := ctx.Get("jwt_account")

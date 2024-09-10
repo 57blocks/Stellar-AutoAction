@@ -10,6 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var ServiceImpl Service
+
 func Login(c *gin.Context) {
 	req := new(dto.ReqLogin)
 
@@ -18,7 +20,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	resp, err := Conductor.Login(c, *req)
+	resp, err := ServiceImpl.Login(c, *req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -39,7 +41,7 @@ func Logout(c *gin.Context) {
 		"logout_token": req.Token,
 	})
 
-	resp, err := Conductor.Logout(c, *req)
+	resp, err := ServiceImpl.Logout(c, *req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -60,7 +62,7 @@ func Refresh(c *gin.Context) {
 		"refresh_token": req.Refresh,
 	})
 
-	resp, err := Conductor.Refresh(c, *req)
+	resp, err := ServiceImpl.Refresh(c, *req)
 	if err != nil {
 		c.Error(err)
 		return

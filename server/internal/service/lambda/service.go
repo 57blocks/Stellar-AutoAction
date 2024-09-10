@@ -37,19 +37,19 @@ type (
 		Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error)
 		Logs(c context.Context, r *dto.ReqLogs) error
 	}
-	conductor struct {
+	service struct {
 		lambdaRepo repo.Lambda
 		amazon     amazonx.Amazon
 	}
 )
 
-var Conductor Service
+var ServiceImpl Service
 
 func NewLambdaService() {
-	if Conductor == nil {
+	if ServiceImpl == nil {
 		repo.NewLambda()
 
-		Conductor = &conductor{
+		ServiceImpl = &service{
 			lambdaRepo: repo.LambdaImpl,
 			amazon:     amazonx.Conductor,
 		}
@@ -61,7 +61,7 @@ type toPersistPair struct {
 	Scheduler *model.LambdaScheduler
 }
 
-func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegister, error) {
+func (svc *service) Register(c context.Context, r *http.Request) (*dto.RespRegister, error) {
 	fileHeaders := r.MultipartForm.File
 	expression := r.Form.Get("expression")
 
@@ -75,7 +75,7 @@ func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegi
 	for _, fhs := range r.MultipartForm.File {
 		fh := fhs[0]
 
-		newLamResp, err := cd.registerLambda(c, fh)
+		newLamResp, err := svc.registerLambda(c, fh)
 		if err != nil {
 			return nil, err
 		}
@@ -94,7 +94,7 @@ func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegi
 		}
 
 		if strings.TrimSpace(expression) != "" {
-			newSchResp, err := cd.boundScheduler(c, newLamResp, expression)
+			newSchResp, err := svc.boundScheduler(c, newLamResp, expression)
 			if err != nil {
 				return nil, err
 			}
@@ -115,7 +115,7 @@ func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegi
 		toPersists = append(toPersists, tpp)
 	}
 
-	go cd.persist(c, toPersists)
+	go svc.persist(c, toPersists)
 
 	return &dto.RespRegister{
 		Lambdas:    lsBrief,
@@ -123,7 +123,7 @@ func (cd *conductor) Register(c context.Context, r *http.Request) (*dto.RespRegi
 	}, nil
 }
 
-func (cd *conductor) registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.CreateFunctionOutput, error) {
+func (svc *service) registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.CreateFunctionOutput, error) {
 	file, err := fh.Open()
 	if err != nil {
 		return nil, err
@@ -139,7 +139,7 @@ func (cd *conductor) registerLambda(c context.Context, fh *multipart.FileHeader)
 	fileName := splits[0]
 
 	// register lambda
-	lambdaFun, err := cd.amazon.RegisterLambda(
+	lambdaFun, err := svc.amazon.RegisterLambda(
 		c,
 		&lambda.CreateFunctionInput{
 			Code: &lambTypes.FunctionCode{
@@ -166,7 +166,7 @@ func (cd *conductor) registerLambda(c context.Context, fh *multipart.FileHeader)
 	return lambdaFun, nil
 }
 
-func (cd *conductor) boundScheduler(
+func (svc *service) boundScheduler(
 	c context.Context,
 	lambdaFun *lambda.CreateFunctionOutput,
 	expression string,
@@ -182,7 +182,7 @@ func (cd *conductor) boundScheduler(
 		return nil, err
 	}
 
-	newSchResp, err := cd.amazon.BoundScheduler(c, &scheduler.CreateScheduleInput{
+	newSchResp, err := svc.amazon.BoundScheduler(c, &scheduler.CreateScheduleInput{
 		FlexibleTimeWindow: &scheTypes.FlexibleTimeWindow{
 			Mode: scheTypes.FlexibleTimeWindowModeOff,
 		},
@@ -208,8 +208,8 @@ func (cd *conductor) boundScheduler(
 	return newSchResp, nil
 }
 
-func (cd *conductor) persist(c context.Context, pairs []toPersistPair) {
-	if err := cd.lambdaRepo.PersistRegResult(c, func(tx *gorm.DB) error {
+func (svc *service) persist(c context.Context, pairs []toPersistPair) {
+	if err := svc.lambdaRepo.PersistRegResult(c, func(tx *gorm.DB) error {
 		for _, pair := range pairs {
 			newLambda := tx.Table("lambda").Create(pair.Lambda)
 			if err := newLambda.Error; err != nil {
@@ -234,8 +234,8 @@ func (cd *conductor) persist(c context.Context, pairs []toPersistPair) {
 	}
 }
 
-func (cd *conductor) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error) {
-	lamb, err := cd.lambdaRepo.FindByNameOrARN(c, r.Lambda)
+func (svc *service) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error) {
+	lamb, err := svc.lambdaRepo.FindByNameOrARN(c, r.Lambda)
 
 	// generate merged payload with orgSecretKey key
 	stdPayload, err := util.GenEventPayload(c)
@@ -262,7 +262,7 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvok
 	}
 
 	// invoke
-	invokeOutput, err := cd.amazon.InvokeLambda(c, &lambda.InvokeInput{
+	invokeOutput, err := svc.amazon.InvokeLambda(c, &lambda.InvokeInput{
 		FunctionName: aws.String(lamb.FunctionName),
 		LogType:      lambTypes.LogTypeTail,
 		Payload:      payloadBytes,
@@ -274,8 +274,8 @@ func (cd *conductor) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvok
 	return dto.BuildRespInvoke(dto.WithInvokeResp(invokeOutput)), nil
 }
 
-func (cd *conductor) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error) {
-	info, err := cd.lambdaRepo.LambdaInfo(c, r)
+func (svc *service) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error) {
+	info, err := svc.lambdaRepo.LambdaInfo(c, r)
 	if err != nil {
 		return nil, err
 	}
@@ -283,7 +283,7 @@ func (cd *conductor) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, err
 	return info, nil
 }
 
-func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
+func (svc *service) Logs(c context.Context, req *dto.ReqLogs) error {
 	// websocket
 	ctx, ok := c.(*gin.Context)
 	if !ok {
@@ -312,7 +312,7 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 		Descending:   aws.Bool(true),
 	}
 
-	describeOutput, err := cd.amazon.DescribeLogStreams(c, describeInput)
+	describeOutput, err := svc.amazon.DescribeLogStreams(c, describeInput)
 	if err != nil {
 		return errorx.Internal(fmt.Sprintf("failed to describe log streams: %s", err.Error()))
 	}
@@ -335,7 +335,7 @@ func (cd *conductor) Logs(c context.Context, req *dto.ReqLogs) error {
 			input.NextToken = nextToken
 		}
 
-		output, err := cd.amazon.GetLogEvents(c, input)
+		output, err := svc.amazon.GetLogEvents(c, input)
 		if err != nil {
 			return errorx.Internal(fmt.Sprintf("failed to get log events: %s", err.Error()))
 		}

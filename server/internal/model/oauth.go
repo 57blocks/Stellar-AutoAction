@@ -31,7 +31,7 @@ type User struct {
 	ICU
 	Account        string `json:"account"`
 	Password       string `json:"password"`
-	UserKey        string `json:"user_key"`
+	CubeSignerUser string `json:"cube_signer_user"`
 	Description    string `json:"description"`
 	OrganizationId int32  `json:"organization_id"`
 }

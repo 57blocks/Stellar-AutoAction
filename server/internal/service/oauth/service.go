@@ -20,25 +20,23 @@ type (
 		Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCredential, error)
 		Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogout, error)
 	}
-	conductor struct {
+	service struct {
 		oauthRepo repo.OAuth
 	}
 )
 
-var Conductor Service
-
 func NewOAuthService() {
-	if Conductor == nil {
+	if ServiceImpl == nil {
 		repo.NewOAuth()
 
-		Conductor = &conductor{
-			oauthRepo: repo.OAuthImpl,
+		ServiceImpl = &service{
+			oauthRepo: repo.OAuthRepo,
 		}
 	}
 }
 
-func (cd *conductor) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredential, error) {
-	u, err := cd.oauthRepo.FindUserByOrgAcn(c, dto.ReqOrgAcn{
+func (svc *service) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredential, error) {
+	u, err := svc.oauthRepo.FindUserByOrgAcn(c, &dto.ReqOrgAcn{
 		OrgName: req.Organization,
 		AcnName: req.Account,
 	})
@@ -89,7 +87,7 @@ func (cd *conductor) Login(c context.Context, req dto.ReqLogin) (*dto.RespCreden
 		AccessExpires:  tokenExp,
 		RefreshExpires: refreshExp,
 	}
-	if err := cd.oauthRepo.SyncToken(c, token); err != nil {
+	if err := svc.oauthRepo.SyncToken(c, token); err != nil {
 		return nil, err
 	}
 
@@ -107,8 +105,8 @@ func (cd *conductor) Login(c context.Context, req dto.ReqLogin) (*dto.RespCreden
 	return resp, nil
 }
 
-func (cd *conductor) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCredential, error) {
-	token, err := cd.oauthRepo.FindTokenByRefresh(c, req.Refresh)
+func (svc *service) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCredential, error) {
+	token, err := svc.oauthRepo.FindTokenByRefresh(c, req.Refresh)
 	if err != nil {
 		return nil, errorx.UnauthorizedWithMsg("invalid refresh token")
 	}
@@ -165,7 +163,7 @@ func (cd *conductor) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCr
 	token.AccessExpires = tokenExp
 	token.UpdatedAt = &now
 
-	if err := cd.oauthRepo.SyncToken(c, token); err != nil {
+	if err := svc.oauthRepo.SyncToken(c, token); err != nil {
 		return nil, err
 	}
 
@@ -182,8 +180,8 @@ func (cd *conductor) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCr
 	return resp, nil
 }
 
-func (cd *conductor) Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogout, error) {
-	if err := cd.oauthRepo.DeleteTokenByAccess(c, req.Token); err != nil {
+func (svc *service) Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogout, error) {
+	if err := svc.oauthRepo.DeleteTokenByAccess(c, req.Token); err != nil {
 		return nil, err
 	}
 

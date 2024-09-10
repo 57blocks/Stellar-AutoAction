@@ -17,18 +17,18 @@ type (
 	Service interface {
 		Organization(c context.Context) (*model.Organization, error)
 	}
-	conductor struct{}
+	service struct{}
 )
 
-var Conductor Service
+var ServiceImpl Service
 
-func init() {
-	if Conductor == nil {
-		Conductor = &conductor{}
+func NewOrgService() {
+	if ServiceImpl == nil {
+		ServiceImpl = &service{}
 	}
 }
 
-func (cd conductor) Organization(c context.Context) (*model.Organization, error) {
+func (svc *service) Organization(c context.Context) (*model.Organization, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errorx.GinContextConv()

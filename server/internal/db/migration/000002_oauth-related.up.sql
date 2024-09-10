@@ -9,7 +9,7 @@ CREATE TABLE "user" (
     "password" text NOT NULL,
     "description" text NULL,
     "organization_id" integer NOT NULL,
-    "user_key" varchar NOT NULL,
+    "cube_signer_user" varchar NOT NULL,
     "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL,
     "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL
 );
@@ -24,7 +24,6 @@ DROP TABLE IF EXISTS "organization";
 CREATE TABLE "organization" (
     "id" serial PRIMARY KEY,
     "name" varchar UNIQUE NOT NULL,
-    "cube_signer_org" varchar UNIQUE NOT NULL,
     "description" text,
     "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL,
     "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL

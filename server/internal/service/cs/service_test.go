@@ -22,23 +22,13 @@ func TestToSignSuccess(t *testing.T) {
 
 	mockRepo.EXPECT().ToSign(ctx, request).Times(1).
 		Return(
-			[]*dto.RespToSign{{
-				Organization: dto.RespOrg{},
-				Account:      dto.RespUser{},
-				Role:         "Role#_",
-				Keys: []dto.RespCSKey{{
-					Key:    "Key#_St3llar_",
-					Scopes: []string{"scope#_1", "scope#_2"},
-				}},
-			}}, nil,
+			[]*dto.RespCSKey{{}}, nil,
 		)
 
-	cd := &conductor{csRepo: mockRepo}
-	roles, err := cd.ToSign(ctx, request)
+	cd := &service{csRepo: mockRepo}
+	toSign, err := cd.ToSign(ctx, request)
 	assert.NoError(t, err)
-	assert.Len(t, roles, 1)
-	assert.Equal(t, "Role#_", roles[0].Role)
-	assert.Equal(t, "Key#_St3llar_", roles[0].Keys[0].Key)
+	assert.Equal(t, "Role#_", toSign)
 }
 
 func TestToSignWithEmptyRoles(t *testing.T) {
@@ -52,10 +42,10 @@ func TestToSignWithEmptyRoles(t *testing.T) {
 
 	mockRepo.EXPECT().ToSign(ctx, request).Times(1).
 		Return(
-			[]*dto.RespToSign{}, nil,
+			[]*dto.RespCSKey{}, nil,
 		)
 
-	cd := &conductor{csRepo: mockRepo}
+	cd := &service{csRepo: mockRepo}
 	roles, err := cd.ToSign(ctx, request)
 	assert.NoError(t, err)
 	assert.Len(t, roles, 0)
@@ -76,7 +66,7 @@ func TestToSignWithError(t *testing.T) {
 			nil, assert.AnError,
 		)
 
-	cd := &conductor{csRepo: mockRepo}
+	cd := &service{csRepo: mockRepo}
 	_, err := cd.ToSign(ctx, request)
 	if assert.Error(t, err) {
 		assert.Equal(t, assert.AnError, err)

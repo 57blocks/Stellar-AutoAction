@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/57blocks/auto-action/server/internal/config"
@@ -12,7 +11,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/repo"
-	csSvc "github.com/57blocks/auto-action/server/internal/service/cs"
+	svcCS "github.com/57blocks/auto-action/server/internal/service/cs"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 	"github.com/57blocks/auto-action/server/internal/third-party/restyx"
 
@@ -23,29 +22,25 @@ type (
 	Service interface {
 		Create(c context.Context, r *http.Request) (*dto.CreateWalletRespInfo, error)
 	}
-	conductor struct {
+	service struct {
 		oauthRepo repo.OAuth
 		csRepo    repo.CubeSigner
 	}
 )
 
-var (
-	Conductor Service
-)
-
 func NewWalletService() {
-	if Conductor == nil {
+	if ServiceImpl == nil {
 		repo.NewOAuth()
 		repo.NewCubeSigner()
 
-		Conductor = &conductor{
-			oauthRepo: repo.OAuthImpl,
-			csRepo:    repo.CubeSignerImpl,
+		ServiceImpl = &service{
+			oauthRepo: repo.OAuthRepo,
+			csRepo:    repo.CubeSignerRepo,
 		}
 	}
 }
 
-func (cd *conductor) Create(c context.Context, r *http.Request) (*dto.CreateWalletRespInfo, error) {
+func (svc *service) Create(c context.Context, r *http.Request) (*dto.CreateWalletRespInfo, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errorx.GinContextConv()
@@ -54,47 +49,30 @@ func (cd *conductor) Create(c context.Context, r *http.Request) (*dto.CreateWall
 	jwtOrg, _ := ctx.Get("jwt_organization")
 	jwtAccount, _ := ctx.Get("jwt_account")
 
-	// fetch the organization by org from the database
-	org, err := cd.oauthRepo.FindOrgByName(c, jwtOrg.(string))
-	if err != nil {
-		return nil, err
-	}
-
-	// fetch the user by account from the database
-	//user := new(model.User)
-	user, err := cd.oauthRepo.FindUserByOrgAcn(c, dto.ReqOrgAcn{
-		OrgName: org.Name,
+	user, err := svc.oauthRepo.FindUserByOrgAcn(c, &dto.ReqOrgAcn{
+		OrgName: jwtOrg.(string),
 		AcnName: jwtAccount.(string),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	// fetch the organization and role by account and organization from the database
-	role, err := cd.csRepo.FindCSByOrgAcn(c, &dto.ReqCSRole{
-		OrgID: org.ID,
-		AcnID: user.ID,
-	})
+	csToken, err := svcCS.ServiceImpl.CubeSignerToken(c)
 	if err != nil {
 		return nil, err
 	}
 
-	csToken, err := csSvc.Conductor.CubeSignerToken(c)
+	keyId, err := svc.addCSKey(csToken, user)
 	if err != nil {
 		return nil, err
 	}
 
-	keyId, err := addCSKey(org, csToken, user)
+	err = svc.addKeyToRole(csToken, keyId)
 	if err != nil {
 		return nil, err
 	}
 
-	err = addKeyToRole(org, role, csToken, keyId)
-	if err != nil {
-		return nil, err
-	}
-
-	err = cd.saveCSKey(c, keyId, role)
+	err = svc.saveCSKey(c, user.ID, keyId)
 	if err != nil {
 		return nil, err
 	}
@@ -107,8 +85,14 @@ func (cd *conductor) Create(c context.Context, r *http.Request) (*dto.CreateWall
 	}, nil
 }
 
-func addCSKey(org *dto.RespOrg, csToken string, user *dto.RespUser) (string, error) {
-	URL := fmt.Sprintf("%s/v0/org/%s/keys", config.GlobalConfig.CS.Endpoint, url.PathEscape(org.CubeSignerOrg))
+func (svc *service) addCSKey(csToken string, user *dto.RespUser) (string, error) {
+	URL := fmt.Sprintf(
+		"%s/v0/org/%s/keys",
+		config.GlobalConfig.CS.Endpoint,
+		config.GlobalConfig.CS.Organization,
+	)
+
+	// TODO: using member to do the request for ut
 	var keyResp dto.AddCsKeyResponse
 	resp, err := restyx.Client.R().
 		SetHeader("Authorization", csToken).
@@ -116,7 +100,7 @@ func addCSKey(org *dto.RespOrg, csToken string, user *dto.RespUser) (string, err
 		SetBody(map[string]interface{}{
 			"count":    1,
 			"key_type": "Ed25519StellarAddr",
-			"owner":    user.UserKey,
+			"owner":    user.CubeSignerUser,
 			"policy":   []string{"AllowRawBlobSigning"},
 		}).
 		SetResult(&keyResp).
@@ -127,14 +111,22 @@ func addCSKey(org *dto.RespOrg, csToken string, user *dto.RespUser) (string, err
 	if resp.IsError() {
 		return "", errorx.Internal(fmt.Sprintf("create cube signer key occurred error: %d, %s", resp.StatusCode(), resp.String()))
 	}
+
 	keyId := keyResp.Keys[0].KeyID
 	logx.Logger.DEBUG(fmt.Sprintf("create cube signer key success: %s", keyId))
 
 	return keyId, nil
 }
 
-func addKeyToRole(org *dto.RespOrg, role *dto.RespCSRole, csToken string, keyId string) error {
-	URL := fmt.Sprintf("%s/v0/org/%s/roles/%s/add_keys", config.GlobalConfig.CS.Endpoint, url.PathEscape(org.CubeSignerOrg), url.PathEscape(role.Role))
+func (svc *service) addKeyToRole(csToken string, keyId string) error {
+	URL := fmt.Sprintf(
+		"%s/v0/org/%s/roles/%s/add_keys",
+		config.GlobalConfig.CS.Endpoint,
+		config.GlobalConfig.CS.Organization,
+		config.GlobalConfig.CS.Role,
+	)
+
+	// TODO: using member to do the request for ut
 	resp, err := restyx.Client.R().
 		SetHeader("Authorization", csToken).
 		SetHeader("Content-Type", "application/json").
@@ -148,20 +140,22 @@ func addKeyToRole(org *dto.RespOrg, role *dto.RespCSRole, csToken string, keyId 
 	if resp.IsError() {
 		return errorx.Internal(fmt.Sprintf("add cube signer key to role occurred error: %d, %s", resp.StatusCode(), resp.String()))
 	}
+
 	logx.Logger.DEBUG(fmt.Sprintf("add cube signer key to role success: %s", resp.String()))
 
 	return nil
 }
 
-func (cd *conductor) saveCSKey(c context.Context, keyId string, role *dto.RespCSRole) error {
+func (svc *service) saveCSKey(c context.Context, userID uint64, key string) error {
 	csKey := &model.CubeSignerKey{
-		Key:    keyId,
-		RoleID: role.ID,
-		Scopes: []string{"{sign:blob}"},
+		AccountID: userID,
+		Key:       key,
+		Scopes:    []string{"{sign:blob}"},
 	}
-	if err := cd.csRepo.SyncCSKey(c, csKey); err != nil {
+	if err := svc.csRepo.SyncCSKey(c, csKey); err != nil {
 		return err
 	}
+
 	logx.Logger.DEBUG(fmt.Sprintf("save cube signer key to database success: %s", csKey.Key))
 
 	return nil

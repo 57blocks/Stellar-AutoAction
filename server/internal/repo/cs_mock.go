@@ -36,21 +36,6 @@ func (m *MockCubeSigner) EXPECT() *MockCubeSignerMockRecorder {
 	return m.recorder
 }
 
-// FindCSByOrgAcn mocks base method.
-func (m *MockCubeSigner) FindCSByOrgAcn(c context.Context, req *dto.ReqCSRole) (*dto.RespCSRole, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindCSByOrgAcn", c, req)
-	ret0, _ := ret[0].(*dto.RespCSRole)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindCSByOrgAcn indicates an expected call of FindCSByOrgAcn.
-func (mr *MockCubeSignerMockRecorder) FindCSByOrgAcn(c, req interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCSByOrgAcn", reflect.TypeOf((*MockCubeSigner)(nil).FindCSByOrgAcn), c, req)
-}
-
 // SyncCSKey mocks base method.
 func (m *MockCubeSigner) SyncCSKey(c context.Context, key *model.CubeSignerKey) error {
 	m.ctrl.T.Helper()
@@ -66,16 +51,16 @@ func (mr *MockCubeSignerMockRecorder) SyncCSKey(c, key interface{}) *gomock.Call
 }
 
 // ToSign mocks base method.
-func (m *MockCubeSigner) ToSign(c context.Context, req *dto.ReqToSign) ([]*dto.RespToSign, error) {
+func (m *MockCubeSigner) ToSign(c context.Context, userID uint64, from string) (*dto.RespCSKey, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ToSign", c, req)
-	ret0, _ := ret[0].([]*dto.RespToSign)
+	ret := m.ctrl.Call(m, "ToSign", c, userID, from)
+	ret0, _ := ret[0].(*dto.RespCSKey)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ToSign indicates an expected call of ToSign.
-func (mr *MockCubeSignerMockRecorder) ToSign(c, req interface{}) *gomock.Call {
+func (mr *MockCubeSignerMockRecorder) ToSign(c, userID, from interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToSign", reflect.TypeOf((*MockCubeSigner)(nil).ToSign), c, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToSign", reflect.TypeOf((*MockCubeSigner)(nil).ToSign), c, userID, from)
 }

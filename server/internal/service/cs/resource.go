@@ -9,6 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var ServiceImpl Service
+
 func ToSign(c *gin.Context) {
 	req := new(dto.ReqToSign)
 
@@ -17,7 +19,7 @@ func ToSign(c *gin.Context) {
 		return
 	}
 
-	respToSign, err := Conductor.ToSign(c, req)
+	respToSign, err := ServiceImpl.ToSign(c, req)
 	if err != nil {
 		c.Error(err)
 		return
