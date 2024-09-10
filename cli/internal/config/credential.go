@@ -21,7 +21,7 @@ type (
 
 	Tokens struct {
 		_       struct{}
-		Token   string `toml:"token" json:"token"`
+		Access  string `toml:"access" json:"access"`
 		Refresh string `toml:"refresh" json:"refresh"`
 	}
 )
@@ -57,7 +57,7 @@ func WithEnvironment(env string) CredOpt {
 
 func WithAccess(access string) CredOpt {
 	return func(cred *Credential) {
-		cred.Token = access
+		cred.Access = access
 	}
 }
 
@@ -111,5 +111,5 @@ func Token() (string, error) {
 		return "", err
 	}
 
-	return credential.Token, nil
+	return credential.Access, nil
 }

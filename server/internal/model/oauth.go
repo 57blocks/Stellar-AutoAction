@@ -54,10 +54,12 @@ func TabNamUserAbbr() string {
 
 type Token struct {
 	ICU
-	Access         string    `json:"access"`
-	Refresh        string    `json:"refresh"`
 	UserId         uint64    `json:"user_id"`
+	Access         string    `json:"access"`
+	AccessID       string    `json:"access_id"`
 	AccessExpires  time.Time `json:"access_expires"`
+	Refresh        string    `json:"refresh"`
+	RefreshID      string    `json:"refresh_id"`
 	RefreshExpires time.Time `json:"refresh_expires"`
 }
 

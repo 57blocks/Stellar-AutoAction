@@ -22,7 +22,7 @@ type (
 		FindOrg(c context.Context, id uint64) (*dto.RespOrg, error)
 		FindOrgByName(c context.Context, name string) (*dto.RespOrg, error)
 
-		FindTokenByRefresh(c context.Context, refresh string) (*model.Token, error)
+		FindTokenByRefreshID(c context.Context, refresh string) (*model.Token, error)
 		SyncToken(c context.Context, token *model.Token) error
 		DeleteTokenByAccess(c context.Context, access string) error
 	}
@@ -112,11 +112,11 @@ func (o *oauth) FindOrgByName(c context.Context, name string) (*dto.RespOrg, err
 	return org, nil
 }
 
-func (o *oauth) FindTokenByRefresh(c context.Context, refresh string) (*model.Token, error) {
+func (o *oauth) FindTokenByRefreshID(c context.Context, refreshID string) (*model.Token, error) {
 	t := new(model.Token)
 	if err := o.Instance.Conn(c).Table(t.TableName()).
 		Where(map[string]interface{}{
-			"refresh": refresh,
+			"refresh_id": refreshID,
 		}).
 		First(t).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
