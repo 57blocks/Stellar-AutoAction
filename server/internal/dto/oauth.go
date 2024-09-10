@@ -17,11 +17,11 @@ type (
 	}
 
 	RespCredential struct {
-		_            struct{}
-		Account      string         `json:"account" toml:"account"`
-		Organization string         `json:"organization" toml:"organization"`
-		Environment  string         `json:"environment" toml:"environment"`
-		TokenPair    jwtx.TokenPair `json:"tokens" toml:"tokens"`
+		_              struct{}
+		Account        string `json:"account" toml:"account"`
+		Organization   string `json:"organization" toml:"organization"`
+		Environment    string `json:"environment" toml:"environment"`
+		jwtx.TokenPair `json:"tokens" toml:"tokens"`
 	}
 	RespCredOpt func(cred *RespCredential)
 )
