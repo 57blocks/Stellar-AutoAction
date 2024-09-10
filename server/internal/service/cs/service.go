@@ -76,8 +76,6 @@ func (svc *service) ToSign(c context.Context, req *dto.ReqToSign) (*dto.RespCSKe
 		return nil, err
 	}
 
-	//forSign.Organization = config.GlobalConfig.CS.Organization
-
 	return forSign, nil
 }
 
