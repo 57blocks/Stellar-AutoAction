@@ -17,6 +17,7 @@ import (
 var create = &cobra.Command{
 	Use:   "create",
 	Short: "Create a wallet",
+	// TODO: add long description
 	Long: `
 Description:	
   Create a new wallet address.
@@ -29,12 +30,12 @@ func init() {
 }
 
 func createFunc(_ *cobra.Command, _ []string) error {
-	wallet := new(config.Wallet)
 	resp, err := supplierCreate()
 	if err != nil {
-		return err
+		return errorx.Internal(fmt.Sprintf("create wallet failed: %s", err.Error()))
 	}
 
+	wallet := new(config.Wallet)
 	if err := json.Unmarshal(resp.Body(), wallet); err != nil {
 		return errorx.Internal(fmt.Sprintf("unmarshaling json response error: %s", err.Error()))
 	}
@@ -59,7 +60,7 @@ func supplierCreate() (*resty.Response, error) {
 			"Content-Type":  "application/json",
 			"Authorization": token,
 		}).
-		Put(URL)
+		Post(URL)
 	if err != nil {
 		return nil, errorx.RestyError(err.Error())
 	}

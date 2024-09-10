@@ -18,3 +18,14 @@ func Create(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, resp)
 }
+
+func Remove(c *gin.Context) {
+	r := c.Request
+
+	err := Conductor.Remove(c, r)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, nil)
+}

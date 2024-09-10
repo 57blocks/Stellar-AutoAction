@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/57blocks/auto-action/server/internal/config"
@@ -21,6 +22,7 @@ import (
 type (
 	Service interface {
 		Create(c context.Context, r *http.Request) (*dto.CreateWalletRespInfo, error)
+		Remove(c context.Context, r *http.Request) error
 	}
 	service struct {
 		oauthRepo repo.OAuth
@@ -77,12 +79,62 @@ func (svc *service) Create(c context.Context, r *http.Request) (*dto.CreateWalle
 		return nil, err
 	}
 
+	err = svc.saveCSKey(c, user.ID, keyId)
+	if err != nil {
+		return nil, err
+	}
+
 	// parse key_id(format: Key#Stellar_<address>) to get the address
 	address := strings.Split(keyId, "_")[1]
 
 	return &dto.CreateWalletRespInfo{
 		Address: address,
 	}, nil
+}
+
+func (svc *service) Remove(c context.Context, r *http.Request) error {
+	ctx, ok := c.(*gin.Context)
+	if !ok {
+		return errorx.GinContextConv()
+	}
+
+	jwtOrg, _ := ctx.Get("jwt_organization")
+	jwtAccount, _ := ctx.Get("jwt_account")
+
+	user, err := svc.oauthRepo.FindUserByOrgAcn(c, &dto.ReqOrgAcn{
+		OrgName: jwtOrg.(string),
+		AcnName: jwtAccount.(string),
+	})
+	if err != nil {
+		return err
+	}
+
+	address := ctx.Param("address")
+	keyId := fmt.Sprintf("Key#Stellar_%s", address)
+	delRowCount, err := svc.csRepo.DeleteCSKey(c, keyId, user.ID)
+	if err != nil {
+		return err
+	}
+	if delRowCount == 0 {
+		return errorx.Internal(fmt.Sprintf("no existed wallet address found: %s", address))
+	}
+
+	csToken, err := svcCS.ServiceImpl.CubeSignerToken(c)
+	if err != nil {
+		return err
+	}
+
+	err = svc.deleteKeyFromRole(csToken, keyId)
+	if err != nil {
+		return err
+	}
+
+	err = svc.deleteCSKey(csToken, keyId)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (svc *service) addCSKey(csToken string, user *dto.RespUser) (string, error) {
@@ -157,6 +209,54 @@ func (svc *service) saveCSKey(c context.Context, userID uint64, key string) erro
 	}
 
 	logx.Logger.DEBUG(fmt.Sprintf("save cube signer key to database success: %s", csKey.Key))
+
+	return nil
+}
+
+func (svc *service) deleteCSKey(csToken string, keyId string) error {
+	URL := fmt.Sprintf(
+		"%s/v0/org/%s/keys/%s",
+		config.GlobalConfig.CS.Endpoint,
+		config.GlobalConfig.CS.Organization,
+		url.PathEscape(keyId),
+	)
+
+	// TODO: using member to do the request for ut
+	resp, err := restyx.Client.R().
+		SetHeader("Authorization", csToken).
+		SetHeader("Content-Type", "application/json").
+		Delete(URL)
+	if err != nil {
+		return errorx.Internal(fmt.Sprintf("delete cube signer key occurred error: %s", err.Error()))
+	}
+	if resp.IsError() {
+		return errorx.Internal(fmt.Sprintf("delete cube signer key occurred error: %d, %s", resp.StatusCode(), resp.String()))
+	}
+	logx.Logger.DEBUG(fmt.Sprintf("delete cube signer key success: %s", keyId))
+
+	return nil
+}
+
+func (svc *service) deleteKeyFromRole(csToken string, keyId string) error {
+	URL := fmt.Sprintf(
+		"%s/v0/org/%s/roles/%s/keys/%s",
+		config.GlobalConfig.CS.Endpoint,
+		config.GlobalConfig.CS.Organization,
+		config.GlobalConfig.CS.Role,
+		url.PathEscape(keyId),
+	)
+	logx.Logger.INFO(fmt.Sprintf("delete cube signer key from role URL: %s", URL))
+	resp, err := restyx.Client.R().
+		SetHeader("Authorization", csToken).
+		SetHeader("Content-Type", "application/json").
+		Delete(URL)
+	if err != nil {
+		return errorx.Internal(fmt.Sprintf("delete cube signer key from role occurred error: %s", err.Error()))
+	}
+	if resp.IsError() {
+		return errorx.Internal(fmt.Sprintf("delete cube signer key from role occurred error: %d, %s", resp.StatusCode(), resp.String()))
+	}
+	logx.Logger.DEBUG(fmt.Sprintf("delete cube signer key from role success: %s", resp.String()))
 
 	return nil
 }

@@ -20,6 +20,7 @@ type (
 		ToSign(c context.Context, userID uint64, from string) (*dto.RespCSKey, error)
 
 		SyncCSKey(c context.Context, key *model.CubeSignerKey) error
+		DeleteCSKey(c context.Context, key string, accountId uint64) (int64, error)
 	}
 	cubeSigner struct {
 		Instance *db.Instance
@@ -35,6 +36,7 @@ func NewCubeSigner() {
 		}
 	}
 }
+
 func (cs *cubeSigner) ToSign(c context.Context, userID uint64, from string) (*dto.RespCSKey, error) {
 	csKey := new(dto.RespCSKey)
 	if err := cs.Instance.Conn(c).
@@ -70,4 +72,17 @@ func (cs *cubeSigner) SyncCSKey(c context.Context, key *model.CubeSignerKey) err
 	}
 
 	return nil
+}
+
+func (cs *cubeSigner) DeleteCSKey(c context.Context, key string, accountId uint64) (int64, error) {
+	result := cs.Instance.Conn(c).
+		Table(model.TabNameCSKey()).
+		Where("key = ? AND account_id = ?", key, accountId).
+		Delete(&model.CubeSignerKey{})
+
+	if result.Error != nil {
+		return 0, errorx.Internal(result.Error.Error())
+	}
+
+	return result.RowsAffected, nil
 }
