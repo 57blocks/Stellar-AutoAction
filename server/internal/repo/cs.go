@@ -22,6 +22,7 @@ type (
 		SyncCSKey(c context.Context, key *model.CubeSignerKey) error
 		FindCSKey(c context.Context, key string, accountId uint64) (*model.CubeSignerKey, error)
 		DeleteCSKey(c context.Context, key string, accountId uint64) error
+		FindCSKeysByAccount(c context.Context, accountId uint64) ([]*model.CubeSignerKey, error)
 	}
 	cubeSigner struct {
 		Instance *db.Instance
@@ -97,4 +98,16 @@ func (cs *cubeSigner) DeleteCSKey(c context.Context, key string, accountId uint6
 	}
 
 	return nil
+}
+
+func (cs *cubeSigner) FindCSKeysByAccount(c context.Context, accountId uint64) ([]*model.CubeSignerKey, error) {
+	keys := make([]*model.CubeSignerKey, 0)
+	if err := cs.Instance.Conn(c).
+		Table(model.TabNameCSKey()).
+		Where("account_id = ?", accountId).
+		Find(&keys).Error; err != nil {
+		return nil, errorx.Internal(err.Error())
+	}
+
+	return keys, nil
 }

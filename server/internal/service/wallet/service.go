@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/server/internal/pkg/util"
 	"github.com/57blocks/auto-action/server/internal/repo"
 	svcCS "github.com/57blocks/auto-action/server/internal/service/cs"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
@@ -23,6 +23,7 @@ type (
 	Service interface {
 		Create(c context.Context, r *http.Request) (*dto.CreateWalletRespInfo, error)
 		Remove(c context.Context, r *dto.RemoveWalletReqInfo) error
+		List(c context.Context, r *http.Request) (*dto.ListWalletsResponse, error)
 	}
 	service struct {
 		oauthRepo repo.OAuth
@@ -77,11 +78,8 @@ func (svc *service) Create(c context.Context, r *http.Request) (*dto.CreateWalle
 		return nil, err
 	}
 
-	// parse key_id(format: Key#Stellar_<address>) to get the address
-	address := strings.Split(keyId, "_")[1]
-
 	return &dto.CreateWalletRespInfo{
-		Address: address,
+		Address: util.GetAddressFromCSKey(keyId),
 	}, nil
 }
 
@@ -129,6 +127,41 @@ func (svc *service) Remove(c context.Context, r *dto.RemoveWalletReqInfo) error 
 	}
 
 	return nil
+}
+
+func (svc *service) List(c context.Context, r *http.Request) (*dto.ListWalletsResponse, error) {
+	ctx, ok := c.(*gin.Context)
+	if !ok {
+		return nil, errorx.GinContextConv()
+	}
+
+	jwtOrg, _ := ctx.Get("jwt_organization")
+	jwtAccount, _ := ctx.Get("jwt_account")
+
+	user, err := svc.oauthRepo.FindUserByOrgAcn(c, &dto.ReqOrgAcn{
+		OrgName: jwtOrg.(string),
+		AcnName: jwtAccount.(string),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	keys, err := svc.csRepo.FindCSKeysByAccount(c, user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	// convert db data to response result
+	response := &dto.ListWalletsResponse{
+		Data: make([]dto.ListWalletRespInfo, len(keys)),
+	}
+	for i, key := range keys {
+		response.Data[i] = dto.ListWalletRespInfo{
+			Address: util.GetAddressFromCSKey(key.Key),
+		}
+	}
+
+	return response, nil
 }
 
 func (svc *service) addCSKey(csToken string, user *dto.RespUser) (string, error) {

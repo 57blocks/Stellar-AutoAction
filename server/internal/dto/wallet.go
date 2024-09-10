@@ -8,4 +8,12 @@ type (
 	RemoveWalletReqInfo struct {
 		Address string `uri:"address"`
 	}
+
+	ListWalletRespInfo struct {
+		Address string `json:"address"`
+	}
+
+	ListWalletsResponse struct {
+		Data []ListWalletRespInfo `json:"data"`
+	}
 )
