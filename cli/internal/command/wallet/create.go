@@ -35,12 +35,12 @@ func createFunc(_ *cobra.Command, _ []string) error {
 		return errorx.Internal(fmt.Sprintf("create wallet failed: %s", err.Error()))
 	}
 
-	wallet := new(config.Wallet)
-	if err := json.Unmarshal(resp.Body(), wallet); err != nil {
+	wallet := make(map[string]interface{})
+	if err := json.Unmarshal(resp.Body(), &wallet); err != nil {
 		return errorx.Internal(fmt.Sprintf("unmarshaling json response error: %s", err.Error()))
 	}
 
-	logx.Logger.Info(fmt.Sprintf("create wallet success, address is %s", wallet.Address))
+	logx.Logger.Info(fmt.Sprintf("create wallet success, address is %s", wallet["address"]))
 	logx.Logger.Info("PS: Should deposit 1 XML to the new address to activate it.")
 	return nil
 }

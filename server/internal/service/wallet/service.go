@@ -22,7 +22,7 @@ import (
 type (
 	Service interface {
 		Create(c context.Context, r *http.Request) (*dto.CreateWalletRespInfo, error)
-		Remove(c context.Context, r *http.Request) error
+		Remove(c context.Context, r *dto.RemoveWalletReqInfo) error
 	}
 	service struct {
 		oauthRepo repo.OAuth
@@ -69,18 +69,15 @@ func (svc *service) Create(c context.Context, r *http.Request) (*dto.CreateWalle
 		return nil, err
 	}
 
-	err = svc.addKeyToRole(csToken, keyId)
-	if err != nil {
+	if err = svc.addKeyToRole(csToken, keyId); err != nil {
 		return nil, err
 	}
 
-	err = svc.saveCSKey(c, user.ID, keyId)
-	if err != nil {
+	if err = svc.saveCSKey(c, user.ID, keyId); err != nil {
 		return nil, err
 	}
 
-	err = svc.saveCSKey(c, user.ID, keyId)
-	if err != nil {
+	if err = svc.saveCSKey(c, user.ID, keyId); err != nil {
 		return nil, err
 	}
 
@@ -92,7 +89,7 @@ func (svc *service) Create(c context.Context, r *http.Request) (*dto.CreateWalle
 	}, nil
 }
 
-func (svc *service) Remove(c context.Context, r *http.Request) error {
+func (svc *service) Remove(c context.Context, r *dto.RemoveWalletReqInfo) error {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return errorx.GinContextConv()
@@ -109,14 +106,13 @@ func (svc *service) Remove(c context.Context, r *http.Request) error {
 		return err
 	}
 
-	address := ctx.Param("address")
-	keyId := fmt.Sprintf("Key#Stellar_%s", address)
-	delRowCount, err := svc.csRepo.DeleteCSKey(c, keyId, user.ID)
+	keyId := fmt.Sprintf("Key#Stellar_%s", r.Address)
+	csKey, err := svc.csRepo.FindCSKey(c, keyId, user.ID)
 	if err != nil {
 		return err
 	}
-	if delRowCount == 0 {
-		return errorx.Internal(fmt.Sprintf("no existed wallet address found: %s", address))
+	if csKey == nil {
+		return errorx.Internal(fmt.Sprintf("no existed wallet address found: %s", r.Address))
 	}
 
 	csToken, err := svcCS.ServiceImpl.CubeSignerToken(c)
@@ -124,13 +120,15 @@ func (svc *service) Remove(c context.Context, r *http.Request) error {
 		return err
 	}
 
-	err = svc.deleteKeyFromRole(csToken, keyId)
-	if err != nil {
+	if err = svc.deleteKeyFromRole(csToken, keyId); err != nil {
 		return err
 	}
 
-	err = svc.deleteCSKey(csToken, keyId)
-	if err != nil {
+	if err = svc.deleteCSKey(csToken, keyId); err != nil {
+		return err
+	}
+
+	if err := svc.csRepo.DeleteCSKey(c, keyId, user.ID); err != nil {
 		return err
 	}
 
