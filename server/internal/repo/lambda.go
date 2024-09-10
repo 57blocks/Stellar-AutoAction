@@ -27,11 +27,11 @@ type (
 	}
 )
 
-var LambdaImpl Lambda
+var LambdaRepo Lambda
 
 func NewLambda() {
-	if LambdaImpl == nil {
-		LambdaImpl = &lambda{
+	if LambdaRepo == nil {
+		LambdaRepo = &lambda{
 			Instance: db.Inst,
 		}
 	}

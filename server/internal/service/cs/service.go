@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/repo"
@@ -77,7 +76,7 @@ func (svc *service) ToSign(c context.Context, req *dto.ReqToSign) (*dto.RespCSKe
 		return nil, err
 	}
 
-	forSign.Organization = config.GlobalConfig.CS.Organization
+	//forSign.Organization = config.GlobalConfig.CS.Organization
 
 	return forSign, nil
 }

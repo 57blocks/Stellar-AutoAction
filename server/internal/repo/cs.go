@@ -3,6 +3,8 @@ package repo
 import (
 	"context"
 	"errors"
+
+	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/model"
@@ -50,6 +52,8 @@ func (cs *cubeSigner) ToSign(c context.Context, userID uint64, from string) (*dt
 		}
 		return nil, errorx.Internal(err.Error())
 	}
+
+	csKey.Organization = config.GlobalConfig.CS.Organization
 
 	return csKey, nil
 }

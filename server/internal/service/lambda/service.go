@@ -50,7 +50,7 @@ func NewLambdaService() {
 		repo.NewLambda()
 
 		ServiceImpl = &service{
-			lambdaRepo: repo.LambdaImpl,
+			lambdaRepo: repo.LambdaRepo,
 			amazon:     amazonx.Conductor,
 		}
 	}
