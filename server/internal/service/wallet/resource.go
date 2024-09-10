@@ -22,7 +22,7 @@ func Create(c *gin.Context) {
 func Remove(c *gin.Context) {
 	r := c.Request
 
-	err := Conductor.Remove(c, r)
+	err := ServiceImpl.Remove(c, r)
 	if err != nil {
 		c.Error(err)
 		return

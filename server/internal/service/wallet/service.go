@@ -141,7 +141,7 @@ func (svc *service) addCSKey(csToken string, user *dto.RespUser) (string, error)
 	URL := fmt.Sprintf(
 		"%s/v0/org/%s/keys",
 		config.GlobalConfig.CS.Endpoint,
-		config.GlobalConfig.CS.Organization,
+		url.PathEscape(config.GlobalConfig.CS.Organization),
 	)
 
 	// TODO: using member to do the request for ut
@@ -174,8 +174,8 @@ func (svc *service) addKeyToRole(csToken string, keyId string) error {
 	URL := fmt.Sprintf(
 		"%s/v0/org/%s/roles/%s/add_keys",
 		config.GlobalConfig.CS.Endpoint,
-		config.GlobalConfig.CS.Organization,
-		config.GlobalConfig.CS.Role,
+		url.PathEscape(config.GlobalConfig.CS.Organization),
+		url.PathEscape(config.GlobalConfig.CS.Role),
 	)
 
 	// TODO: using member to do the request for ut
@@ -217,7 +217,7 @@ func (svc *service) deleteCSKey(csToken string, keyId string) error {
 	URL := fmt.Sprintf(
 		"%s/v0/org/%s/keys/%s",
 		config.GlobalConfig.CS.Endpoint,
-		config.GlobalConfig.CS.Organization,
+		url.PathEscape(config.GlobalConfig.CS.Organization),
 		url.PathEscape(keyId),
 	)
 
@@ -241,8 +241,8 @@ func (svc *service) deleteKeyFromRole(csToken string, keyId string) error {
 	URL := fmt.Sprintf(
 		"%s/v0/org/%s/roles/%s/keys/%s",
 		config.GlobalConfig.CS.Endpoint,
-		config.GlobalConfig.CS.Organization,
-		config.GlobalConfig.CS.Role,
+		url.PathEscape(config.GlobalConfig.CS.Organization),
+		url.PathEscape(config.GlobalConfig.CS.Role),
 		url.PathEscape(keyId),
 	)
 	logx.Logger.INFO(fmt.Sprintf("delete cube signer key from role URL: %s", URL))

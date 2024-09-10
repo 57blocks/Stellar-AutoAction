@@ -38,8 +38,7 @@ Flags:
 func removeFunc(_ *cobra.Command, args []string) error {
 	walletAddress := args[0]
 	logx.Logger.Info(fmt.Sprintf("Removing wallet with address: %s\n", walletAddress))
-	err := supplierRemove(walletAddress)
-	if err != nil {
+	if err := supplierRemove(walletAddress); err != nil {
 		return errorx.Internal(fmt.Sprintf("remove wallet failed: %s", err.Error()))
 	}
 
