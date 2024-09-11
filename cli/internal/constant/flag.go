@@ -24,9 +24,9 @@ const (
 	FlagRate FlagName = "rate"
 )
 
-// FlagEnv Flags for Wallet verify command
+// FlagPayload Flags for Lambda invoke command
 const (
-	FlagEnv FlagName = "env"
+	FlagPayload FlagName = "payload"
 )
 
 func (f FlagName) ValStr() string {
