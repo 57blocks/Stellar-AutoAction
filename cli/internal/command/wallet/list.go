@@ -32,7 +32,7 @@ func init() {
 func listFunc(_ *cobra.Command, _ []string) error {
 	resp, err := supplierList()
 	if err != nil {
-		return errorx.Internal(fmt.Sprintf("list wallet failed: %s", err.Error()))
+		return err
 	}
 
 	var respData map[string]interface{}

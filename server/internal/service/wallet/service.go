@@ -3,7 +3,6 @@ package wallet
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"net/url"
 
 	"github.com/57blocks/auto-action/server/internal/config"
@@ -21,9 +20,9 @@ import (
 
 type (
 	Service interface {
-		Create(c context.Context, r *http.Request) (*dto.CreateWalletRespInfo, error)
+		Create(c context.Context) (*dto.CreateWalletRespInfo, error)
 		Remove(c context.Context, r *dto.RemoveWalletReqInfo) error
-		List(c context.Context, r *http.Request) (*dto.ListWalletsResponse, error)
+		List(c context.Context) (*dto.ListWalletsResponse, error)
 	}
 	service struct {
 		oauthRepo repo.OAuth
@@ -43,7 +42,7 @@ func NewWalletService() {
 	}
 }
 
-func (svc *service) Create(c context.Context, r *http.Request) (*dto.CreateWalletRespInfo, error) {
+func (svc *service) Create(c context.Context) (*dto.CreateWalletRespInfo, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errorx.GinContextConv()
@@ -129,7 +128,7 @@ func (svc *service) Remove(c context.Context, r *dto.RemoveWalletReqInfo) error 
 	return nil
 }
 
-func (svc *service) List(c context.Context, r *http.Request) (*dto.ListWalletsResponse, error) {
+func (svc *service) List(c context.Context) (*dto.ListWalletsResponse, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errorx.GinContextConv()
