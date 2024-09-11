@@ -31,5 +31,5 @@ endpoint = "CS_ENDPOINT"
 organization = "CS_ORGANIZATION"
 role = "CS_ROLE"
 
-[limit]
-wallet_address = "LIMIT_WALLET_ADDRESS"
+[wallet]
+max = "WALLET_MAX"

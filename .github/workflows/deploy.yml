@@ -98,7 +98,7 @@ jobs:
             CS_ENDPOINT=${{ vars.CS_ENDPOINT }}
             CS_ORGANIZATION=${{ secrets.CS_ORGANIZATION }}
             CS_ROLE=${{ secrets.CS_ROLE }}
-            LIMIT_WALLET_ADDRESS=${{ vars.LIMIT_WALLET_ADDRESS}}
+            WALLET_MAX=${{ vars.WALLET_MAX}}
 
       - name: Deploy to Amazon ECS task definition
         id: deploy-task-def

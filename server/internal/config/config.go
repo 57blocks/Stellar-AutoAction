@@ -24,7 +24,7 @@ type (
 		Amazon `mapstructure:"aws"`
 		RDS    `mapstructure:"rds"`
 		CS     `mapstructure:"cs"`
-		Limit  `mapstructure:"limit"`
+		Wallet `mapstructure:"wallet"`
 	}
 
 	Bound struct {
@@ -69,9 +69,9 @@ type (
 		Role         string `mapstructure:"role"`
 	}
 
-	Limit struct {
-		_             struct{}
-		WalletAddress string `mapstructure:"wallet_address"`
+	Wallet struct {
+		_   struct{}
+		Max int `mapstructure:"max"`
 	}
 )
 
