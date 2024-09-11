@@ -1,7 +1,6 @@
 package dto
 
 import (
-	"io"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -103,8 +102,14 @@ type (
 // Register related
 type (
 	ReqRegister struct {
+		_          struct{}
+		Expression string
+		Files      []*ReqFile
+	}
+	ReqFile struct {
 		_     struct{}
-		Files []io.Reader `json:"files"`
+		Name  string
+		Bytes []byte
 	}
 
 	RespRegister struct {

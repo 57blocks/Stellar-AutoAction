@@ -8,6 +8,7 @@ on:
       - "server/**"
     branches:
       - staging
+  workflow_dispatch:
 
 permissions:
   id-token: write

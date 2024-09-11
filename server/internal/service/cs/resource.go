@@ -16,12 +16,14 @@ func ToSign(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(req); err != nil {
 		c.Error(errorx.BadRequest(err.Error()))
+		c.Abort()
 		return
 	}
 
 	respToSign, err := ServiceImpl.ToSign(c, req)
 	if err != nil {
 		c.Error(err)
+		c.Abort()
 		return
 	}
 

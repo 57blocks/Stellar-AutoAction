@@ -16,12 +16,14 @@ func Login(c *gin.Context) {
 
 	if err := c.BindJSON(req); err != nil {
 		c.Error(errorx.BadRequest(err.Error()))
+		c.Abort()
 		return
 	}
 
 	resp, err := ServiceImpl.Login(c, *req)
 	if err != nil {
 		c.Error(err)
+		c.Abort()
 		return
 	}
 
@@ -33,12 +35,14 @@ func Logout(c *gin.Context) {
 
 	if err := c.BindJSON(req); err != nil {
 		c.Error(errorx.BadRequest(err.Error()))
+		c.Abort()
 		return
 	}
 
 	resp, err := ServiceImpl.Logout(c, *req)
 	if err != nil {
 		c.Error(err)
+		c.Abort()
 		return
 	}
 
@@ -50,12 +54,14 @@ func Refresh(c *gin.Context) {
 
 	if err := c.BindJSON(req); err != nil {
 		c.Error(errorx.BadRequest(err.Error()))
+		c.Abort()
 		return
 	}
 
 	resp, err := ServiceImpl.Refresh(c, *req)
 	if err != nil {
 		c.Error(err)
+		c.Abort()
 		return
 	}
 

@@ -86,6 +86,10 @@ For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-t
 }
 
 func registerFunc(_ *cobra.Command, args []string) error {
+	if err := util.ValidateZipFiles(args); err != nil {
+		return err
+	}
+
 	response, err := supplierRegister(args)
 	if err != nil {
 		return err

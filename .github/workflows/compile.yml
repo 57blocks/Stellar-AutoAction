@@ -6,6 +6,7 @@ on:
       - "cli/**"
     tags:
       - "*"
+  workflow_dispatch:
 
 jobs:
   compile:

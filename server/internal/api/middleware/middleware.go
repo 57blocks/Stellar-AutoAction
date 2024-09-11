@@ -6,6 +6,7 @@ import (
 
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/service/cs"
+	"github.com/57blocks/auto-action/server/internal/third-party/eslint"
 	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 
@@ -115,5 +116,27 @@ func PostHandleErr() gin.HandlerFunc {
 		// unrecognized error
 		c.JSON(http.StatusInternalServerError, &struct{ Error interface{} }{Error: e})
 		return
+	}
+}
+
+func RegisterESLintCheck() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if err := c.Request.ParseMultipartForm(10 << 20); err != nil {
+			c.Error(errorx.BadRequest(err.Error()))
+			c.Abort()
+			return
+		}
+
+		for _, fileHeader := range c.Request.MultipartForm.File {
+			for _, header := range fileHeader {
+				if err := eslint.Check(header); err != nil {
+					c.Error(errorx.BadRequest(err.Error()))
+					c.Abort()
+					return
+				}
+			}
+		}
+
+		c.Next()
 	}
 }
