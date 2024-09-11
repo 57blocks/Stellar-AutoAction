@@ -3,6 +3,8 @@ package cs
 import (
 	"context"
 	"fmt"
+	"github.com/57blocks/auto-action/server/internal/config"
+	"github.com/spf13/viper"
 	"testing"
 
 	"github.com/57blocks/auto-action/server/internal/dto"
@@ -20,6 +22,15 @@ func TestToSignSuccess(t *testing.T) {
 	mockCSRepo := repo.NewMockCubeSigner(ctrl)
 
 	ctx := context.TODO()
+
+	viper.Set("CS.Organization", "MockOrganization")
+	viper.Set("CS.Role", "MockRole")
+
+	cfg := new(config.Configuration)
+	cfg.CS.Organization = viper.GetString("CS.Organization")
+	cfg.CS.Role = viper.GetString("CS.Role")
+
+	config.GlobalConfig = cfg
 
 	userID := uint64(1)
 	from := "from"

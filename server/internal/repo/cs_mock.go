@@ -36,6 +36,50 @@ func (m *MockCubeSigner) EXPECT() *MockCubeSignerMockRecorder {
 	return m.recorder
 }
 
+// DeleteCSKey mocks base method.
+func (m *MockCubeSigner) DeleteCSKey(c context.Context, key string, accountId uint64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteCSKey", c, key, accountId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteCSKey indicates an expected call of DeleteCSKey.
+func (mr *MockCubeSignerMockRecorder) DeleteCSKey(c, key, accountId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCSKey", reflect.TypeOf((*MockCubeSigner)(nil).DeleteCSKey), c, key, accountId)
+}
+
+// FindCSKey mocks base method.
+func (m *MockCubeSigner) FindCSKey(c context.Context, key string, accountId uint64) (*model.CubeSignerKey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindCSKey", c, key, accountId)
+	ret0, _ := ret[0].(*model.CubeSignerKey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindCSKey indicates an expected call of FindCSKey.
+func (mr *MockCubeSignerMockRecorder) FindCSKey(c, key, accountId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCSKey", reflect.TypeOf((*MockCubeSigner)(nil).FindCSKey), c, key, accountId)
+}
+
+// FindCSKeysByAccount mocks base method.
+func (m *MockCubeSigner) FindCSKeysByAccount(c context.Context, accountId uint64) ([]*model.CubeSignerKey, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindCSKeysByAccount", c, accountId)
+	ret0, _ := ret[0].([]*model.CubeSignerKey)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindCSKeysByAccount indicates an expected call of FindCSKeysByAccount.
+func (mr *MockCubeSignerMockRecorder) FindCSKeysByAccount(c, accountId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindCSKeysByAccount", reflect.TypeOf((*MockCubeSigner)(nil).FindCSKeysByAccount), c, accountId)
+}
+
 // SyncCSKey mocks base method.
 func (m *MockCubeSigner) SyncCSKey(c context.Context, key *model.CubeSignerKey) error {
 	m.ctrl.T.Helper()
