@@ -11,9 +11,7 @@ import (
 var ServiceImpl Service
 
 func Create(c *gin.Context) {
-	r := c.Request
-
-	resp, err := ServiceImpl.Create(c, r)
+	resp, err := ServiceImpl.Create(c)
 	if err != nil {
 		c.Error(err)
 		return
@@ -35,4 +33,13 @@ func Remove(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, nil)
+}
+
+func ListWallets(c *gin.Context) {
+	resp, err := ServiceImpl.List(c)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
 }

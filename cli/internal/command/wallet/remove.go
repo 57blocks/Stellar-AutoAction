@@ -43,6 +43,7 @@ func removeFunc(_ *cobra.Command, args []string) error {
 	}
 
 	logx.Logger.Info("remove wallet success")
+
 	return nil
 }
 
