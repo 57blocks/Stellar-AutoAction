@@ -22,10 +22,10 @@ import (
 
 type (
 	Service interface {
-		Create(c context.Context) (*dto.CreateWalletRespInfo, error)
-		Remove(c context.Context, r *dto.RemoveWalletReqInfo) error
-		List(c context.Context) (*dto.ListWalletsRespInfo, error)
-		Verify(c context.Context, r *dto.VerifyWalletReqInfo) (*dto.VerifyWalletRespInfo, error)
+		Create(c context.Context) (*dto.RespCreateWallet, error)
+		Remove(c context.Context, r *dto.ReqRemoveWallet) error
+		List(c context.Context) (*dto.RespListWallets, error)
+		Verify(c context.Context, r *dto.ReqVerifyWallet) (*dto.RespVerifyWallet, error)
 	}
 	service struct {
 		oauthRepo repo.OAuth
@@ -45,7 +45,7 @@ func NewWalletService() {
 	}
 }
 
-func (svc *service) Create(c context.Context) (*dto.CreateWalletRespInfo, error) {
+func (svc *service) Create(c context.Context) (*dto.RespCreateWallet, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errorx.GinContextConv()
@@ -80,12 +80,12 @@ func (svc *service) Create(c context.Context) (*dto.CreateWalletRespInfo, error)
 		return nil, err
 	}
 
-	return &dto.CreateWalletRespInfo{
+	return &dto.RespCreateWallet{
 		Address: util.GetAddressFromCSKey(keyId),
 	}, nil
 }
 
-func (svc *service) Remove(c context.Context, r *dto.RemoveWalletReqInfo) error {
+func (svc *service) Remove(c context.Context, r *dto.ReqRemoveWallet) error {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return errorx.GinContextConv()
@@ -131,7 +131,7 @@ func (svc *service) Remove(c context.Context, r *dto.RemoveWalletReqInfo) error 
 	return nil
 }
 
-func (svc *service) List(c context.Context) (*dto.ListWalletsRespInfo, error) {
+func (svc *service) List(c context.Context) (*dto.RespListWallets, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errorx.GinContextConv()
@@ -154,11 +154,11 @@ func (svc *service) List(c context.Context) (*dto.ListWalletsRespInfo, error) {
 	}
 
 	// convert db data to response result
-	response := &dto.ListWalletsRespInfo{
-		Data: make([]dto.ListWalletRespInfo, len(keys)),
+	response := &dto.RespListWallets{
+		Data: make([]dto.RespListWallet, len(keys)),
 	}
 	for i, key := range keys {
-		response.Data[i] = dto.ListWalletRespInfo{
+		response.Data[i] = dto.RespListWallet{
 			Address: util.GetAddressFromCSKey(key.Key),
 		}
 	}
@@ -166,7 +166,7 @@ func (svc *service) List(c context.Context) (*dto.ListWalletsRespInfo, error) {
 	return response, nil
 }
 
-func (svc *service) Verify(c context.Context, r *dto.VerifyWalletReqInfo) (*dto.VerifyWalletRespInfo, error) {
+func (svc *service) Verify(c context.Context, r *dto.ReqVerifyWallet) (*dto.RespVerifyWallet, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errorx.GinContextConv()
@@ -194,19 +194,19 @@ func (svc *service) Verify(c context.Context, r *dto.VerifyWalletReqInfo) (*dto.
 	}
 
 	horizon := horizonclient.DefaultTestNetClient
-	if config.GlobalConfig.Bound.Name == constant.StellarNetworkType.MainNet {
+	if config.GlobalConfig.Bound.Name == string(constant.StellarNetworkTypeTestNet) {
 		horizon = horizonclient.DefaultPublicNetClient
 	}
 	_, err = horizon.AccountDetail(horizonclient.AccountRequest{AccountID: r.Address})
 	if err != nil {
 		logx.Logger.ERROR(fmt.Sprintf("verify wallet address %s occurred error: %s", r.Address, err.Error()))
-		return &dto.VerifyWalletRespInfo{
+		return &dto.RespVerifyWallet{
 			Address: r.Address,
 			IsValid: false,
 		}, nil
 	}
 
-	return &dto.VerifyWalletRespInfo{
+	return &dto.RespVerifyWallet{
 		Address: r.Address,
 		IsValid: true,
 	}, nil
@@ -220,7 +220,7 @@ func (svc *service) addCSKey(csToken string, user *dto.RespUser) (string, error)
 	)
 
 	// TODO: using member to do the request for ut
-	var keyResp dto.AddCsKeyResponse
+	var keyResp dto.RespAddCsKey
 	resp, err := restyx.Client.R().
 		SetHeader("Authorization", csToken).
 		SetHeader("Content-Type", "application/json").

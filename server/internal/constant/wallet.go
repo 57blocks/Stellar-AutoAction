@@ -1,11 +1,8 @@
 package constant
 
-type StellarNetworkTypeEnum struct {
-	TestNet string
-	MainNet string
-}
+type StellarNetworkType string
 
-var StellarNetworkType = StellarNetworkTypeEnum{
-	TestNet: "Horizon-Testnet",
-	MainNet: "Horizon",
-}
+const (
+	StellarNetworkTypeTestNet StellarNetworkType = "testnet"
+	StellarNetworkTypeMainNet StellarNetworkType = "mainnet"
+)

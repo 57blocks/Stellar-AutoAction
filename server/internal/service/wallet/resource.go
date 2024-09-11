@@ -23,7 +23,7 @@ func Create(c *gin.Context) {
 }
 
 func Remove(c *gin.Context) {
-	req := new(dto.RemoveWalletReqInfo)
+	req := new(dto.ReqRemoveWallet)
 
 	if err := c.BindUri(req); err != nil {
 		c.Error(errorx.BadRequest(err.Error()))
@@ -53,7 +53,7 @@ func ListWallets(c *gin.Context) {
 }
 
 func Verify(c *gin.Context) {
-	req := new(dto.VerifyWalletReqInfo)
+	req := new(dto.ReqVerifyWallet)
 
 	if err := c.BindUri(req); err != nil {
 		c.Error(errorx.BadRequest(err.Error()))
