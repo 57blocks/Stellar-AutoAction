@@ -3,14 +3,14 @@ package cs
 import (
 	"context"
 	"fmt"
-	"github.com/57blocks/auto-action/server/internal/config"
-	"github.com/spf13/viper"
 	"testing"
 
+	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/repo"
 
 	"github.com/golang/mock/gomock"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 )
 
