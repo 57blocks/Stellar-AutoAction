@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/57blocks/auto-action/cli/internal/config"
-	"github.com/57blocks/auto-action/cli/internal/constant"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
@@ -22,8 +20,7 @@ var verify = &cobra.Command{
 	Long: `
 Description:	
   Verify whether a Stellar wallet address under a user is valid.
-  You can verify addresses on both the Stellar mainnet and testnet
-  by setting the env flag to specify the mainnet or testnet.
+  You can verify addresses on the Stellar blockchain.
 
 Note:
   - If no funds have been transferred to the wallet address after its creation, the wallet address is considered invalid.
@@ -42,17 +39,6 @@ Usage:
 
 Flags:
 {{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}`)
-
-	flagEnv := constant.FlagEnv.ValStr()
-	verify.Flags().StringP(
-		flagEnv,
-		"e",
-		config.Vp.GetString(flagEnv),
-		`
-	The environment of the wallet address. The value should be one of the following:
-	- testnet (default)
-	- mainnet
-	`)
 }
 
 func verifyFunc(_ *cobra.Command, args []string) error {

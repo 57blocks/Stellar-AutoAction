@@ -24,11 +24,6 @@ const (
 	FlagRate FlagName = "rate"
 )
 
-// FlagPayload Flags for Lambda invoke command
-const (
-	FlagPayload FlagName = "payload"
-)
-
 // FlagEnv Flags for Wallet verify command
 const (
 	FlagEnv FlagName = "env"
