@@ -194,7 +194,7 @@ func (svc *service) Verify(c context.Context, r *dto.VerifyWalletReqInfo) (*dto.
 	}
 
 	horizon := horizonclient.DefaultTestNetClient
-	if r.Env == constant.StellarNetworkType.MainNet {
+	if config.GlobalConfig.Bound.Name == constant.StellarNetworkType.MainNet {
 		horizon = horizonclient.DefaultPublicNetClient
 	}
 	_, err = horizon.AccountDetail(horizonclient.AccountRequest{AccountID: r.Address})

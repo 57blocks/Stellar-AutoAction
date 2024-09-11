@@ -5,13 +5,12 @@ import (
 	"fmt"
 
 	"github.com/57blocks/auto-action/cli/internal/config"
-	"github.com/57blocks/auto-action/cli/internal/constant"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
-	"github.com/go-resty/resty/v2"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/spf13/cobra"
 )
 
@@ -36,30 +35,13 @@ Usage:
 
 Flags:
 {{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}`)
-
-	flagEnv := constant.FlagEnv.ValStr()
-	verify.Flags().StringP(
-		flagEnv,
-		"e",
-		config.Vp.GetString(flagEnv),
-		`
-The environment of the wallet address. 
-The value should be one of the following:
-- testnet (default)
-- mainnet
-`)
 }
 
 func verifyFunc(_ *cobra.Command, args []string) error {
 	walletAddress := args[0]
-	env := config.Vp.GetString(constant.FlagEnv.ValStr())
-	if env == "" {
-		env = "testnet"
-	}
-
 	logx.Logger.Info(fmt.Sprintf("Verifying wallet with address: %s\n", walletAddress))
 
-	resp, err := supplierVerify(walletAddress, env)
+	resp, err := supplierVerify(walletAddress)
 	if err != nil {
 		return err
 	}
@@ -72,12 +54,12 @@ func verifyFunc(_ *cobra.Command, args []string) error {
 	if wallet["is_valid"] == true {
 		isValid = "valid"
 	}
-	logx.Logger.Info(fmt.Sprintf("The wallet adderss %s in %s is %s", walletAddress, env, isValid))
+	logx.Logger.Info(fmt.Sprintf("The wallet adderss %s is %s", walletAddress, isValid))
 
 	return nil
 }
 
-func supplierVerify(walletAddress string, env string) (*resty.Response, error) {
+func supplierVerify(walletAddress string) (*resty.Response, error) {
 	token, err := config.Token()
 	if err != nil {
 		return nil, err
@@ -90,9 +72,6 @@ func supplierVerify(walletAddress string, env string) (*resty.Response, error) {
 		SetHeaders(map[string]string{
 			"Content-Type":  "application/json",
 			"Authorization": token,
-		}).
-		SetBody(map[string]string{
-			"env": env,
 		}).
 		Post(URL)
 	if err != nil {

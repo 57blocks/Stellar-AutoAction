@@ -60,16 +60,6 @@ func Verify(c *gin.Context) {
 		return
 	}
 
-	if err := c.ShouldBindJSON(req); err != nil {
-		c.Error(errorx.BadRequest(err.Error()))
-		return
-	}
-
-	if req.Env == "" {
-		c.Error(errorx.BadRequest("env should not be empty"))
-		return
-	}
-
 	resp, err := ServiceImpl.Verify(c, req)
 	if err != nil {
 		c.Error(err)

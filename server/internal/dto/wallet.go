@@ -19,7 +19,6 @@ type (
 
 	VerifyWalletReqInfo struct {
 		Address string `uri:"address"`
-		Env     string `json:"env"`
 	}
 
 	VerifyWalletRespInfo struct {

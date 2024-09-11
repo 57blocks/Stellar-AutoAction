@@ -6,6 +6,6 @@ type StellarNetworkTypeEnum struct {
 }
 
 var StellarNetworkType = StellarNetworkTypeEnum{
-	TestNet: "testnet",
-	MainNet: "mainnet",
+	TestNet: "Horizon-Testnet",
+	MainNet: "Horizon",
 }
