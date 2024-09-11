@@ -24,6 +24,7 @@ type (
 		Amazon `mapstructure:"aws"`
 		RDS    `mapstructure:"rds"`
 		CS     `mapstructure:"cs"`
+		Limit  `mapstructure:"limit"`
 	}
 
 	Bound struct {
@@ -66,6 +67,11 @@ type (
 		Endpoint     string `mapstructure:"endpoint"`
 		Organization string `mapstructure:"organization"`
 		Role         string `mapstructure:"role"`
+	}
+
+	Limit struct {
+		_             struct{}
+		WalletAddress string `mapstructure:"wallet_address"`
 	}
 )
 

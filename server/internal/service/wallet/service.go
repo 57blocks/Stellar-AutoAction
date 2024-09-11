@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strconv"
 
 	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/dto"
@@ -57,6 +58,20 @@ func (svc *service) Create(c context.Context) (*dto.CreateWalletRespInfo, error)
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// check the limit of wallet address
+	limit, err := strconv.Atoi(config.GlobalConfig.Limit.WalletAddress)
+	if err != nil {
+		return nil, errorx.Internal(fmt.Sprintf("invalid wallet address limit: %s", config.GlobalConfig.Limit.WalletAddress))
+	}
+
+	keys, err := svc.csRepo.FindCSKeysByAccount(c, user.ID)
+	if err != nil {
+		return nil, err
+	}
+	if len(keys) >= limit {
+		return nil, errorx.Internal(fmt.Sprintf("the number of wallet address is limited to %d", limit))
 	}
 
 	csToken, err := svcCS.ServiceImpl.CubeSignerToken(c)
