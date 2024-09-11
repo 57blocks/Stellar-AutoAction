@@ -13,7 +13,7 @@ type (
 		Address string `json:"address"`
 	}
 
-	ListWalletsResponse struct {
+	ListWalletsRespInfo struct {
 		Data []ListWalletRespInfo `json:"data"`
 	}
 

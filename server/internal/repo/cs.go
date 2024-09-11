@@ -75,10 +75,15 @@ func (cs *cubeSigner) SyncCSKey(c context.Context, key *model.CubeSignerKey) err
 
 func (cs *cubeSigner) FindCSKey(c context.Context, key string, accountId uint64) (*model.CubeSignerKey, error) {
 	csKey := new(model.CubeSignerKey)
-	if err := cs.Instance.Conn(c).
+
+	err := cs.Instance.Conn(c).
 		Table(model.TabNameCSKey()).
 		Where("key = ? AND account_id = ?", key, accountId).
-		First(csKey).Error; err != nil {
+		First(csKey).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
 		return nil, errorx.Internal(err.Error())
 	}
 

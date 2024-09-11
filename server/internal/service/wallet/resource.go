@@ -54,10 +54,17 @@ func ListWallets(c *gin.Context) {
 
 func Verify(c *gin.Context) {
 	req := new(dto.VerifyWalletReqInfo)
+
+	if err := c.BindUri(req); err != nil {
+		c.Error(errorx.BadRequest(err.Error()))
+		return
+	}
+
 	if err := c.ShouldBindJSON(req); err != nil {
 		c.Error(errorx.BadRequest(err.Error()))
 		return
 	}
+
 	if req.Env == "" {
 		c.Error(errorx.BadRequest("env should not be empty"))
 		return

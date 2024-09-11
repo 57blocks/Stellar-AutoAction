@@ -24,8 +24,8 @@ type (
 	Service interface {
 		Create(c context.Context) (*dto.CreateWalletRespInfo, error)
 		Remove(c context.Context, r *dto.RemoveWalletReqInfo) error
-		List(c context.Context) (*dto.ListWalletsResponse, error)
-		Verify(c context.Context, req *dto.VerifyWalletReqInfo) (*dto.VerifyWalletRespInfo, error)
+		List(c context.Context) (*dto.ListWalletsRespInfo, error)
+		Verify(c context.Context, r *dto.VerifyWalletReqInfo) (*dto.VerifyWalletRespInfo, error)
 	}
 	service struct {
 		oauthRepo repo.OAuth
@@ -102,7 +102,8 @@ func (svc *service) Remove(c context.Context, r *dto.RemoveWalletReqInfo) error 
 		return err
 	}
 
-	keyId := fmt.Sprintf("Key#Stellar_%s", r.Address)
+	keyId := util.GetCSKeyFromAddress(r.Address)
+	logx.Logger.INFO(fmt.Sprintf("Address: %s, keyId: %s", r.Address, keyId))
 	csKey, err := svc.csRepo.FindCSKey(c, keyId, user.ID)
 	if err != nil {
 		return err
@@ -131,7 +132,7 @@ func (svc *service) Remove(c context.Context, r *dto.RemoveWalletReqInfo) error 
 	return nil
 }
 
-func (svc *service) List(c context.Context) (*dto.ListWalletsResponse, error) {
+func (svc *service) List(c context.Context) (*dto.ListWalletsRespInfo, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errorx.GinContextConv()
@@ -154,7 +155,7 @@ func (svc *service) List(c context.Context) (*dto.ListWalletsResponse, error) {
 	}
 
 	// convert db data to response result
-	response := &dto.ListWalletsResponse{
+	response := &dto.ListWalletsRespInfo{
 		Data: make([]dto.ListWalletRespInfo, len(keys)),
 	}
 	for i, key := range keys {
@@ -166,7 +167,7 @@ func (svc *service) List(c context.Context) (*dto.ListWalletsResponse, error) {
 	return response, nil
 }
 
-func (svc *service) Verify(c context.Context, req *dto.VerifyWalletReqInfo) (*dto.VerifyWalletRespInfo, error) {
+func (svc *service) Verify(c context.Context, r *dto.VerifyWalletReqInfo) (*dto.VerifyWalletRespInfo, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errorx.GinContextConv()
@@ -183,34 +184,31 @@ func (svc *service) Verify(c context.Context, req *dto.VerifyWalletReqInfo) (*dt
 		return nil, err
 	}
 
-	keyId := util.GetCSKeyFromAddress(req.Address)
+	keyId := util.GetCSKeyFromAddress(r.Address)
 	// check key is existed in the database
 	csKey, err := svc.csRepo.FindCSKey(c, keyId, user.ID)
 	if err != nil {
 		return nil, err
 	}
 	if csKey == nil {
-		return &dto.VerifyWalletRespInfo{
-			Address: req.Address,
-			IsValid: false,
-		}, nil
+		return nil, errorx.Internal(fmt.Sprintf("no existed wallet address found: %s", r.Address))
 	}
 
 	horizon := horizonclient.DefaultTestNetClient
-	if req.Env == constant.StellarNetworkType.MainNet {
+	if r.Env == constant.StellarNetworkType.MainNet {
 		horizon = horizonclient.DefaultPublicNetClient
 	}
-	_, err = horizon.AccountDetail(horizonclient.AccountRequest{AccountID: req.Address})
+	_, err = horizon.AccountDetail(horizonclient.AccountRequest{AccountID: r.Address})
 	if err != nil {
-		logx.Logger.ERROR(fmt.Sprintf("verify wallet address %s occurred error: %s", req.Address, err.Error()))
+		logx.Logger.ERROR(fmt.Sprintf("verify wallet address %s occurred error: %s", r.Address, err.Error()))
 		return &dto.VerifyWalletRespInfo{
-			Address: req.Address,
+			Address: r.Address,
 			IsValid: false,
 		}, nil
 	}
 
 	return &dto.VerifyWalletRespInfo{
-		Address: req.Address,
+		Address: r.Address,
 		IsValid: true,
 	}, nil
 }
@@ -323,7 +321,7 @@ func (svc *service) deleteKeyFromRole(csToken string, keyId string) error {
 		url.PathEscape(config.GlobalConfig.CS.Role),
 		url.PathEscape(keyId),
 	)
-	logx.Logger.INFO(fmt.Sprintf("delete cube signer key from role URL: %s", URL))
+
 	resp, err := restyx.Client.R().
 		SetHeader("Authorization", csToken).
 		SetHeader("Content-Type", "application/json").

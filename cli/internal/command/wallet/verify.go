@@ -61,15 +61,15 @@ func verifyFunc(_ *cobra.Command, args []string) error {
 
 	resp, err := supplierVerify(walletAddress, env)
 	if err != nil {
-		return errorx.Internal(fmt.Sprintf("verify wallet failed: %s", err.Error()))
+		return err
 	}
 
-	wallet := new(config.Wallet)
-	if err := json.Unmarshal(resp.Body(), wallet); err != nil {
+	wallet := make(map[string]interface{})
+	if err := json.Unmarshal(resp.Body(), &wallet); err != nil {
 		return errorx.Internal(fmt.Sprintf("unmarshaling json response error: %s", err.Error()))
 	}
 	isValid := "invalid"
-	if wallet.IsValid {
+	if wallet["is_valid"] == true {
 		isValid = "valid"
 	}
 	logx.Logger.Info(fmt.Sprintf("The wallet adderss %s in %s is %s", walletAddress, env, isValid))
