@@ -29,6 +29,11 @@ const (
 	FlagPayload FlagName = "payload"
 )
 
+// FlagEnv Flags for Wallet verify command
+const (
+	FlagEnv FlagName = "env"
+)
+
 func (f FlagName) ValStr() string {
 	return string(f)
 }

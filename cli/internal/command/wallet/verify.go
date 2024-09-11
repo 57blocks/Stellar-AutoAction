@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/57blocks/auto-action/cli/internal/config"
+	"github.com/57blocks/auto-action/cli/internal/constant"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
@@ -20,7 +21,13 @@ var verify = &cobra.Command{
 	// TODO: add long description
 	Long: `
 Description:	
-  Verify the validity of a wallet address.
+  Verify whether a Stellar wallet address under a user is valid.
+  You can verify addresses on both the Stellar mainnet and testnet
+  by setting the env flag to specify the mainnet or testnet.
+
+Note:
+  - If no funds have been transferred to the wallet address after its creation, the wallet address is considered invalid.
+  - You can only verify wallet addresses under your own user account, and cannot verify addresses of other users.
 `,
 	Args: cobra.ExactArgs(1),
 	RunE: verifyFunc,
@@ -35,6 +42,17 @@ Usage:
 
 Flags:
 {{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}`)
+
+	flagEnv := constant.FlagEnv.ValStr()
+	verify.Flags().StringP(
+		flagEnv,
+		"e",
+		config.Vp.GetString(flagEnv),
+		`
+	The environment of the wallet address. The value should be one of the following:
+	- testnet (default)
+	- mainnet
+	`)
 }
 
 func verifyFunc(_ *cobra.Command, args []string) error {

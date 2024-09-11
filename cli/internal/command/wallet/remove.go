@@ -15,10 +15,16 @@ import (
 var remove = &cobra.Command{
 	Use:   "remove [wallet-address]",
 	Short: "Delete a wallet",
-	// TODO: add long description
 	Long: `
 Description:	
-  Delete an existing wallet address.
+  Delete a Stellar wallet address under a user.
+  After the wallet address is deleted,
+  it will no longer be able to sign third-party transactions,
+  but the wallet address will still exist on the Stellar blockchain.
+
+Note:
+  - If the wallet address does not exist, the delete command will return an error.
+  - You can only delete wallet addresses under your own user account.
 `,
 	Args: cobra.ExactArgs(1),
 	RunE: removeFunc,

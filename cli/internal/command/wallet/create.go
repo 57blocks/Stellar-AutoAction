@@ -17,10 +17,16 @@ import (
 var create = &cobra.Command{
 	Use:   "create",
 	Short: "Create a wallet",
-	// TODO: add long description
 	Long: `
 Description:	
-  Create a new wallet address.
+  Create a new Stellar wallet address that can be used on
+  both the mainnet and testnet of Stellar.
+  However, before using the wallet,
+  at least 1 XML must be transferred to this wallet address.
+
+Note:
+  - There is a limit to the number of wallet addresses that can be created. Currently, each user can only create 10 wallet addresses.
+  - After creating the wallet address, you need to transfer at least 10 XML to this wallet address for it to function properly.
 `,
 	RunE: createFunc,
 }
