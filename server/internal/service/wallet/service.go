@@ -103,7 +103,6 @@ func (svc *service) Remove(c context.Context, r *dto.RemoveWalletReqInfo) error 
 	}
 
 	keyId := util.GetCSKeyFromAddress(r.Address)
-	logx.Logger.INFO(fmt.Sprintf("Address: %s, keyId: %s", r.Address, keyId))
 	csKey, err := svc.csRepo.FindCSKey(c, keyId, user.ID)
 	if err != nil {
 		return err
