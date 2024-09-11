@@ -1,5 +1,6 @@
 # AutoAction
 
+
 ## AWS preparation
 Terraform
 1. VPC init with pub/pir subnets, and get the subnet ids.
@@ -10,6 +11,7 @@ Terraform
    c. Execution role for ECS task: ecr and log related.
 4. Secret Manager:
    1. Server secret key.
+
 
 ## DB migration
 There is an initial version: `000000_init`, which aims at:
@@ -25,6 +27,12 @@ There is an initial version: `000000_init`, which aims at:
    - Insert the organization in use.
    - Insert the initial user account.
    - CubeSigner related data.
+
+
+## ESLint
+
+Using `npm install eslint globals` to install ESLint for local environment.
+
 
 ## CubeSigner
 

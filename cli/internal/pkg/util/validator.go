@@ -2,9 +2,10 @@ package util
 
 import (
 	"archive/zip"
-	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 	"os"
 	"strings"
+
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 )
 
 func ValidateZipFiles(paths []string) error {
@@ -28,11 +29,13 @@ func CheckJsLambdaZipFile(path string) error {
 	if err != nil {
 		return errorx.Internal(err.Error())
 	}
+
 	// check if the file is a valid zip file
 	archive, err := zip.NewReader(zipFile, stat.Size())
 	if err != nil {
 		return errorx.Internal(err.Error() + ": " + path)
 	}
+
 	// check if the zip file contains any js files, will use ESLint to check the content at the sever side
 	validJsFiles := make([]string, 0)
 	for _, file := range archive.File {
@@ -44,7 +47,8 @@ func CheckJsLambdaZipFile(path string) error {
 		}
 	}
 	if len(validJsFiles) == 0 {
-		return errorx.BadRequest("no valid js files found in " + path)
+		return errorx.BadRequest("no valid js files found in: " + path)
 	}
+
 	return nil
 }

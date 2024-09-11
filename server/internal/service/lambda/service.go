@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"gorm.io/gorm"
-	"io"
-	"mime/multipart"
 	"net/http"
 	"strings"
 	"time"
@@ -32,7 +30,7 @@ import (
 
 type (
 	Service interface {
-		Register(c context.Context, r *http.Request) (*dto.RespRegister, error)
+		Register(c context.Context, r *dto.ReqRegister) (*dto.RespRegister, error)
 		Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error)
 		Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error)
 		Logs(c context.Context, r *dto.ReqLogs) error
@@ -61,21 +59,19 @@ type toPersistPair struct {
 	Scheduler *model.LambdaScheduler
 }
 
-func (svc *service) Register(c context.Context, r *http.Request) (*dto.RespRegister, error) {
-	fileHeaders := r.MultipartForm.File
-	expression := r.Form.Get("expression")
+func (svc *service) Register(c context.Context, r *dto.ReqRegister) (*dto.RespRegister, error) {
+	expression := r.Expression
+	files := r.Files
 
 	// db persistence
-	toPersists := make([]toPersistPair, 0, len(fileHeaders))
+	toPersists := make([]toPersistPair, 0, len(files))
 
 	// brief response
-	lsBrief := make([]dto.RespLamBrief, 0, len(fileHeaders))
-	ssBrief := make([]dto.RespSchBrief, 0, len(fileHeaders))
+	lsBrief := make([]dto.RespLamBrief, 0, len(files))
+	ssBrief := make([]dto.RespSchBrief, 0, len(files))
 
-	for _, fhs := range r.MultipartForm.File {
-		fh := fhs[0]
-
-		newLamResp, err := svc.registerLambda(c, fh)
+	for _, file := range files {
+		newLamResp, err := svc.registerLambda(c, file)
 		if err != nil {
 			return nil, err
 		}
@@ -108,8 +104,7 @@ func (svc *service) Register(c context.Context, r *http.Request) (*dto.RespRegis
 				model.WithSchArn(*newSchResp.ScheduleArn),
 			)
 		} else {
-			splits := strings.Split(fh.Filename, ".")
-			logx.Logger.INFO(fmt.Sprintf("%s: will be triggered manually", splits[0]))
+			logx.Logger.INFO(fmt.Sprintf("%s: will be triggered manually", file.Name))
 		}
 
 		toPersists = append(toPersists, tpp)
@@ -123,19 +118,8 @@ func (svc *service) Register(c context.Context, r *http.Request) (*dto.RespRegis
 	}, nil
 }
 
-func (svc *service) registerLambda(c context.Context, fh *multipart.FileHeader) (*lambda.CreateFunctionOutput, error) {
-	file, err := fh.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	fileBytes, err := io.ReadAll(file)
-	if err != nil {
-		return nil, errorx.Internal(fmt.Sprintf("failed to read file: %s, err: %s", fh.Filename, err.Error()))
-	}
-
-	splits := strings.Split(fh.Filename, ".")
+func (svc *service) registerLambda(c context.Context, file *dto.ReqFile) (*lambda.CreateFunctionOutput, error) {
+	splits := strings.Split(file.Name, ".")
 	fileName := splits[0]
 
 	// register lambda
@@ -143,7 +127,7 @@ func (svc *service) registerLambda(c context.Context, fh *multipart.FileHeader) 
 		c,
 		&lambda.CreateFunctionInput{
 			Code: &lambTypes.FunctionCode{
-				ZipFile: fileBytes,
+				ZipFile: file.Bytes,
 			},
 			FunctionName: aws.String(util.GenLambdaFuncName(c, fileName)),
 			// TODO: put into env when the infrastructure is ready, the same as `VpcConfig` below.
@@ -160,7 +144,7 @@ func (svc *service) registerLambda(c context.Context, fh *multipart.FileHeader) 
 		func(opt *lambda.Options) {},
 	)
 	if err != nil {
-		return nil, errorx.Internal(fmt.Sprintf("failed to register lambda: %s, err: %s", fh.Filename, err.Error()))
+		return nil, errorx.Internal(fmt.Sprintf("failed to register lambda: %s, err: %s", fileName, err.Error()))
 	}
 
 	return lambdaFun, nil

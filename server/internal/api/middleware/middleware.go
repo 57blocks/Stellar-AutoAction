@@ -2,11 +2,11 @@ package middleware
 
 import (
 	"errors"
-	"github.com/57blocks/auto-action/server/internal/third-party/eslint"
 	"net/http"
 
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/service/cs"
+	"github.com/57blocks/auto-action/server/internal/third-party/eslint"
 	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 
@@ -126,10 +126,10 @@ func RegisterESLintCheck() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
 		for _, fileHeader := range c.Request.MultipartForm.File {
 			for _, header := range fileHeader {
-				err := eslint.Check(header)
-				if err != nil {
+				if err := eslint.Check(header); err != nil {
 					c.Error(errorx.BadRequest(err.Error()))
 					c.Abort()
 					return

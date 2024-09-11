@@ -11,6 +11,7 @@ func IsRunningInsideDocker() bool {
 	if err == nil {
 		return true
 	}
+
 	return isRunningInsideDockerCGroup()
 }
 
@@ -19,6 +20,7 @@ func isRunningInsideDockerCGroup() bool {
 	if err != nil {
 		return false
 	}
+
 	lines := strings.Split(string(data), "\n")
 	for _, line := range lines {
 		parts := strings.Split(line, "/")
@@ -28,5 +30,6 @@ func isRunningInsideDockerCGroup() bool {
 			}
 		}
 	}
+
 	return false
 }

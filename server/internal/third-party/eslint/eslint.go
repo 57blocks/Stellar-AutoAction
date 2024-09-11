@@ -1,16 +1,18 @@
 package eslint
 
 import (
-	"errors"
 	"fmt"
-	"github.com/57blocks/auto-action/server/internal/pkg/util"
-	"github.com/google/uuid"
 	"io"
 	"mime/multipart"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/server/internal/pkg/util"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -64,14 +66,16 @@ func Check(zipFile *multipart.FileHeader) error {
 
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), JSExt) {
-			output, err := exec.Command("npx", "eslint", "-c", LintConfig, filepath.Join(tmpDir, file.Name())).CombinedOutput()
+			output, err := exec.Command("npx", "eslint", "-c", LintConfig, filepath.Join(tmpDir, file.Name())).
+				CombinedOutput()
 			if err != nil {
 				errMessage := strings.Trim(string(output), "\n")
 				if strings.Contains(errMessage, "/") {
 					fileName := strings.Split(errMessage, "/")[len(strings.Split(errMessage, "/"))-1]
-					return errors.New(fmt.Sprintf("%s/%s", zipFile.Filename, fileName))
+
+					return errorx.BadRequest(fmt.Sprintf("%s/%s\n error: %s", zipFile.Filename, fileName, errMessage))
 				} else {
-					return errors.New(errMessage)
+					return errorx.BadRequest(errMessage)
 				}
 			}
 		}

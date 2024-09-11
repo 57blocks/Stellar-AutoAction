@@ -53,3 +53,7 @@ crash.log
 
 # Local .terraform directories
 **/.terraform/*
+
+**/package.json
+**/package-lock.json
+**/node_modules/
