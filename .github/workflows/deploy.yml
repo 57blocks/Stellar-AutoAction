@@ -7,7 +7,7 @@ on:
     paths:
       - "server/**"
     branches:
-      - staging
+      - tf_sample
   workflow_dispatch:
 
 permissions:
