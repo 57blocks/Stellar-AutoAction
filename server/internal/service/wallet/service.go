@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/constant"
@@ -103,12 +104,12 @@ func (svc *service) Remove(c context.Context, r *dto.ReqRemoveWallet) error {
 	}
 
 	keyId := util.GetCSKeyFromAddress(r.Address)
-	csKey, err := svc.csRepo.FindCSKey(c, keyId, user.ID)
+	_, err = svc.csRepo.FindCSKey(c, keyId, user.ID)
 	if err != nil {
+		if strings.Contains(err.Error(), "cube signer key not found") {
+			return errorx.Internal(fmt.Sprintf("no existed wallet address found: %s", r.Address))
+		}
 		return err
-	}
-	if csKey == nil {
-		return errorx.Internal(fmt.Sprintf("no existed wallet address found: %s", r.Address))
 	}
 
 	csToken, err := svcCS.ServiceImpl.CubeSignerToken(c)
@@ -184,13 +185,12 @@ func (svc *service) Verify(c context.Context, r *dto.ReqVerifyWallet) (*dto.Resp
 	}
 
 	keyId := util.GetCSKeyFromAddress(r.Address)
-	// check key is existed in the database
-	csKey, err := svc.csRepo.FindCSKey(c, keyId, user.ID)
+	_, err = svc.csRepo.FindCSKey(c, keyId, user.ID)
 	if err != nil {
+		if strings.Contains(err.Error(), "cube signer key not found") {
+			return nil, errorx.Internal(fmt.Sprintf("no existed wallet address found: %s", r.Address))
+		}
 		return nil, err
-	}
-	if csKey == nil {
-		return nil, errorx.Internal(fmt.Sprintf("no existed wallet address found: %s", r.Address))
 	}
 
 	horizon := horizonclient.DefaultTestNetClient

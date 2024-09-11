@@ -81,7 +81,7 @@ func (cs *cubeSigner) FindCSKey(c context.Context, key string, accountId uint64)
 		Where("key = ? AND account_id = ?", key, accountId).
 		First(csKey).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
+			return nil, errorx.NotFound("cube signer key not found")
 		}
 		return nil, errorx.Internal(err.Error())
 	}
