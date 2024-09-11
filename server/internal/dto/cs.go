@@ -16,6 +16,7 @@ type (
 		AccountID    uint64        `json:"-"`
 		Account      RespUser      `json:"account,omitempty" gorm:"foreignKey:account_id;references:id"`
 		Organization string        `json:"organization"`
+		Role         string        `json:"role"`
 		Key          string        `json:"key"`
 		Scopes       model.StrList `json:"scopes" gorm:"type:text[]"`
 	}
