@@ -59,11 +59,10 @@ func (aac *AAClaims) Valid() error {
 		return err
 	}
 
-	if aac.StdJWTClaims.Audience != config.GlobalConfig.Bound.EndPoint {
+	// TODO: confirm with that using Name or EndPoint when the terraform is ready
+	if aac.StdJWTClaims.Audience != config.GlobalConfig.EndPoint {
 		return errorx.UnauthorizedWithMsg("invalid audience")
 	}
-
-	// TODO: add additional check for if the bound-endpoint match with the environment
 
 	return nil
 }
@@ -71,7 +70,7 @@ func (aac *AAClaims) Valid() error {
 type rs256 struct{}
 
 func (rs *rs256) Assign(claim jwt.Claims) (string, error) {
-	pem, err := base64.StdEncoding.DecodeString(config.GlobalConfig.JWT.PrivateKey)
+	pem, err := base64.StdEncoding.DecodeString(config.GlobalConfig.PrivateKey)
 	if err != nil {
 		return "", errorx.Internal("decode private key failed")
 	}
@@ -92,7 +91,7 @@ func (rs *rs256) Assign(claim jwt.Claims) (string, error) {
 }
 
 func (rs *rs256) Parse(raw string) (jwt.Claims, error) {
-	pem, err := base64.StdEncoding.DecodeString(config.GlobalConfig.JWT.PublicKey)
+	pem, err := base64.StdEncoding.DecodeString(config.GlobalConfig.PublicKey)
 	if err != nil {
 		return nil, errorx.Internal("decode public key failed")
 	}
