@@ -21,7 +21,7 @@ type (
 		FindByNameOrARN(c context.Context, input string) (*dto.RespInfo, error)
 		LambdaInfo(c context.Context, req *dto.ReqInfo) (*dto.RespInfo, error)
 		PersistRegResult(c context.Context, fc func(tx *gorm.DB) error, opts ...*sql.TxOptions) error
-		FindByAccountId(c context.Context, accountId uint64) ([]*dto.RespInfo, error)
+		FindByAccount(c context.Context, accountId uint64) ([]*dto.RespInfo, error)
 	}
 	lambda struct {
 		Instance *db.Instance
@@ -92,7 +92,7 @@ func (l *lambda) PersistRegResult(c context.Context, fc func(tx *gorm.DB) error,
 	return nil
 }
 
-func (l *lambda) FindByAccountId(c context.Context, accountId uint64) ([]*dto.RespInfo, error) {
+func (l *lambda) FindByAccount(c context.Context, accountId uint64) ([]*dto.RespInfo, error) {
 	resp := make([]*dto.RespInfo, 0)
 
 	if err := l.Instance.Conn(c).Table("lambda").

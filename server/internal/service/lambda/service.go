@@ -78,12 +78,12 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) (*dto.RespRe
 	}
 
 	max := config.GlobalConfig.Lambda.Max
-	ls, err := svc.lambdaRepo.FindByAccountId(c, user.ID)
+	ls, err := svc.lambdaRepo.FindByAccount(c, user.ID)
 	if err != nil {
 		return nil, err
 	}
 	if len(ls)+len(files) > max {
-		return nil, errorx.Internal(fmt.Sprintf("the number of lambdas is limited to %d", max))
+		return nil, errorx.BadRequest(fmt.Sprintf("the number of lambdas is limited to %d", max))
 	}
 
 	// db persistence
