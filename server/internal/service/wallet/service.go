@@ -63,6 +63,19 @@ func (svc *service) Create(c context.Context) (*dto.RespCreateWallet, error) {
 		return nil, err
 	}
 
+	max := config.GlobalConfig.Wallet.Max
+	if max <= 0 {
+		return nil, errorx.Internal(fmt.Sprintf("无效的钱包地址限制: %d", max))
+	}
+
+	keys, err := svc.csRepo.FindCSKeysByAccount(c, user.ID)
+	if err != nil {
+		return nil, err
+	}
+	if len(keys) >= max {
+		return nil, errorx.Internal(fmt.Sprintf("the number of wallet address is limited to %d", max))
+	}
+
 	csToken, err := svcCS.ServiceImpl.CubeSignerToken(c)
 	if err != nil {
 		return nil, err

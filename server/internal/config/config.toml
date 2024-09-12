@@ -30,3 +30,6 @@ sslmode = "disable"
 endpoint = "CS_ENDPOINT"
 organization = "CS_ORGANIZATION"
 role = "CS_ROLE"
+
+[wallet]
+max = "WALLET_MAX"
