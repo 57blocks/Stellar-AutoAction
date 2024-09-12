@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/57blocks/auto-action/server/internal/model"
 
 	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/dto"
+	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/pkg/util"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
