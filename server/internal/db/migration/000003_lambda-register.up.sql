@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS "lambda";
 
 CREATE TABLE "lambda" (
     "id" serial PRIMARY KEY,
+    "account_id" int4 NOT NULL,
     "function_name" varchar UNIQUE NOT NULL,
     "function_arn" varchar UNIQUE NOT NULL,
     "runtime" varchar NOT NULL,

@@ -17,6 +17,7 @@ type (
 	RespInfo struct {
 		_            struct{}
 		ID           uint64      `json:"-"`
+		AccountId    uint64      `json:"account_id"`
 		FunctionName string      `json:"function_name"`
 		FunctionArn  string      `json:"function_arn"`
 		Runtime      string      `json:"runtime"`
@@ -119,12 +120,13 @@ type (
 	}
 
 	RespLamBrief struct {
-		_       struct{}
-		Name    string `json:"function_name"`
-		Arn     string `json:"function_arn"`
-		Runtime string `json:"runtime"`
-		Handler string `json:"handler"`
-		Version string `json:"version"`
+		_         struct{}
+		AccountId uint64 `json:"account_id"`
+		Name      string `json:"function_name"`
+		Arn       string `json:"function_arn"`
+		Runtime   string `json:"runtime"`
+		Handler   string `json:"handler"`
+		Version   string `json:"version"`
 	}
 	RespSchBrief struct {
 		_              struct{}

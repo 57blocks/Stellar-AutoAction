@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"gorm.io/gorm"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/57blocks/auto-action/server/internal/config"
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
@@ -26,6 +26,7 @@ import (
 	scheTypes "github.com/aws/aws-sdk-go-v2/service/scheduler/types"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"gorm.io/gorm"
 )
 
 type (
@@ -38,6 +39,7 @@ type (
 	service struct {
 		lambdaRepo repo.Lambda
 		amazon     amazonx.Amazon
+		oauthRepo  repo.OAuth
 	}
 )
 
@@ -50,6 +52,7 @@ func NewLambdaService() {
 		ServiceImpl = &service{
 			lambdaRepo: repo.LambdaRepo,
 			amazon:     amazonx.Conductor,
+			oauthRepo:  repo.OAuthRepo,
 		}
 	}
 }
@@ -62,6 +65,26 @@ type toPersistPair struct {
 func (svc *service) Register(c context.Context, r *dto.ReqRegister) (*dto.RespRegister, error) {
 	expression := r.Expression
 	files := r.Files
+
+	jwtOrg, _ := c.(*gin.Context).Get("jwt_organization")
+	jwtAccount, _ := c.(*gin.Context).Get("jwt_account")
+
+	user, err := svc.oauthRepo.FindUserByOrgAcn(c, &dto.ReqOrgAcn{
+		OrgName: jwtOrg.(string),
+		AcnName: jwtAccount.(string),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	max := config.GlobalConfig.Lambda.Max
+	ls, err := svc.lambdaRepo.FindByAccount(c, user.ID)
+	if err != nil {
+		return nil, err
+	}
+	if len(ls)+len(files) > max {
+		return nil, errorx.BadRequest(fmt.Sprintf("the number of lambdas is limited to %d", max))
+	}
 
 	// db persistence
 	toPersists := make([]toPersistPair, 0, len(files))
@@ -76,11 +99,12 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) (*dto.RespRe
 			return nil, err
 		}
 		lsBrief = append(lsBrief, dto.RespLamBrief{
-			Name:    *newLamResp.FunctionName,
-			Arn:     *newLamResp.FunctionArn,
-			Runtime: string(newLamResp.Runtime),
-			Handler: *newLamResp.Handler,
-			Version: *newLamResp.Version,
+			AccountId: user.ID,
+			Name:      *newLamResp.FunctionName,
+			Arn:       *newLamResp.FunctionArn,
+			Runtime:   string(newLamResp.Runtime),
+			Handler:   *newLamResp.Handler,
+			Version:   *newLamResp.Version,
 		})
 
 		tpp := toPersistPair{
