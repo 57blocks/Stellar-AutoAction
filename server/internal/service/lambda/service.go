@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/57blocks/auto-action/server/internal/constant"
 	"net/http"
 	"strings"
 	"time"
@@ -68,8 +69,8 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) ([]*dto.Resp
 	expression := r.Expression
 	files := r.Files
 
-	jwtOrg, _ := c.(*gin.Context).Get("jwt_organization")
-	jwtAccount, _ := c.(*gin.Context).Get("jwt_account")
+	jwtOrg, _ := c.(*gin.Context).Get(constant.ClaimIss.Str())
+	jwtAccount, _ := c.(*gin.Context).Get(constant.ClaimSub.Str())
 
 	user, err := svc.oauthRepo.FindUserByOrgAcn(c, &dto.ReqOrgAcn{
 		OrgName: jwtOrg.(string),

@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/57blocks/auto-action/server/internal/model"
 
+	"github.com/57blocks/auto-action/server/internal/constant"
 	"github.com/57blocks/auto-action/server/internal/db"
+	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 
 	"github.com/gin-gonic/gin"
@@ -34,7 +35,7 @@ func (svc *service) Organization(c context.Context) (*model.Organization, error)
 		return nil, errorx.GinContextConv()
 	}
 
-	jwtOrg, _ := ctx.Get("jwt_organization")
+	jwtOrg, _ := ctx.Get(constant.ClaimIss.Str())
 
 	org := new(model.Organization)
 	if err := db.Inst.Conn(c).Table(org.TableName()).
