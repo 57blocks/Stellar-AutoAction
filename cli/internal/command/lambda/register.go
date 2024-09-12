@@ -30,14 +30,18 @@ Note:
   - The name of the handler must be: **handler**. 
   - Manually, if no flags puts in, which means the handler/handlers 
 	will be triggered by invoke command manually.
-  - By corn. 
-  - By rate, only three units supported: minutes, hours, days.
-  	For example: rate(1 minutes).
-  - By at, only one-time execution, for a specific time in the future.
-  	For example: at(yyyy-mm-ddThh:mm:ss).
-  - At most one expression flag could be set.
-  - Only cron/rate/at would create an Event Bridge Scheduler to invoke 
-	the lambda function.
+  - Payload, using -p/--payload to set the payload, if it's required.
+    The payload is a well-formed JSON string, and also, be valid/usable
+    in the handler/handlers.
+  - Trigger:
+	- By corn. 
+	- By rate, only three units supported: minutes, hours, days.
+      For example: rate(1 minutes).
+	- By at, one-time execution, under a specific time in the future.
+      For example: at(yyyy-mm-ddThh:mm:ss).
+	- At most one expression flag could be set.
+	- Expression flags: at/cron/rate would create an Event Bridge
+      Scheduler to invoke lambda function, together with the payload.
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		a := cmd.Flags().Changed(constant.FlagAt.ValStr())
@@ -57,31 +61,39 @@ Note:
 func init() {
 	lambdaGroup.AddCommand(register)
 
-	flagCron := constant.FlagCron.ValStr()
+	fCron := constant.FlagCron.ValStr()
 	register.Flags().StringP(
-		flagCron,
+		fCron,
 		"c",
-		config.Vp.GetString(flagCron),
+		config.Vp.GetString(fCron),
 		`The cron execution expression for the Event Bridge Scheduler.
 For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#cron-based
 `)
 
-	flagRate := constant.FlagRate.ValStr()
+	fRate := constant.FlagRate.ValStr()
 	register.Flags().StringP(
-		flagRate,
+		fRate,
 		"r",
-		config.Vp.GetString(flagRate),
+		config.Vp.GetString(fRate),
 		`The rate execution expression for the Event Bridge Scheduler.
 For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#rate-based
 `)
 
-	flagAt := constant.FlagAt.ValStr()
+	fAt := constant.FlagAt.ValStr()
 	register.Flags().StringP(
-		flagAt,
+		fAt,
 		"a",
-		config.Vp.GetString(flagAt),
+		config.Vp.GetString(fAt),
 		`The one-time execution expression for the Event Bridge Scheduler.
 For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#one-time
+`)
+
+	fPayload := constant.FlagPayload.ValStr()
+	register.Flags().StringP(
+		fPayload,
+		"p",
+		config.Vp.GetString(fPayload),
+		`The payload for the lambda function execution.
 `)
 }
 
@@ -128,22 +140,31 @@ func supplierRegister(args []string) (*resty.Response, error) {
 		SetFiles(argMap)
 
 	// flags handling
-	flagMap := make(map[string]string, 1)
-	flagKeys := []string{constant.FlagAt.ValStr(), constant.FlagCron.ValStr(), constant.FlagRate.ValStr()}
-	for _, key := range flagKeys {
-		if value := strings.TrimSpace(config.Vp.GetString(key)); value != "" {
-			flagMap["expression"] = value
-			logx.Logger.Info("register lambda", "invoke expression", value)
+	fMap := make(map[string]string, 1)
+	fKeys := []string{constant.FlagAt.ValStr(), constant.FlagCron.ValStr(), constant.FlagRate.ValStr()}
+	for _, key := range fKeys {
+		if expVal := strings.TrimSpace(config.Vp.GetString(key)); expVal != "" {
+			fMap["expression"] = expVal
+			logx.Logger.Info("register lambda", "invoke expression", expVal)
 			break
 		}
 	}
 
-	if len(flagMap) == 0 {
-		flagMap["expression"] = ""
+	if len(fMap) == 0 {
 		logx.Logger.Info("register lambda", "invoke expression", "manually")
 	}
 
-	request = request.SetFormData(flagMap)
+	if pldVal := strings.TrimSpace(config.Vp.GetString(constant.FlagPayload.ValStr())); pldVal != "" {
+		temp := make(map[string]string, 1)
+		if err := json.Unmarshal([]byte(pldVal), &temp); err != nil {
+			return nil, errorx.BadRequest(fmt.Sprintf("invalid payload: %s", pldVal))
+		}
+
+		fMap["payload"] = pldVal
+	}
+	logx.Logger.Info("register lambda", "invoke payload", "none")
+
+	request = request.SetFormData(fMap)
 
 	response, err := request.Post(URL)
 	if err != nil {

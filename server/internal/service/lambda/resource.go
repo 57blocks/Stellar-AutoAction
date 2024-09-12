@@ -58,6 +58,7 @@ func Register(c *gin.Context) {
 
 	resp, err := ServiceImpl.Register(c, &dto.ReqRegister{
 		Expression: r.Form.Get("expression"),
+		Payload:    r.Form.Get("payload"),
 		Files:      reqFiles,
 	})
 	if err != nil {
