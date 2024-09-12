@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/57blocks/auto-action/server/internal/model"
 
 	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/dto"
@@ -43,6 +44,9 @@ func (l *lambda) FindByNameOrARN(c context.Context, input string) (*dto.RespInfo
 	lamb := new(dto.RespInfo)
 
 	if err := l.Instance.Conn(c).Table("lambda").
+		Preload("Scheduler", func(db *gorm.DB) *gorm.DB {
+			return db.Table(model.TabNameLambdaSch())
+		}).
 		Where(map[string]interface{}{
 			"function_arn": input,
 		}).

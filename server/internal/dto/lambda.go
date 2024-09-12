@@ -108,9 +108,9 @@ type (
 	}
 
 	RespRegister struct {
-		_          struct{}
-		Lambdas    []RespLamBrief `json:"lambdas"`
-		Schedulers []RespSchBrief `json:"schedulers"`
+		_         struct{}
+		Lambda    *RespLamBrief `json:"lambda"`
+		Scheduler *RespSchBrief `json:"scheduler"`
 	}
 
 	RespLamBrief struct {
@@ -125,6 +125,7 @@ type (
 	RespSchBrief struct {
 		_              struct{}
 		Arn            string `json:"schedule_arn,omitempty"`
+		Name           string `json:"schedule_name,omitempty"`
 		BoundLambdaArn string `json:"bound_lambda_arn,omitempty"`
 	}
 )

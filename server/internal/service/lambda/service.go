@@ -32,7 +32,7 @@ import (
 
 type (
 	Service interface {
-		Register(c context.Context, r *dto.ReqRegister) (*dto.RespRegister, error)
+		Register(c context.Context, r *dto.ReqRegister) ([]*dto.RespRegister, error)
 		Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error)
 		Info(c context.Context, r *dto.ReqURILambda) (*dto.RespInfo, error)
 		Logs(c context.Context, r *dto.ReqURILambda) error
@@ -59,12 +59,12 @@ func NewLambdaService() {
 	}
 }
 
-type toPersistPair struct {
+type toBePersistPair struct {
 	Lambda    *model.Lambda
 	Scheduler *model.LambdaScheduler
 }
 
-func (svc *service) Register(c context.Context, r *dto.ReqRegister) (*dto.RespRegister, error) {
+func (svc *service) Register(c context.Context, r *dto.ReqRegister) ([]*dto.RespRegister, error) {
 	expression := r.Expression
 	files := r.Files
 
@@ -79,37 +79,33 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) (*dto.RespRe
 		return nil, err
 	}
 
-	max := config.GlobalConfig.Lambda.Max
+	maxLimit := config.GlobalConfig.Lambda.Max
 	ls, err := svc.lambdaRepo.FindByAccount(c, user.ID)
 	if err != nil {
 		return nil, err
 	}
-	if len(ls)+len(files) > max {
-		return nil, errorx.BadRequest(fmt.Sprintf("the number of lambdas is limited to %d", max))
+	if len(ls)+len(files) > maxLimit {
+		return nil, errorx.BadRequest(fmt.Sprintf("the number of lambdas is limited to %d", maxLimit))
 	}
 
-	// db persistence
-	toPersists := make([]toPersistPair, 0, len(files))
-
-	// brief response
-	lsBrief := make([]dto.RespLamBrief, 0, len(files))
-	ssBrief := make([]dto.RespSchBrief, 0, len(files))
+	toBePersist := make([]toBePersistPair, 0, len(files))
+	resp := make([]*dto.RespRegister, 0, len(files))
 
 	for _, file := range files {
 		newLamResp, err := svc.registerLambda(c, file)
 		if err != nil {
 			return nil, err
 		}
-		lsBrief = append(lsBrief, dto.RespLamBrief{
-			AccountId: user.ID,
-			Name:      *newLamResp.FunctionName,
-			Arn:       *newLamResp.FunctionArn,
-			Runtime:   string(newLamResp.Runtime),
-			Handler:   *newLamResp.Handler,
-			Version:   *newLamResp.Version,
-		})
 
-		tpp := toPersistPair{
+		respItem := &dto.RespRegister{Lambda: &dto.RespLamBrief{
+			Name:    *newLamResp.FunctionName,
+			Arn:     *newLamResp.FunctionArn,
+			Runtime: string(newLamResp.Runtime),
+			Handler: *newLamResp.Handler,
+			Version: *newLamResp.Version,
+		}}
+
+		tpp := toBePersistPair{
 			Lambda: model.BuildLambda(
 				model.WithLambdaResp(newLamResp),
 				model.WithAccountID(user.ID),
@@ -122,10 +118,11 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) (*dto.RespRe
 				return nil, err
 			}
 
-			ssBrief = append(ssBrief, dto.RespSchBrief{
+			respItem.Scheduler = &dto.RespSchBrief{
 				Arn:            *newLamResp.FunctionArn,
+				Name:           *newLamResp.FunctionName,
 				BoundLambdaArn: *newSchResp.ScheduleArn,
-			})
+			}
 
 			tpp.Scheduler = model.BuildScheduler(
 				model.WithExpression(expression),
@@ -137,17 +134,15 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) (*dto.RespRe
 			logx.Logger.INFO(fmt.Sprintf("%s: will be triggered manually", file.Name))
 		}
 
-		toPersists = append(toPersists, tpp)
+		toBePersist = append(toBePersist, tpp)
+		resp = append(resp, respItem)
 	}
 
-	if err := svc.persistRegisterResults(c, toPersists); err != nil {
+	if err := svc.persistRegisterResults(c, toBePersist); err != nil {
 		return nil, err
 	}
 
-	return &dto.RespRegister{
-		Lambdas:    lsBrief,
-		Schedulers: ssBrief,
-	}, nil
+	return resp, nil
 }
 
 func (svc *service) registerLambda(c context.Context, file *dto.ReqFile) (*lambda.CreateFunctionOutput, error) {
@@ -224,7 +219,7 @@ func (svc *service) boundScheduler(
 	return newSchResp, nil
 }
 
-func (svc *service) persistRegisterResults(c context.Context, pairs []toPersistPair) error {
+func (svc *service) persistRegisterResults(c context.Context, pairs []toBePersistPair) error {
 	if err := svc.lambdaRepo.PersistRegResult(c, func(tx *gorm.DB) error {
 		for _, pair := range pairs {
 			newLambda := tx.Table("lambda").Create(pair.Lambda)
@@ -381,7 +376,6 @@ func (svc *service) Remove(c context.Context, r *dto.ReqURILambda) (*dto.RespRem
 
 	rmvLambInput := &lambda.DeleteFunctionInput{
 		FunctionName: aws.String(lamb.FunctionName),
-		Qualifier:    aws.String(lamb.Version),
 	}
 	rmvLamb, err := svc.amazon.RemoveLambda(c, rmvLambInput)
 	if err != nil {
@@ -394,7 +388,7 @@ func (svc *service) Remove(c context.Context, r *dto.ReqURILambda) (*dto.RespRem
 	))
 
 	rmvSchInput := &scheduler.DeleteScheduleInput{
-		Name: aws.String(lamb.Scheduler.ScheduleArn),
+		Name: aws.String(lamb.Scheduler.ScheduleName),
 	}
 	rmvSch, err := svc.amazon.RemoveScheduler(c, rmvSchInput)
 	if err != nil {
@@ -402,22 +396,27 @@ func (svc *service) Remove(c context.Context, r *dto.ReqURILambda) (*dto.RespRem
 	}
 	logx.Logger.INFO(fmt.Sprintf(
 		"scheduler <%s/%s> removed metadata %v",
-		lamb.Scheduler.ScheduleArn,
-		lamb.Scheduler.Expression,
+		lamb.Scheduler.ScheduleName, lamb.Scheduler.ScheduleArn,
 		rmvSch.ResultMetadata,
 	))
 
 	if err := svc.lambdaRepo.DeleteLambdaTX(
 		c,
 		func(tx *gorm.DB) error {
-			if err := tx.Table(model.TabNameLambda()).
-				Delete(&model.Lambda{FunctionArn: lamb.FunctionArn}).
+			if err := tx.
+				Where(map[string]interface{}{
+					"function_arn": lamb.FunctionArn,
+				}).
+				Delete(&model.Lambda{}).
 				Error; err != nil {
 				return errorx.Internal(fmt.Sprintf("failed to delete lambda: %s", lamb.FunctionArn))
 			}
 
-			if err := tx.Table(model.TabNameLambdaSch()).
-				Delete(&model.LambdaScheduler{LambdaID: lamb.ID}).Error; err != nil {
+			if err := tx.
+				Where(map[string]interface{}{
+					"lambda_id": lamb.ID,
+				}).
+				Delete(&model.LambdaScheduler{}).Error; err != nil {
 				return errorx.Internal(fmt.Sprintf("failed to delete scheduler: %s", lamb.Scheduler.ScheduleArn))
 			}
 
