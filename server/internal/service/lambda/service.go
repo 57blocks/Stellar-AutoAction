@@ -113,7 +113,7 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) ([]*dto.Resp
 		}
 
 		if strings.TrimSpace(expression) != "" {
-			newSchResp, err := svc.boundScheduler(c, newLamResp, expression)
+			newSchResp, err := svc.boundScheduler(c, newLamResp, expression, r.Payload)
 			if err != nil {
 				return nil, err
 			}
@@ -180,17 +180,15 @@ func (svc *service) registerLambda(c context.Context, file *dto.ReqFile) (*lambd
 func (svc *service) boundScheduler(
 	c context.Context,
 	lambdaFun *lambda.CreateFunctionOutput,
-	expression string,
+	expression string, inputPayload string,
 ) (*scheduler.CreateScheduleOutput, error) {
-	logx.Logger.DEBUG(fmt.Sprintf("scheduler expression found: %s", expression))
-
-	event, err := util.GenEventPayload(c)
+	event, err := util.GenEventPayload(c, inputPayload)
 	if err != nil {
 		return nil, err
 	}
 	eventJSON, err := json.Marshal(event)
 	if err != nil {
-		return nil, err
+		return nil, errorx.Internal(fmt.Sprintf("failed to marshal event payload to json: %s", err.Error()))
 	}
 
 	newSchResp, err := svc.amazon.BoundScheduler(c, &scheduler.CreateScheduleInput{
@@ -251,23 +249,9 @@ func (svc *service) persistRegisterResults(c context.Context, pairs []toBePersis
 func (svc *service) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error) {
 	lamb, err := svc.lambdaRepo.FindByNameOrARN(c, r.Lambda)
 
-	// generate merged payload with orgSecretKey key
-	stdPayload, err := util.GenEventPayload(c)
+	payload, err := util.GenEventPayload(c, r.Payload)
 	if err != nil {
 		return nil, err
-	}
-	payload := map[string]interface{}{
-		"organization": stdPayload.Organization,
-		"account":      stdPayload.Account,
-	}
-
-	if len([]byte(r.Payload)) > 0 {
-		var inputPayload map[string]interface{}
-		if err := json.Unmarshal([]byte(r.Payload), &inputPayload); err != nil {
-			return nil, errorx.Internal(fmt.Sprintf("failed to unmarshal input payload: %s", err.Error()))
-		}
-
-		payload = util.MergeMaps(payload, inputPayload)
 	}
 
 	payloadBytes, err := json.Marshal(payload)

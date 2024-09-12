@@ -2,9 +2,9 @@ package util
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
-	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	svcOrg "github.com/57blocks/auto-action/server/internal/service/organization"
 
@@ -20,7 +20,7 @@ func GenLambdaFuncName(c context.Context, name string) string {
 	return fmt.Sprintf("%s-%s-%s", org.Name, account, name)
 }
 
-func GenEventPayload(c context.Context) (*dto.StdEventPayload, error) {
+func GenEventPayload(c context.Context, payload string) (*map[string]interface{}, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errorx.GinContextConv()
@@ -29,8 +29,13 @@ func GenEventPayload(c context.Context) (*dto.StdEventPayload, error) {
 	jwtOrg, _ := ctx.Get("jwt_organization")
 	jwtAccount, _ := ctx.Get("jwt_account")
 
-	return &dto.StdEventPayload{
-		Organization: jwtOrg.(string),
-		Account:      jwtAccount.(string),
-	}, nil
+	inputPayload := make(map[string]interface{})
+	if len(payload) > 0 {
+		json.Unmarshal([]byte(payload), &inputPayload) // the payload is validated in CLI already
+	}
+
+	inputPayload["organization"] = jwtOrg.(string)
+	inputPayload["account"] = jwtAccount.(string)
+
+	return &inputPayload, nil
 }

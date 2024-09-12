@@ -99,6 +99,7 @@ type (
 	ReqRegister struct {
 		_          struct{}
 		Expression string
+		Payload    string
 		Files      []*ReqFile
 	}
 	ReqFile struct {
