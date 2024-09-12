@@ -2,6 +2,7 @@ package lambda
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -33,8 +34,9 @@ type (
 	Service interface {
 		Register(c context.Context, r *dto.ReqRegister) (*dto.RespRegister, error)
 		Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error)
-		Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error)
-		Logs(c context.Context, r *dto.ReqLogs) error
+		Info(c context.Context, r *dto.ReqURILambda) (*dto.RespInfo, error)
+		Logs(c context.Context, r *dto.ReqURILambda) error
+		Remove(c context.Context, r *dto.ReqURILambda) (*dto.RespRemove, error)
 	}
 	service struct {
 		lambdaRepo repo.Lambda
@@ -124,9 +126,12 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) (*dto.RespRe
 				Arn:            *newLamResp.FunctionArn,
 				BoundLambdaArn: *newSchResp.ScheduleArn,
 			})
+
 			tpp.Scheduler = model.BuildScheduler(
 				model.WithExpression(expression),
 				model.WithSchArn(*newSchResp.ScheduleArn),
+				// in binding the scheduler with Lambda, the scheduler name is from the name of Lambda.
+				model.WithSchName(*newLamResp.FunctionName),
 			)
 		} else {
 			logx.Logger.INFO(fmt.Sprintf("%s: will be triggered manually", file.Name))
@@ -135,7 +140,9 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) (*dto.RespRe
 		toPersists = append(toPersists, tpp)
 	}
 
-	go svc.persist(c, toPersists)
+	if err := svc.persistRegisterResults(c, toPersists); err != nil {
+		return nil, err
+	}
 
 	return &dto.RespRegister{
 		Lambdas:    lsBrief,
@@ -217,7 +224,7 @@ func (svc *service) boundScheduler(
 	return newSchResp, nil
 }
 
-func (svc *service) persist(c context.Context, pairs []toPersistPair) {
+func (svc *service) persistRegisterResults(c context.Context, pairs []toPersistPair) error {
 	if err := svc.lambdaRepo.PersistRegResult(c, func(tx *gorm.DB) error {
 		for _, pair := range pairs {
 			newLambda := tx.Table("lambda").Create(pair.Lambda)
@@ -239,8 +246,11 @@ func (svc *service) persist(c context.Context, pairs []toPersistPair) {
 
 		return nil
 	}); err != nil {
-		logx.Logger.ERROR("failed to persist lambda related data", map[string]interface{}{"error": err.Error()})
+		logx.Logger.ERROR("failed to persistRegisterResults lambda related data", map[string]interface{}{"error": err.Error()})
+		return errorx.Internal(err.Error())
 	}
+
+	return nil
 }
 
 func (svc *service) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error) {
@@ -283,7 +293,7 @@ func (svc *service) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke
 	return dto.BuildRespInvoke(dto.WithInvokeResp(invokeOutput)), nil
 }
 
-func (svc *service) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, error) {
+func (svc *service) Info(c context.Context, r *dto.ReqURILambda) (*dto.RespInfo, error) {
 	info, err := svc.lambdaRepo.LambdaInfo(c, r)
 	if err != nil {
 		return nil, err
@@ -292,7 +302,7 @@ func (svc *service) Info(c context.Context, r *dto.ReqInfo) (*dto.RespInfo, erro
 	return info, nil
 }
 
-func (svc *service) Logs(c context.Context, req *dto.ReqLogs) error {
+func (svc *service) Logs(c context.Context, req *dto.ReqURILambda) error {
 	// websocket
 	ctx, ok := c.(*gin.Context)
 	if !ok {
@@ -361,4 +371,72 @@ func (svc *service) Logs(c context.Context, req *dto.ReqLogs) error {
 			time.Sleep(30 * time.Second)
 		}
 	}
+}
+
+func (svc *service) Remove(c context.Context, r *dto.ReqURILambda) (*dto.RespRemove, error) {
+	lamb, err := svc.lambdaRepo.FindByNameOrARN(c, r.Lambda)
+	if err != nil {
+		return nil, err
+	}
+
+	rmvLambInput := &lambda.DeleteFunctionInput{
+		FunctionName: aws.String(lamb.FunctionName),
+		Qualifier:    aws.String(lamb.Version),
+	}
+	rmvLamb, err := svc.amazon.RemoveLambda(c, rmvLambInput)
+	if err != nil {
+		return nil, err
+	}
+	logx.Logger.INFO(fmt.Sprintf(
+		"lambda <%s/%s> removed\nmetadata: %v",
+		lamb.FunctionName, lamb.FunctionArn,
+		rmvLamb.ResultMetadata,
+	))
+
+	rmvSchInput := &scheduler.DeleteScheduleInput{
+		Name: aws.String(lamb.Scheduler.ScheduleArn),
+	}
+	rmvSch, err := svc.amazon.RemoveScheduler(c, rmvSchInput)
+	if err != nil {
+		return nil, err
+	}
+	logx.Logger.INFO(fmt.Sprintf(
+		"scheduler <%s/%s> removed metadata %v",
+		lamb.Scheduler.ScheduleArn,
+		lamb.Scheduler.Expression,
+		rmvSch.ResultMetadata,
+	))
+
+	if err := svc.lambdaRepo.DeleteLambdaTX(
+		c,
+		func(tx *gorm.DB) error {
+			if err := tx.Table(model.TabNameLambda()).
+				Delete(&model.Lambda{FunctionArn: lamb.FunctionArn}).
+				Error; err != nil {
+				return errorx.Internal(fmt.Sprintf("failed to delete lambda: %s", lamb.FunctionArn))
+			}
+
+			if err := tx.Table(model.TabNameLambdaSch()).
+				Delete(&model.LambdaScheduler{LambdaID: lamb.ID}).Error; err != nil {
+				return errorx.Internal(fmt.Sprintf("failed to delete scheduler: %s", lamb.Scheduler.ScheduleArn))
+			}
+
+			return nil
+		},
+		&sql.TxOptions{
+			Isolation: sql.LevelSerializable,
+		},
+	); err != nil {
+		return nil, err
+	}
+
+	return &dto.RespRemove{
+		Lambdas: dto.RespLamBrief{
+			Name: lamb.FunctionName,
+			Arn:  lamb.FunctionArn,
+		},
+		Scheduler: dto.RespSchBrief{
+			Arn: lamb.Scheduler.ScheduleArn,
+		},
+	}, nil
 }

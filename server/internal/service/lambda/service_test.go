@@ -18,7 +18,7 @@ func TestInfoSuccess(t *testing.T) {
 	mockRepo := repo.NewMockLambda(ctrl)
 
 	ctx := context.TODO()
-	request := &dto.ReqInfo{Lambda: "name/arn"}
+	request := &dto.ReqURILambda{Lambda: "name/arn"}
 
 	now := time.Now().UTC()
 	sha256 := "E2X2ZXxocZcefGFb8lu2QnbYV8higgV2yYcJSwPLAA4="
@@ -36,7 +36,7 @@ func TestInfoSuccess(t *testing.T) {
 				Role:         "arn:aws:iam::123340007534:role/LambdaExecutionRole",
 				Runtime:      "nodejs20.x",
 				Version:      "$LATEST",
-				Schedulers: []dto.Scheduler{
+				Scheduler: []dto.Scheduler{
 					{
 						Expression:  "rate(1 minutes)",
 						ScheduleArn: "arn:aws:scheduler:us-east-2:123340007534:schedule/default/epic-v3n-transfer",
@@ -52,6 +52,6 @@ func TestInfoSuccess(t *testing.T) {
 	}
 	info, err := cd.Info(ctx, request)
 	assert.NoError(t, err)
-	assert.Len(t, info.Schedulers, 1)
+	assert.Len(t, info.Scheduler, 1)
 	assert.Equal(t, info.CodeSHA256, sha256)
 }

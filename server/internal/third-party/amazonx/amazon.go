@@ -23,6 +23,10 @@ type (
 			input *scheduler.CreateScheduleInput,
 			opts ...func(*scheduler.Options),
 		) (*scheduler.CreateScheduleOutput, error)
+		GetScheduler(
+			c context.Context,
+			input *scheduler.GetScheduleInput,
+		) (*scheduler.GetScheduleOutput, error)
 		InvokeLambda(
 			c context.Context,
 			input *lambda.InvokeInput,
@@ -39,6 +43,14 @@ type (
 			c context.Context,
 			input *secretsmanager.GetSecretValueInput,
 		) (*secretsmanager.GetSecretValueOutput, error)
+		RemoveLambda(
+			c context.Context,
+			input *lambda.DeleteFunctionInput,
+		) (*lambda.DeleteFunctionOutput, error)
+		RemoveScheduler(
+			c context.Context,
+			input *scheduler.DeleteScheduleInput,
+		) (*scheduler.DeleteScheduleOutput, error)
 	}
 
 	amazon struct {
@@ -102,6 +114,10 @@ func (a *amazon) BoundScheduler(c context.Context, input *scheduler.CreateSchedu
 	return a.schedulerClient.CreateSchedule(c, input, opts...)
 }
 
+func (a *amazon) GetScheduler(c context.Context, input *scheduler.GetScheduleInput) (*scheduler.GetScheduleOutput, error) {
+	return a.schedulerClient.GetSchedule(c, input)
+}
+
 func (a *amazon) InvokeLambda(c context.Context, input *lambda.InvokeInput) (*lambda.InvokeOutput, error) {
 	return a.lambdaClient.Invoke(c, input)
 }
@@ -125,4 +141,18 @@ func (a *amazon) GetSecretValue(
 	input *secretsmanager.GetSecretValueInput,
 ) (*secretsmanager.GetSecretValueOutput, error) {
 	return a.secretManagerClient.GetSecretValue(c, input)
+}
+
+func (a *amazon) RemoveLambda(
+	c context.Context,
+	input *lambda.DeleteFunctionInput,
+) (*lambda.DeleteFunctionOutput, error) {
+	return a.lambdaClient.DeleteFunction(c, input)
+}
+
+func (a *amazon) RemoveScheduler(
+	c context.Context,
+	input *scheduler.DeleteScheduleInput,
+) (*scheduler.DeleteScheduleOutput, error) {
+	return a.schedulerClient.DeleteSchedule(c, input)
 }

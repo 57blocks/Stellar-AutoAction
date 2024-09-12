@@ -30,6 +30,7 @@ DROP TABLE IF EXISTS "lambda_scheduler";
 CREATE TABLE "lambda_scheduler" (
     "id" serial PRIMARY KEY,
     "lambda_id" int4 NOT NULL,
+    "schedule_name" varchar UNIQUE NOT NULL,
     "schedule_arn" varchar UNIQUE NOT NULL,
     "expression" varchar NOT NULL,
     "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL,

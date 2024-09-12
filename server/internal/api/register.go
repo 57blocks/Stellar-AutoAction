@@ -26,6 +26,7 @@ func RegisterHandlers(g *gin.Engine) http.Handler {
 		lambdaGroup.POST("/:lambda", lambda.Invoke)
 		lambdaGroup.GET("/:lambda/info", lambda.Info)
 		lambdaGroup.GET("/:lambda/logs", lambda.Logs)
+		lambdaGroup.DELETE("/:lambda", lambda.Remove)
 	}
 
 	walletGroup := g.Group("/wallet", middleware.Authentication(), middleware.Authorization())

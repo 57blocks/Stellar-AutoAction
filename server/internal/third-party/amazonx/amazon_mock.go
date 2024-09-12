@@ -88,6 +88,21 @@ func (mr *MockAmazonMockRecorder) GetLogEvents(c, input interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLogEvents", reflect.TypeOf((*MockAmazon)(nil).GetLogEvents), c, input)
 }
 
+// GetScheduler mocks base method.
+func (m *MockAmazon) GetScheduler(c context.Context, input *scheduler.GetScheduleInput) (*scheduler.GetScheduleOutput, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetScheduler", c, input)
+	ret0, _ := ret[0].(*scheduler.GetScheduleOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetScheduler indicates an expected call of GetScheduler.
+func (mr *MockAmazonMockRecorder) GetScheduler(c, input interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScheduler", reflect.TypeOf((*MockAmazon)(nil).GetScheduler), c, input)
+}
+
 // GetSecretValue mocks base method.
 func (m *MockAmazon) GetSecretValue(c context.Context, input *secretsmanager.GetSecretValueInput) (*secretsmanager.GetSecretValueOutput, error) {
 	m.ctrl.T.Helper()
@@ -136,4 +151,34 @@ func (mr *MockAmazonMockRecorder) RegisterLambda(c, input interface{}, opts ...i
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{c, input}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RegisterLambda", reflect.TypeOf((*MockAmazon)(nil).RegisterLambda), varargs...)
+}
+
+// RemoveLambda mocks base method.
+func (m *MockAmazon) RemoveLambda(c context.Context, input *lambda.DeleteFunctionInput) (*lambda.DeleteFunctionOutput, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveLambda", c, input)
+	ret0, _ := ret[0].(*lambda.DeleteFunctionOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RemoveLambda indicates an expected call of RemoveLambda.
+func (mr *MockAmazonMockRecorder) RemoveLambda(c, input interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveLambda", reflect.TypeOf((*MockAmazon)(nil).RemoveLambda), c, input)
+}
+
+// RemoveScheduler mocks base method.
+func (m *MockAmazon) RemoveScheduler(c context.Context, input *scheduler.DeleteScheduleInput) (*scheduler.DeleteScheduleOutput, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveScheduler", c, input)
+	ret0, _ := ret[0].(*scheduler.DeleteScheduleOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RemoveScheduler indicates an expected call of RemoveScheduler.
+func (mr *MockAmazonMockRecorder) RemoveScheduler(c, input interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveScheduler", reflect.TypeOf((*MockAmazon)(nil).RemoveScheduler), c, input)
 }

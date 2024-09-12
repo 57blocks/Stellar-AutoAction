@@ -37,6 +37,40 @@ func (m *MockLambda) EXPECT() *MockLambdaMockRecorder {
 	return m.recorder
 }
 
+// DeleteLambdaTX mocks base method.
+func (m *MockLambda) DeleteLambdaTX(c context.Context, f func(*gorm.DB) error, opts ...*sql.TxOptions) error {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{c, f}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteLambdaTX", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteLambdaTX indicates an expected call of DeleteLambdaTX.
+func (mr *MockLambdaMockRecorder) DeleteLambdaTX(c, f interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{c, f}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteLambdaTX", reflect.TypeOf((*MockLambda)(nil).DeleteLambdaTX), varargs...)
+}
+
+// FindByAccount mocks base method.
+func (m *MockLambda) FindByAccount(c context.Context, accountId uint64) ([]*dto.RespInfo, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByAccount", c, accountId)
+	ret0, _ := ret[0].([]*dto.RespInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByAccount indicates an expected call of FindByAccount.
+func (mr *MockLambdaMockRecorder) FindByAccount(c, accountId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByAccount", reflect.TypeOf((*MockLambda)(nil).FindByAccount), c, accountId)
+}
+
 // FindByNameOrARN mocks base method.
 func (m *MockLambda) FindByNameOrARN(c context.Context, input string) (*dto.RespInfo, error) {
 	m.ctrl.T.Helper()
@@ -53,7 +87,7 @@ func (mr *MockLambdaMockRecorder) FindByNameOrARN(c, input interface{}) *gomock.
 }
 
 // LambdaInfo mocks base method.
-func (m *MockLambda) LambdaInfo(c context.Context, req *dto.ReqInfo) (*dto.RespInfo, error) {
+func (m *MockLambda) LambdaInfo(c context.Context, req *dto.ReqURILambda) (*dto.RespInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "LambdaInfo", c, req)
 	ret0, _ := ret[0].(*dto.RespInfo)
