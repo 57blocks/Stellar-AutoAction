@@ -67,11 +67,11 @@ func logoutFunc(_ *cobra.Command, _ []string) error {
 	}
 
 	if _, err := supplierLogout(credential.Access); err != nil {
-		return err
+		logx.Logger.Warn(fmt.Sprintf("reported waring while logging out: %s", err.Error()))
 	}
 
 	if err := config.RemoveCredential(cfg.Credential); err != nil {
-		return err
+		logx.Logger.Warn(fmt.Sprintf("reported waring while cleaning up: %s", err.Error()))
 	}
 
 	if err := config.ResetConfigCredential(); err != nil {
