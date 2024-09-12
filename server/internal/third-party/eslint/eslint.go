@@ -16,16 +16,17 @@ import (
 )
 
 const (
-	LintDir    = "internal/third-party/eslint"
-	LintConfig = LintDir + "/eslint.config.mjs"
-	JSExt      = ".js"
+	LintDir       = "internal/third-party/eslint"
+	LintConfig    = LintDir + "/eslint.config.mjs"
+	JSExt         = ".js"
+	PathSeparator = string(os.PathSeparator)
 )
 
 func init() {
 	if util.IsRunningInsideDocker() {
 		output, err := exec.Command("npx", "eslint", "-c", LintConfig, ".").CombinedOutput()
 		if err != nil {
-			panic(fmt.Sprintf("failed to init eslint: %s\n%s", string(output), err.Error()))
+			panic(fmt.Sprintf("failed to init eslint: %s%s%s", string(output), PathSeparator, err.Error()))
 		}
 	}
 }
@@ -63,23 +64,35 @@ func Check(zipFile *multipart.FileHeader) error {
 	if err != nil {
 		return err
 	}
-
+	lineBreak := newLine()
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), JSExt) {
 			output, err := exec.Command("npx", "eslint", "-c", LintConfig, filepath.Join(tmpDir, file.Name())).
 				CombinedOutput()
-			if err != nil {
-				errMessage := strings.Trim(string(output), "\n")
-				if strings.Contains(errMessage, "/") {
-					fileName := strings.Split(errMessage, "/")[len(strings.Split(errMessage, "/"))-1]
-
-					return errorx.BadRequest(fmt.Sprintf("%s/%s\n error: %s", zipFile.Filename, fileName, errMessage))
-				} else {
-					return errorx.BadRequest(errMessage)
+			errMessage := strings.TrimSpace(string(output))
+			if err == nil {
+				continue
+			}
+			if !strings.Contains(errMessage, lineBreak) {
+				return errorx.BadRequest(errMessage)
+			}
+			messageLines := strings.Split(errMessage, lineBreak)
+			for _, line := range messageLines {
+				if strings.Contains(line, ":") && strings.Contains(line, "error") {
+					errMessage = strings.TrimSpace(line)
+					break
 				}
 			}
+			return errorx.BadRequest(fmt.Sprintf("%s/%s: %s", zipFile.Filename, file.Name(), errMessage))
 		}
 	}
 
 	return nil
+}
+
+func newLine() string {
+	if os.PathSeparator == '/' {
+		return "\n"
+	}
+	return "\r\n"
 }
