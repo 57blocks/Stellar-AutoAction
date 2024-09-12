@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/57blocks/auto-action/server/internal/model"
 
 	"github.com/57blocks/auto-action/server/internal/db"
 	"github.com/57blocks/auto-action/server/internal/dto"
@@ -19,9 +20,10 @@ import (
 type (
 	Lambda interface {
 		FindByNameOrARN(c context.Context, input string) (*dto.RespInfo, error)
-		LambdaInfo(c context.Context, req *dto.ReqInfo) (*dto.RespInfo, error)
+		LambdaInfo(c context.Context, req *dto.ReqURILambda) (*dto.RespInfo, error)
 		PersistRegResult(c context.Context, fc func(tx *gorm.DB) error, opts ...*sql.TxOptions) error
 		FindByAccount(c context.Context, accountId uint64) ([]*dto.RespInfo, error)
+		DeleteLambdaTX(c context.Context, f func(tx *gorm.DB) error, opts ...*sql.TxOptions) error
 	}
 	lambda struct {
 		Instance *db.Instance
@@ -42,6 +44,9 @@ func (l *lambda) FindByNameOrARN(c context.Context, input string) (*dto.RespInfo
 	lamb := new(dto.RespInfo)
 
 	if err := l.Instance.Conn(c).Table("lambda").
+		Preload("Scheduler", func(db *gorm.DB) *gorm.DB {
+			return db.Table(model.TabNameLambdaSch())
+		}).
 		Where(map[string]interface{}{
 			"function_arn": input,
 		}).
@@ -59,11 +64,11 @@ func (l *lambda) FindByNameOrARN(c context.Context, input string) (*dto.RespInfo
 	return lamb, nil
 }
 
-func (l *lambda) LambdaInfo(c context.Context, req *dto.ReqInfo) (*dto.RespInfo, error) {
+func (l *lambda) LambdaInfo(c context.Context, req *dto.ReqURILambda) (*dto.RespInfo, error) {
 	resp := new(dto.RespInfo)
 
 	if err := l.Instance.Conn(c).Table("lambda").
-		Preload("Schedulers", func(db *gorm.DB) *gorm.DB {
+		Preload("Scheduler", func(db *gorm.DB) *gorm.DB {
 			return db.Table("lambda_scheduler")
 		}).
 		Where(map[string]interface{}{
@@ -98,9 +103,20 @@ func (l *lambda) FindByAccount(c context.Context, accountId uint64) ([]*dto.Resp
 	if err := l.Instance.Conn(c).Table("lambda").
 		Where(map[string]interface{}{
 			"account_id": accountId,
-		}).Find(&resp).Error; err != nil {
+		}).
+		Find(&resp).Error; err != nil {
 		return nil, errorx.Internal(fmt.Sprintf("failed to query lambda by account, err: %s", err.Error()))
 	}
 
 	return resp, nil
+}
+
+func (l *lambda) DeleteLambdaTX(c context.Context, f func(tx *gorm.DB) error, opts ...*sql.TxOptions) error {
+	if err := l.Instance.Conn(c).Transaction(f, opts...); err != nil {
+		logx.Logger.ERROR(fmt.Sprintf("remove lambda and its scheduler failed, err: %s", err.Error()))
+
+		return errorx.Internal("failed to remove lambda")
+	}
+
+	return nil
 }

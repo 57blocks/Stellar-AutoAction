@@ -95,7 +95,7 @@ func Invoke(c *gin.Context) {
 }
 
 func Info(c *gin.Context) {
-	req := new(dto.ReqInfo)
+	req := new(dto.ReqURILambda)
 
 	if err := c.BindUri(req); err != nil {
 		c.Error(errorx.BadRequest(err.Error()))
@@ -114,7 +114,7 @@ func Info(c *gin.Context) {
 }
 
 func Logs(c *gin.Context) {
-	req := new(dto.ReqLogs)
+	req := new(dto.ReqURILambda)
 
 	if err := c.BindUri(req); err != nil {
 		c.Error(errorx.BadRequest(err.Error()))
@@ -127,4 +127,23 @@ func Logs(c *gin.Context) {
 		c.Abort()
 		return
 	}
+}
+
+func Remove(c *gin.Context) {
+	req := new(dto.ReqURILambda)
+
+	if err := c.BindUri(req); err != nil {
+		c.Error(errorx.BadRequest(err.Error()))
+		c.Abort()
+		return
+	}
+
+	resp, err := ServiceImpl.Remove(c, req)
+	if err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }

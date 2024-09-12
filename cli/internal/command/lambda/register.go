@@ -95,7 +95,7 @@ func registerFunc(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	var respData map[string]interface{}
+	var respData []map[string]interface{}
 	if err := json.Unmarshal(response.Body(), &respData); err != nil {
 		logx.Logger.Error("Error unmarshalling JSON", "error", err.Error())
 		return errorx.Internal(err.Error())

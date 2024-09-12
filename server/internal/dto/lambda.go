@@ -8,34 +8,35 @@ import (
 	"github.com/aws/smithy-go/middleware"
 )
 
+type ReqURILambda struct {
+	Lambda string `uri:"lambda" json:"lambda"`
+}
+
 // Info
 type (
-	ReqInfo struct {
-		Lambda string `uri:"lambda" json:"lambda"`
-	}
-
 	RespInfo struct {
 		_            struct{}
-		ID           uint64      `json:"-"`
-		AccountId    uint64      `json:"account_id"`
-		FunctionName string      `json:"function_name"`
-		FunctionArn  string      `json:"function_arn"`
-		Runtime      string      `json:"runtime"`
-		Role         string      `json:"role"`
-		Handler      string      `json:"handler"`
-		Description  string      `json:"description"`
-		CodeSHA256   string      `json:"code_sha256"`
-		Version      string      `json:"version"`
-		RevisionID   string      `json:"revision_id"`
-		Schedulers   []Scheduler `json:"schedulers" gorm:"foreignKey:lambda_id"`
-		CreatedAt    *time.Time  `json:"created_at"`
-		UpdatedAt    *time.Time  `json:"updated_at"`
+		ID           uint64     `json:"-"`
+		AccountId    uint64     `json:"account_id"`
+		FunctionName string     `json:"function_name"`
+		FunctionArn  string     `json:"function_arn"`
+		Runtime      string     `json:"runtime"`
+		Role         string     `json:"role"`
+		Handler      string     `json:"handler"`
+		Description  string     `json:"description"`
+		CodeSHA256   string     `json:"code_sha256"`
+		Version      string     `json:"version"`
+		RevisionID   string     `json:"revision_id"`
+		Scheduler    Scheduler  `json:"scheduler" gorm:"foreignKey:lambda_id"`
+		CreatedAt    *time.Time `json:"created_at"`
+		UpdatedAt    *time.Time `json:"updated_at"`
 	}
 
 	Scheduler struct {
-		LambdaID    uint64 `json:"-"`
-		ScheduleArn string `json:"schedule_arn"`
-		Expression  string `json:"expression"`
+		LambdaID     uint64 `json:"-"`
+		ScheduleName string `json:"schedule_name,omitempty"`
+		ScheduleArn  string `json:"schedule_arn,omitempty"`
+		Expression   string `json:"expression,omitempty"`
 	}
 )
 
@@ -93,13 +94,6 @@ func WithInvokeResp(resp *lambda.InvokeOutput) RespInvokeOpt {
 	}
 }
 
-// ReqLogs cloudwatch event logs
-type (
-	ReqLogs struct {
-		Lambda string `uri:"lambda"`
-	}
-)
-
 // Register related
 type (
 	ReqRegister struct {
@@ -114,24 +108,25 @@ type (
 	}
 
 	RespRegister struct {
-		_          struct{}
-		Lambdas    []RespLamBrief `json:"lambdas"`
-		Schedulers []RespSchBrief `json:"schedulers"`
+		_         struct{}
+		Lambda    *RespLamBrief `json:"lambda"`
+		Scheduler *RespSchBrief `json:"scheduler"`
 	}
 
 	RespLamBrief struct {
 		_         struct{}
-		AccountId uint64 `json:"account_id"`
-		Name      string `json:"function_name"`
-		Arn       string `json:"function_arn"`
-		Runtime   string `json:"runtime"`
-		Handler   string `json:"handler"`
-		Version   string `json:"version"`
+		AccountId uint64 `json:"account_id,omitempty"`
+		Name      string `json:"function_name,omitempty"`
+		Arn       string `json:"function_arn,omitempty"`
+		Runtime   string `json:"runtime,omitempty"`
+		Handler   string `json:"handler,omitempty"`
+		Version   string `json:"version,omitempty"`
 	}
 	RespSchBrief struct {
 		_              struct{}
-		Arn            string `json:"schedule_arn"`
-		BoundLambdaArn string `json:"bound_lambda_arn"`
+		Arn            string `json:"schedule_arn,omitempty"`
+		Name           string `json:"schedule_name,omitempty"`
+		BoundLambdaArn string `json:"bound_lambda_arn,omitempty"`
 	}
 )
 
@@ -142,3 +137,10 @@ type (
 		Account      string `json:"account"`
 	}
 )
+
+// RespRemove related
+type RespRemove struct {
+	_         struct{}
+	Lambdas   RespLamBrief `json:"lambda"`
+	Scheduler RespSchBrief `json:"scheduler"`
+}

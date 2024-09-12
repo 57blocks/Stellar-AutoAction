@@ -39,9 +39,10 @@ func TabNameLambdaAbbr() string {
 // LambdaScheduler model
 type LambdaScheduler struct {
 	ICU
-	LambdaID    uint64 `json:"lambda_id"`
-	ScheduleArn string `json:"schedule_arn"`
-	Expression  string `json:"expression"`
+	LambdaID     uint64 `json:"lambda_id"`
+	ScheduleName string `json:"schedule_name"`
+	ScheduleArn  string `json:"schedule_arn"`
+	Expression   string `json:"expression"`
 }
 
 func (l *LambdaScheduler) TableName() string {
@@ -123,8 +124,8 @@ func WithExpression(expression string) SchedulerOpt {
 	}
 }
 
-func WithLambdaID(lamIDRef uint64) SchedulerOpt {
+func WithSchName(name string) SchedulerOpt {
 	return func(l *LambdaScheduler) {
-		l.LambdaID = lamIDRef
+		l.ScheduleName = name
 	}
 }
