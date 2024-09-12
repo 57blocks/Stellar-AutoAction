@@ -151,7 +151,6 @@ func supplierRegister(args []string) (*resty.Response, error) {
 	}
 
 	if len(fMap) == 0 {
-		fMap["expression"] = ""
 		logx.Logger.Info("register lambda", "invoke expression", "manually")
 	}
 
@@ -163,6 +162,7 @@ func supplierRegister(args []string) (*resty.Response, error) {
 
 		fMap["payload"] = pldVal
 	}
+	logx.Logger.Info("register lambda", "invoke payload", "none")
 
 	request = request.SetFormData(fMap)
 
