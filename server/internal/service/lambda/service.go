@@ -110,6 +110,7 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) (*dto.RespRe
 		tpp := toPersistPair{
 			Lambda: model.BuildLambda(
 				model.WithLambdaResp(newLamResp),
+				model.WithAccountID(user.ID),
 			),
 		}
 
