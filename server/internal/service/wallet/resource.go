@@ -23,7 +23,7 @@ func Create(c *gin.Context) {
 }
 
 func Remove(c *gin.Context) {
-	req := new(dto.RemoveWalletReqInfo)
+	req := new(dto.ReqRemoveWallet)
 
 	if err := c.BindUri(req); err != nil {
 		c.Error(errorx.BadRequest(err.Error()))
@@ -49,5 +49,21 @@ func ListWallets(c *gin.Context) {
 		return
 	}
 
+	c.JSON(http.StatusOK, resp)
+}
+
+func Verify(c *gin.Context) {
+	req := new(dto.ReqVerifyWallet)
+
+	if err := c.BindUri(req); err != nil {
+		c.Error(errorx.BadRequest(err.Error()))
+		return
+	}
+
+	resp, err := ServiceImpl.Verify(c, req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
 	c.JSON(http.StatusOK, resp)
 }

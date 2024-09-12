@@ -32,7 +32,7 @@ func init() {
 func createFunc(_ *cobra.Command, _ []string) error {
 	resp, err := supplierCreate()
 	if err != nil {
-		return errorx.Internal(fmt.Sprintf("create wallet failed: %s", err.Error()))
+		return err
 	}
 
 	wallet := make(map[string]interface{})
@@ -42,6 +42,7 @@ func createFunc(_ *cobra.Command, _ []string) error {
 
 	logx.Logger.Info(fmt.Sprintf("create wallet success, address is %s", wallet["address"]))
 	logx.Logger.Info("PS: Should deposit 1 XML to the new address to activate it.")
+
 	return nil
 }
 

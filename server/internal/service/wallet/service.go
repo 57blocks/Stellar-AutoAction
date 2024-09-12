@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/57blocks/auto-action/server/internal/config"
+	"github.com/57blocks/auto-action/server/internal/constant"
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
@@ -16,13 +18,15 @@ import (
 	"github.com/57blocks/auto-action/server/internal/third-party/restyx"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stellar/go/clients/horizonclient"
 )
 
 type (
 	Service interface {
-		Create(c context.Context) (*dto.CreateWalletRespInfo, error)
-		Remove(c context.Context, r *dto.RemoveWalletReqInfo) error
-		List(c context.Context) (*dto.ListWalletsResponse, error)
+		Create(c context.Context) (*dto.RespCreateWallet, error)
+		Remove(c context.Context, r *dto.ReqRemoveWallet) error
+		List(c context.Context) (*dto.RespListWallets, error)
+		Verify(c context.Context, r *dto.ReqVerifyWallet) (*dto.RespVerifyWallet, error)
 	}
 	service struct {
 		oauthRepo repo.OAuth
@@ -42,7 +46,7 @@ func NewWalletService() {
 	}
 }
 
-func (svc *service) Create(c context.Context) (*dto.CreateWalletRespInfo, error) {
+func (svc *service) Create(c context.Context) (*dto.RespCreateWallet, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errorx.GinContextConv()
@@ -77,12 +81,12 @@ func (svc *service) Create(c context.Context) (*dto.CreateWalletRespInfo, error)
 		return nil, err
 	}
 
-	return &dto.CreateWalletRespInfo{
+	return &dto.RespCreateWallet{
 		Address: util.GetAddressFromCSKey(keyId),
 	}, nil
 }
 
-func (svc *service) Remove(c context.Context, r *dto.RemoveWalletReqInfo) error {
+func (svc *service) Remove(c context.Context, r *dto.ReqRemoveWallet) error {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return errorx.GinContextConv()
@@ -99,13 +103,13 @@ func (svc *service) Remove(c context.Context, r *dto.RemoveWalletReqInfo) error 
 		return err
 	}
 
-	keyId := fmt.Sprintf("Key#Stellar_%s", r.Address)
-	csKey, err := svc.csRepo.FindCSKey(c, keyId, user.ID)
+	keyId := util.GetCSKeyFromAddress(r.Address)
+	_, err = svc.csRepo.FindCSKey(c, keyId, user.ID)
 	if err != nil {
+		if strings.Contains(err.Error(), "cube signer key not found") {
+			return errorx.Internal(fmt.Sprintf("no existed wallet address found: %s", r.Address))
+		}
 		return err
-	}
-	if csKey == nil {
-		return errorx.Internal(fmt.Sprintf("no existed wallet address found: %s", r.Address))
 	}
 
 	csToken, err := svcCS.ServiceImpl.CubeSignerToken(c)
@@ -128,7 +132,7 @@ func (svc *service) Remove(c context.Context, r *dto.RemoveWalletReqInfo) error 
 	return nil
 }
 
-func (svc *service) List(c context.Context) (*dto.ListWalletsResponse, error) {
+func (svc *service) List(c context.Context) (*dto.RespListWallets, error) {
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return nil, errorx.GinContextConv()
@@ -151,16 +155,61 @@ func (svc *service) List(c context.Context) (*dto.ListWalletsResponse, error) {
 	}
 
 	// convert db data to response result
-	response := &dto.ListWalletsResponse{
-		Data: make([]dto.ListWalletRespInfo, len(keys)),
+	response := &dto.RespListWallets{
+		Data: make([]dto.RespListWallet, len(keys)),
 	}
 	for i, key := range keys {
-		response.Data[i] = dto.ListWalletRespInfo{
+		response.Data[i] = dto.RespListWallet{
 			Address: util.GetAddressFromCSKey(key.Key),
 		}
 	}
 
 	return response, nil
+}
+
+func (svc *service) Verify(c context.Context, r *dto.ReqVerifyWallet) (*dto.RespVerifyWallet, error) {
+	ctx, ok := c.(*gin.Context)
+	if !ok {
+		return nil, errorx.GinContextConv()
+	}
+
+	jwtOrg, _ := ctx.Get("jwt_organization")
+	jwtAccount, _ := ctx.Get("jwt_account")
+
+	user, err := svc.oauthRepo.FindUserByOrgAcn(c, &dto.ReqOrgAcn{
+		OrgName: jwtOrg.(string),
+		AcnName: jwtAccount.(string),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	keyId := util.GetCSKeyFromAddress(r.Address)
+	_, err = svc.csRepo.FindCSKey(c, keyId, user.ID)
+	if err != nil {
+		if strings.Contains(err.Error(), "cube signer key not found") {
+			return nil, errorx.Internal(fmt.Sprintf("no existed wallet address found: %s", r.Address))
+		}
+		return nil, err
+	}
+
+	horizon := horizonclient.DefaultTestNetClient
+	if config.GlobalConfig.Bound.Name == string(constant.StellarNetworkTypeTestNet) {
+		horizon = horizonclient.DefaultPublicNetClient
+	}
+	_, err = horizon.AccountDetail(horizonclient.AccountRequest{AccountID: r.Address})
+	if err != nil {
+		logx.Logger.ERROR(fmt.Sprintf("verify wallet address %s occurred error: %s", r.Address, err.Error()))
+		return &dto.RespVerifyWallet{
+			Address: r.Address,
+			IsValid: false,
+		}, nil
+	}
+
+	return &dto.RespVerifyWallet{
+		Address: r.Address,
+		IsValid: true,
+	}, nil
 }
 
 func (svc *service) addCSKey(csToken string, user *dto.RespUser) (string, error) {
@@ -171,7 +220,7 @@ func (svc *service) addCSKey(csToken string, user *dto.RespUser) (string, error)
 	)
 
 	// TODO: using member to do the request for ut
-	var keyResp dto.AddCsKeyResponse
+	var keyResp dto.RespAddCsKey
 	resp, err := restyx.Client.R().
 		SetHeader("Authorization", csToken).
 		SetHeader("Content-Type", "application/json").
@@ -271,7 +320,7 @@ func (svc *service) deleteKeyFromRole(csToken string, keyId string) error {
 		url.PathEscape(config.GlobalConfig.CS.Role),
 		url.PathEscape(keyId),
 	)
-	logx.Logger.INFO(fmt.Sprintf("delete cube signer key from role URL: %s", URL))
+
 	resp, err := restyx.Client.R().
 		SetHeader("Authorization", csToken).
 		SetHeader("Content-Type", "application/json").

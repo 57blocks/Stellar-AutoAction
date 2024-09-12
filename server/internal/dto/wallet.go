@@ -1,19 +1,28 @@
 package dto
 
 type (
-	CreateWalletRespInfo struct {
+	RespCreateWallet struct {
 		Address string `json:"address"`
 	}
 
-	RemoveWalletReqInfo struct {
+	ReqRemoveWallet struct {
 		Address string `uri:"address"`
 	}
 
-	ListWalletRespInfo struct {
+	RespListWallet struct {
 		Address string `json:"address"`
 	}
 
-	ListWalletsResponse struct {
-		Data []ListWalletRespInfo `json:"data"`
+	RespListWallets struct {
+		Data []RespListWallet `json:"data"`
+	}
+
+	ReqVerifyWallet struct {
+		Address string `uri:"address"`
+	}
+
+	RespVerifyWallet struct {
+		Address string `json:"address"`
+		IsValid bool   `json:"is_valid"`
 	}
 )

@@ -1,17 +1,17 @@
 mode = "development"
 
 [bound]
-name = "NAME"
-endpoint = "ENDPOINT"
+name = "BOUND_NAME"
+endpoint = "BOUND_ENDPOINT"
 
 [log]
-level = "DEBUG"
-encoding = "json"
+level = "LOG_LEVEL"
+encoding = "LOG_ENCODING"
 
 [jwt]
-protocol = "PROTOCOL"
-private_key = "PRIVATE_KEY"
-public_key = "PUBLIC_KEy"
+protocol = "JWT_PROTOCOL"
+private_key = "JWT_PRIVATE_KEY"
+public_key = "JWT_PUBLIC_KEY"
 
 [aws]
 region = "AWS_REGION"
