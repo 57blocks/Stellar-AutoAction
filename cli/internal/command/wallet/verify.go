@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
@@ -16,7 +17,6 @@ import (
 var verify = &cobra.Command{
 	Use:   "verify [wallet-address]",
 	Short: "Verify a wallet",
-	// TODO: add long description
 	Long: `
 Description:	
   Verify whether a Stellar wallet address under a user is valid.
