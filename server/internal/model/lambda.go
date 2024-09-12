@@ -7,6 +7,7 @@ import (
 // Lambda model
 type Lambda struct {
 	ICU
+	AccountID    uint64 `json:"account_id"`
 	FunctionName string `json:"function_name"`
 	FunctionArn  string `json:"function_arn"`
 	Runtime      string `json:"runtime"`
@@ -89,6 +90,12 @@ func WithLambdaResp(resp *lambda.CreateFunctionOutput) LambdaOpt {
 		l.CodeSHA256 = *resp.CodeSha256
 		l.Version = *resp.Version
 		l.RevisionID = *resp.RevisionId
+	}
+}
+
+func WithAccountID(accountID uint64) LambdaOpt {
+	return func(l *Lambda) {
+		l.AccountID = accountID
 	}
 }
 
