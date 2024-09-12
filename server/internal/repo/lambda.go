@@ -21,6 +21,7 @@ type (
 		FindByNameOrARN(c context.Context, input string) (*dto.RespInfo, error)
 		LambdaInfo(c context.Context, req *dto.ReqInfo) (*dto.RespInfo, error)
 		PersistRegResult(c context.Context, fc func(tx *gorm.DB) error, opts ...*sql.TxOptions) error
+		FindByAccountId(c context.Context, accountId uint64) ([]*dto.RespInfo, error)
 	}
 	lambda struct {
 		Instance *db.Instance
@@ -89,4 +90,17 @@ func (l *lambda) PersistRegResult(c context.Context, fc func(tx *gorm.DB) error,
 	}
 
 	return nil
+}
+
+func (l *lambda) FindByAccountId(c context.Context, accountId uint64) ([]*dto.RespInfo, error) {
+	resp := make([]*dto.RespInfo, 0)
+
+	if err := l.Instance.Conn(c).Table("lambda").
+		Where(map[string]interface{}{
+			"account_id": accountId,
+		}).Find(&resp).Error; err != nil {
+		return nil, errorx.Internal(fmt.Sprintf("failed to query lambda by account, err: %s", err.Error()))
+	}
+
+	return resp, nil
 }

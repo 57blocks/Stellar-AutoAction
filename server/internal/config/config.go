@@ -25,6 +25,7 @@ type (
 		RDS    `mapstructure:"rds"`
 		CS     `mapstructure:"cs"`
 		Wallet `mapstructure:"wallet"`
+		Lambda `mapstructure:"lambda"`
 	}
 
 	Bound struct {
@@ -70,6 +71,11 @@ type (
 	}
 
 	Wallet struct {
+		_   struct{}
+		Max int `mapstructure:"max"`
+	}
+
+	Lambda struct {
 		_   struct{}
 		Max int `mapstructure:"max"`
 	}

@@ -63,7 +63,7 @@ func init() {
 		"c",
 		config.Vp.GetString(flagCron),
 		`The cron execution expression for the Event Bridge Scheduler.
-For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#rate-based
+For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#cron-based
 `)
 
 	flagRate := constant.FlagRate.ValStr()
@@ -72,7 +72,7 @@ For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-t
 		"r",
 		config.Vp.GetString(flagRate),
 		`The rate execution expression for the Event Bridge Scheduler.
-For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#cron-based
+For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#rate-based
 `)
 
 	flagAt := constant.FlagAt.ValStr()

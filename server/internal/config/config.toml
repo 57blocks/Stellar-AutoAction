@@ -33,3 +33,6 @@ role = "CS_ROLE"
 
 [wallet]
 max = "WALLET_MAX"
+
+[lambda]
+max = "LAMBDA_MAX"
