@@ -17,10 +17,11 @@ import (
 var list = &cobra.Command{
 	Use:   "list",
 	Short: "List wallets",
-	// TODO: add long description
 	Long: `
 Description:	
-  List all saved wallet addresses.
+  Display all wallet addresses under the user.
+  The result will be a list that shows the information of each wallet address.
+  The result will be in JSON format.
 `,
 	RunE: listFunc,
 }

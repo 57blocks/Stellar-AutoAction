@@ -17,10 +17,14 @@ import (
 var verify = &cobra.Command{
 	Use:   "verify [wallet-address]",
 	Short: "Verify a wallet",
-	// TODO: add long description
 	Long: `
 Description:	
-  Verify the validity of a wallet address.
+  Verify whether a Stellar wallet address under a user is valid.
+  You can verify addresses on the Stellar blockchain.
+
+Note:
+  - If no funds have been transferred to the wallet address after its creation, the wallet address is considered invalid.
+  - You can only verify wallet addresses under your own user account, and cannot verify addresses of other users.
 `,
 	Args: cobra.ExactArgs(1),
 	RunE: verifyFunc,
