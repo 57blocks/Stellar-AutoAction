@@ -64,10 +64,6 @@ func (svc *service) Create(c context.Context) (*dto.RespCreateWallet, error) {
 	}
 
 	max := config.GlobalConfig.Wallet.Max
-	if max <= 0 {
-		return nil, errorx.Internal(fmt.Sprintf("无效的钱包地址限制: %d", max))
-	}
-
 	keys, err := svc.csRepo.FindCSKeysByAccount(c, user.ID)
 	if err != nil {
 		return nil, err
