@@ -18,8 +18,8 @@ import (
 type (
 	Service interface {
 		Login(c context.Context, req dto.ReqLogin) (*dto.RespCredential, error)
-		Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCredential, error)
-		Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogout, error)
+		Refresh(c context.Context, raw string) (*dto.RespCredential, error)
+		Logout(c context.Context, raw string) (*dto.RespLogout, error)
 	}
 	service struct {
 		jwtx      jwtx.JWT
@@ -80,7 +80,7 @@ func (svc *service) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredent
 			Id:        refreshID,
 			IssuedAt:  now.Unix(),
 			Issuer:    req.Organization,
-			NotBefore: now.Unix(), // won't be valid until access token expires
+			NotBefore: now.Unix(),
 			//NotBefore: accessExp.Unix(), // won't be valid until access token expires
 			Subject: u.Account,
 		},
@@ -117,8 +117,8 @@ func (svc *service) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredent
 	return resp, nil
 }
 
-func (svc *service) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCredential, error) {
-	jwtClaims, err := svc.jwtx.Parse(req.Refresh)
+func (svc *service) Refresh(c context.Context, raw string) (*dto.RespCredential, error) {
+	jwtClaims, err := svc.jwtx.Parse(raw)
 	if err != nil {
 		return nil, err
 	}
@@ -168,15 +168,15 @@ func (svc *service) Refresh(c context.Context, req dto.ReqRefresh) (*dto.RespCre
 		dto.WithEnvironment(config.GlobalConfig.Name),
 		dto.WithTokenPair(jwtx.TokenPair{
 			Access:  access,
-			Refresh: req.Refresh,
+			Refresh: raw,
 		}),
 	)
 
 	return resp, nil
 }
 
-func (svc *service) Logout(c context.Context, req dto.ReqLogout) (*dto.RespLogout, error) {
-	if err := svc.oauthRepo.DeleteTokenByAccess(c, req.Token); err != nil {
+func (svc *service) Logout(c context.Context, raw string) (*dto.RespLogout, error) {
+	if err := svc.oauthRepo.DeleteTokenByAccess(c, raw); err != nil {
 		return nil, err
 	}
 

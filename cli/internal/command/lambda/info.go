@@ -39,7 +39,7 @@ func infoFunc(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	URL := util.ParseReqPath(fmt.Sprintf("%s/lambda/%s/info", config.Vp.GetString("bound_with.endpoint"), args[0]))
+	URL := util.ParseReqPath(fmt.Sprintf("%s/lambda/%s", config.Vp.GetString("bound_with.endpoint"), args[0]))
 
 	response, err := restyx.Client.R().
 		EnableTrace().

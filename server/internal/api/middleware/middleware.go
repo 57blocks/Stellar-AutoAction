@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/57blocks/auto-action/server/internal/constant"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/service/cs"
 	"github.com/57blocks/auto-action/server/internal/third-party/eslint"
@@ -15,22 +16,40 @@ import (
 
 func SecretKey() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		key := c.GetHeader("API-Key")
+		key := c.GetHeader(constant.APIKey.Str())
 		if key == "" {
 			c.Error(errorx.UnauthorizedWithMsg("missing api key"))
+			c.Abort()
 			return
 		}
 
 		apiKey, err := cs.ServiceImpl.APIKey(c)
 		if err != nil {
 			c.Error(err)
+			c.Abort()
 			return
 		}
 
 		if apiKey != key {
 			c.Error(errorx.UnauthorizedWithMsg("invalid api key"))
+			c.Abort()
 			return
 		}
+
+		c.Next()
+	}
+}
+
+func AuthHeader() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		jwtToken := c.GetHeader(constant.AuthHeader.Str())
+		if jwtToken == "" {
+			c.Error(errorx.UnauthorizedWithMsg("missing token"))
+			c.Abort()
+			return
+		}
+
+		c.Set(constant.ClaimRaw.Str(), jwtToken)
 
 		c.Next()
 	}
@@ -41,25 +60,26 @@ func Authentication() gin.HandlerFunc {
 		token := c.GetHeader("Authorization")
 		if token == "" {
 			c.Error(errorx.UnauthorizedWithMsg("missing token"))
+			c.Abort()
 			return
 		}
 
 		jwtClaims, err := jwtx.RS256.Parse(token)
 		if err != nil {
 			c.Error(err)
+			c.Abort()
 			return
 		}
 
 		claimMap, ok := jwtClaims.(*jwtx.AAClaims) // TODO: remove the type conversion after testing
 		if !ok {
 			c.Error(errorx.UnauthorizedWithMsg("invalid token"))
+			c.Abort()
 			return
 		}
 
-		c.Set("jwt_exp", claimMap.StdJWTClaims.ExpiresAt)
-		c.Set("jwt_account", claimMap.StdJWTClaims.Subject)
-		c.Set("jwt_organization", claimMap.StdJWTClaims.Issuer)
-		c.Set("jwt_environment", "Horizon") // TODO: add mapping between `Aud` and env
+		c.Set(constant.ClaimSub.Str(), claimMap.StdJWTClaims.Subject)
+		c.Set(constant.ClaimIss.Str(), claimMap.StdJWTClaims.Issuer)
 
 		logx.Logger.DEBUG("authentication success")
 
@@ -102,6 +122,7 @@ func PostHandleErr() gin.HandlerFunc {
 		c.Next()
 
 		if len(c.Errors) == 0 {
+			c.Abort()
 			return
 		}
 
@@ -110,6 +131,7 @@ func PostHandleErr() gin.HandlerFunc {
 		err := new(errorx.Errorx)
 		if errors.Is(e.Err, err) {
 			c.JSON(err.Status(), &struct{ Error interface{} }{Error: err})
+			c.Abort()
 			return
 		}
 

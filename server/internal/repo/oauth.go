@@ -44,7 +44,7 @@ func NewOAuth() {
 
 func (o *oauth) FindUserByAcn(c context.Context, acn string) (*dto.RespUser, error) {
 	u := new(dto.RespUser)
-	if err := db.Inst.Conn(c).Table(model.TabNamUser()).
+	if err := db.Inst.Conn(c).Table(model.TabNameUser()).
 		Where(map[string]interface{}{
 			"account": acn,
 		}).
@@ -61,7 +61,7 @@ func (o *oauth) FindUserByAcn(c context.Context, acn string) (*dto.RespUser, err
 
 func (o *oauth) FindUserByOrgAcn(c context.Context, req *dto.ReqOrgAcn) (*dto.RespUser, error) {
 	u := new(dto.RespUser)
-	if err := o.Instance.Conn(c).Table(model.TabNamUserAbbr()).
+	if err := o.Instance.Conn(c).Table(model.TabNameUserAbbr()).
 		Joins("LEFT JOIN organization AS o ON u.organization_id = o.id").
 		Where(map[string]interface{}{
 			"u.account": req.AcnName,
@@ -80,7 +80,7 @@ func (o *oauth) FindUserByOrgAcn(c context.Context, req *dto.ReqOrgAcn) (*dto.Re
 
 func (o *oauth) FindOrg(c context.Context, id uint64) (*dto.RespOrg, error) {
 	org := new(dto.RespOrg)
-	if err := o.Instance.Conn(c).Table(model.TabNamOrg()).
+	if err := o.Instance.Conn(c).Table(model.TabNameOrg()).
 		Where(map[string]interface{}{
 			"id": id,
 		}).
@@ -97,7 +97,7 @@ func (o *oauth) FindOrg(c context.Context, id uint64) (*dto.RespOrg, error) {
 
 func (o *oauth) FindOrgByName(c context.Context, name string) (*dto.RespOrg, error) {
 	org := new(dto.RespOrg)
-	if err := o.Instance.Conn(c).Table(model.TabNamOrg()).
+	if err := o.Instance.Conn(c).Table(model.TabNameOrg()).
 		Where(map[string]interface{}{
 			"name": name,
 		}).
@@ -146,7 +146,7 @@ func (o *oauth) SyncToken(c context.Context, token *model.Token) error {
 
 func (o *oauth) DeleteTokenByAccess(c context.Context, access string) error {
 	if err := o.Instance.Conn(c).
-		Table(model.TabNamToken()).
+		Table(model.TabNameToken()).
 		Where(map[string]interface{}{
 			"access": access,
 		}).

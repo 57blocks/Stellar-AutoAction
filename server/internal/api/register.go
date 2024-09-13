@@ -16,15 +16,16 @@ func RegisterHandlers(g *gin.Engine) http.Handler {
 	oauthGroup := g.Group("/oauth")
 	{
 		oauthGroup.POST("/login", oauth.Login)
-		oauthGroup.DELETE("/logout", oauth.Logout)
-		oauthGroup.POST("/refresh", oauth.Refresh)
+		oauthGroup.DELETE("/logout", middleware.AuthHeader(), oauth.Logout)
+		oauthGroup.POST("/refresh", middleware.AuthHeader(), oauth.Refresh)
 	}
 
 	lambdaGroup := g.Group("/lambda", middleware.Authentication(), middleware.Authorization())
 	{
 		lambdaGroup.POST("", middleware.RegisterESLintCheck(), lambda.Register)
 		lambdaGroup.POST("/:lambda", lambda.Invoke)
-		lambdaGroup.GET("/:lambda/info", lambda.Info)
+		lambdaGroup.GET("", lambda.List)
+		lambdaGroup.GET("/:lambda", lambda.Info)
 		lambdaGroup.GET("/:lambda/logs", lambda.Logs)
 		lambdaGroup.DELETE("/:lambda", lambda.Remove)
 	}

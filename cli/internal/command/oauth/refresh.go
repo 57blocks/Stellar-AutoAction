@@ -81,7 +81,10 @@ func supplierRefresh(refresh string) (*resty.Response, error) {
 
 	response, err := restyx.Client.R().
 		EnableTrace().
-		SetBody(ReqRefresh{Refresh: refresh}).
+		SetHeaders(map[string]string{
+			"Content-Type":  "application/json",
+			"Authorization": refresh,
+		}).
 		Post(URL)
 	if err != nil {
 		return nil, errorx.RestyError(err.Error())

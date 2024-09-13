@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/57blocks/auto-action/server/internal/constant"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	svcOrg "github.com/57blocks/auto-action/server/internal/service/organization"
 
@@ -15,7 +16,7 @@ func GenLambdaFuncName(c context.Context, name string) string {
 	org, _ := svcOrg.ServiceImpl.Organization(c)
 
 	ctx := c.(*gin.Context)
-	account, _ := ctx.Get("jwt_account")
+	account, _ := ctx.Get(constant.ClaimSub.Str())
 
 	return fmt.Sprintf("%s-%s-%s", org.Name, account, name)
 }
@@ -26,8 +27,8 @@ func GenEventPayload(c context.Context, payload string) (*map[string]interface{}
 		return nil, errorx.GinContextConv()
 	}
 
-	jwtOrg, _ := ctx.Get("jwt_organization")
-	jwtAccount, _ := ctx.Get("jwt_account")
+	jwtOrg, _ := ctx.Get(constant.ClaimIss.Str())
+	jwtAccount, _ := ctx.Get(constant.ClaimSub.Str())
 
 	inputPayload := make(map[string]interface{})
 	if len(payload) > 0 {

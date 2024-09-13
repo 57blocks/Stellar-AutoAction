@@ -47,7 +47,7 @@ func (cs *cubeSigner) ToSign(c context.Context, userID uint64, from string) (*dt
 			"key":        from,
 		}).
 		Preload("Account", func(db *gorm.DB) *gorm.DB {
-			return db.Table(model.TabNamUser())
+			return db.Table(model.TabNameUser())
 		}).
 		First(csKey).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

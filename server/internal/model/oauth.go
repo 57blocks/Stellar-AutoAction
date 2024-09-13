@@ -19,11 +19,11 @@ func (o *Organization) TableNameWithAbbr() string {
 	return "organization AS o"
 }
 
-func TabNamOrg() string {
+func TabNameOrg() string {
 	return (&Organization{}).TableName()
 }
 
-func TabNamOrgAbbr() string {
+func TabNameOrgAbbr() string {
 	return (&Organization{}).TableNameWithAbbr()
 }
 
@@ -44,11 +44,11 @@ func (u *User) TableNameAbbr() string {
 	return "\"user\" AS u"
 }
 
-func TabNamUser() string {
+func TabNameUser() string {
 	return (&User{}).TableName()
 }
 
-func TabNamUserAbbr() string {
+func TabNameUserAbbr() string {
 	return (&User{}).TableNameAbbr()
 }
 
@@ -71,10 +71,10 @@ func (t *Token) TableNameWithAbbr() string {
 	return "token AS t"
 }
 
-func TabNamToken() string {
+func TabNameToken() string {
 	return (&Token{}).TableName()
 }
 
-func TabNamTokenAbbr() string {
+func TabNameTokenAbbr() string {
 	return (&Token{}).TableNameWithAbbr()
 }

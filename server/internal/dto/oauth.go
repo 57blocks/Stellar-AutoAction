@@ -6,6 +6,16 @@ import (
 	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
 )
 
+// general representation
+type (
+	ReqID struct {
+		ID uint64 `json:"id"`
+	}
+	ReqName struct {
+		Name string `json:"name"`
+	}
+)
+
 // Login related dto
 type (
 	ReqLogin struct {
@@ -61,30 +71,8 @@ func WithTokenPair(tp jwtx.TokenPair) RespCredOpt {
 	}
 }
 
-// Logout related dto
-type (
-	ReqLogout struct {
-		_     struct{}
-		Token string `json:"token"`
-	}
-
-	RespLogout struct{}
-)
-
-// ReqRefresh related dto
-type ReqRefresh struct {
-	_       struct{}
-	Refresh string `json:"refresh"`
-}
-
-type (
-	ReqID struct {
-		ID uint64 `json:"id"`
-	}
-	ReqName struct {
-		Name string `json:"name"`
-	}
-)
+// RespLogout related dto
+type RespLogout struct{}
 
 // User model representations in request
 type (

@@ -67,11 +67,11 @@ func logoutFunc(_ *cobra.Command, _ []string) error {
 	}
 
 	if _, err := supplierLogout(credential.Access); err != nil {
-		return err
+		logx.Logger.Warn(fmt.Sprintf("reported waring while logging out: %s", err.Error()))
 	}
 
 	if err := config.RemoveCredential(cfg.Credential); err != nil {
-		return err
+		logx.Logger.Warn(fmt.Sprintf("reported waring while cleaning up: %s", err.Error()))
 	}
 
 	if err := config.ResetConfigCredential(); err != nil {
@@ -83,12 +83,15 @@ func logoutFunc(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func supplierLogout(token string) (*resty.Response, error) {
+func supplierLogout(access string) (*resty.Response, error) {
 	URL := util.ParseReqPath(fmt.Sprintf("%s/oauth/logout", config.Vp.GetString("bound_with.endpoint")))
 
 	response, err := restyx.Client.R().
 		EnableTrace().
-		SetBody(ReqLogout{Token: token}).
+		SetHeaders(map[string]string{
+			"Content-Type":  "application/json",
+			"Authorization": access,
+		}).
 		Delete(URL)
 	if err != nil {
 		return nil, errorx.RestyError(err.Error())

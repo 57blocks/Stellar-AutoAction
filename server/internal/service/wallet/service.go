@@ -52,8 +52,8 @@ func (svc *service) Create(c context.Context) (*dto.RespCreateWallet, error) {
 		return nil, errorx.GinContextConv()
 	}
 
-	jwtOrg, _ := ctx.Get("jwt_organization")
-	jwtAccount, _ := ctx.Get("jwt_account")
+	jwtOrg, _ := ctx.Get(constant.ClaimIss.Str())
+	jwtAccount, _ := ctx.Get(constant.ClaimSub.Str())
 
 	user, err := svc.oauthRepo.FindUserByOrgAcn(c, &dto.ReqOrgAcn{
 		OrgName: jwtOrg.(string),
@@ -105,8 +105,8 @@ func (svc *service) Remove(c context.Context, r *dto.ReqRemoveWallet) error {
 		return errorx.GinContextConv()
 	}
 
-	jwtOrg, _ := ctx.Get("jwt_organization")
-	jwtAccount, _ := ctx.Get("jwt_account")
+	jwtOrg, _ := ctx.Get(constant.ClaimIss.Str())
+	jwtAccount, _ := ctx.Get(constant.ClaimSub.Str())
 
 	user, err := svc.oauthRepo.FindUserByOrgAcn(c, &dto.ReqOrgAcn{
 		OrgName: jwtOrg.(string),
@@ -151,8 +151,8 @@ func (svc *service) List(c context.Context) (*dto.RespListWallets, error) {
 		return nil, errorx.GinContextConv()
 	}
 
-	jwtOrg, _ := ctx.Get("jwt_organization")
-	jwtAccount, _ := ctx.Get("jwt_account")
+	jwtOrg, _ := ctx.Get(constant.ClaimIss.Str())
+	jwtAccount, _ := ctx.Get(constant.ClaimSub.Str())
 
 	user, err := svc.oauthRepo.FindUserByOrgAcn(c, &dto.ReqOrgAcn{
 		OrgName: jwtOrg.(string),
@@ -186,8 +186,8 @@ func (svc *service) Verify(c context.Context, r *dto.ReqVerifyWallet) (*dto.Resp
 		return nil, errorx.GinContextConv()
 	}
 
-	jwtOrg, _ := ctx.Get("jwt_organization")
-	jwtAccount, _ := ctx.Get("jwt_account")
+	jwtOrg, _ := ctx.Get(constant.ClaimIss.Str())
+	jwtAccount, _ := ctx.Get(constant.ClaimSub.Str())
 
 	user, err := svc.oauthRepo.FindUserByOrgAcn(c, &dto.ReqOrgAcn{
 		OrgName: jwtOrg.(string),
