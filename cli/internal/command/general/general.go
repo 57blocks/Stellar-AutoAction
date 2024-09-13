@@ -9,7 +9,7 @@ import (
 // generalGroup represents the general command
 var generalGroup = &cobra.Command{
 	Use:   "general",
-	Short: "The subcommands group for General usage",
+	Short: "CLI general settings",
 }
 
 func init() {

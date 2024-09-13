@@ -9,7 +9,7 @@ import (
 // oauthGroup represents the group command
 var oauthGroup = &cobra.Command{
 	Use:   "oauth",
-	Short: "The subcommands group for OAuth usage",
+	Short: "User oauth operations",
 }
 
 func init() {
