@@ -34,7 +34,7 @@ Note:
     The payload is a well-formed JSON string, and also, be valid/usable
     in the handler/handlers.
   - Trigger:
-	- By corn. 
+	- By cron.
 	- By rate, only three units supported: minutes, hours, days.
       For example: rate(1 minutes).
 	- By at, one-time execution, under a specific time in the future.

@@ -26,7 +26,7 @@ Description:
 
 Note:
   - There is a limit to the number of wallet addresses that can be created. Currently, each user can only create 10 wallet addresses.
-  - After creating the wallet address, you need to transfer at least 10 XML to this wallet address for it to function properly.
+  - After creating the wallet address, you need to transfer at least 1 XML to this wallet address for it to function properly.
 `,
 	RunE: createFunc,
 }
