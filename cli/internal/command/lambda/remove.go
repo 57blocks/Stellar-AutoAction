@@ -3,6 +3,7 @@ package lambda
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
@@ -41,7 +42,7 @@ func removeFunc(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	URL := util.ParseReqPath(fmt.Sprintf("%s/lambda/%s", config.Vp.GetString("bound_with.endpoint"), args[0]))
+	URL := util.ParseReqPath(fmt.Sprintf("%s/lambda/%s", config.Vp.GetString("bound_with.endpoint"), url.PathEscape(args[0])))
 
 	response, err := restyx.Client.R().
 		EnableTrace().
