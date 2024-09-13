@@ -50,20 +50,12 @@ func listFunc(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	force := cmd.Flags().Lookup("full").Value.String() == "true"
-	if force {
-		fmt.Println("Force flag is set to true")
-	} else {
-		fmt.Println("Force flag is not set")
-	}
-
 	rawURL := fmt.Sprintf("%s/lambda", config.Vp.GetString("bound_with.endpoint"))
 	if cmd.Flags().Lookup("full").Changed {
 		rawURL = fmt.Sprintf("%s?full=true", rawURL)
 	}
 
 	URL := util.ParseReqPath(rawURL)
-	fmt.Println("URL:", URL)
 
 	response, err := restyx.Client.R().
 		EnableTrace().

@@ -1,13 +1,14 @@
 package lambda
 
 import (
-	"github.com/57blocks/auto-action/server/internal/constant"
-	"github.com/gin-gonic/gin"
 	"testing"
 	"time"
 
+	"github.com/57blocks/auto-action/server/internal/constant"
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/repo"
+
+	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )

@@ -2,9 +2,9 @@ package middleware
 
 import (
 	"errors"
-	"github.com/57blocks/auto-action/server/internal/constant"
 	"net/http"
 
+	"github.com/57blocks/auto-action/server/internal/constant"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/service/cs"
 	"github.com/57blocks/auto-action/server/internal/third-party/eslint"

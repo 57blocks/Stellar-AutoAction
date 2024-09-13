@@ -15,7 +15,6 @@ type ReqURILambda struct {
 // RespInList the response of listing lambdas
 type (
 	ReqList struct {
-		//Full bool `uri:"full" query:"full" json:"full"`
 		Full bool `form:"full"`
 	}
 	RespInList struct {
