@@ -4,7 +4,7 @@ type FlagName string
 
 // Flags for the configure command
 const (
-	FlagLog        FlagName = "logx"
+	FlagLog        FlagName = "log"
 	FlagSource     FlagName = "source"
 	FlagCredential FlagName = "credential"
 	FlagEndPoint   FlagName = "endpoint"
@@ -27,6 +27,10 @@ const (
 // FlagPayload Flags for Lambda invoke command
 const (
 	FlagPayload FlagName = "payload"
+)
+
+const (
+	FlagFull FlagName = "full"
 )
 
 func (f FlagName) ValStr() string {

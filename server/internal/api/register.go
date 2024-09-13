@@ -24,7 +24,8 @@ func RegisterHandlers(g *gin.Engine) http.Handler {
 	{
 		lambdaGroup.POST("", middleware.RegisterESLintCheck(), lambda.Register)
 		lambdaGroup.POST("/:lambda", lambda.Invoke)
-		lambdaGroup.GET("/:lambda/info", lambda.Info)
+		lambdaGroup.GET("", lambda.List)
+		lambdaGroup.GET("/:lambda", lambda.Info)
 		lambdaGroup.GET("/:lambda/logs", lambda.Logs)
 		lambdaGroup.DELETE("/:lambda", lambda.Remove)
 	}

@@ -1,7 +1,8 @@
 package lambda
 
 import (
-	"context"
+	"github.com/57blocks/auto-action/server/internal/constant"
+	"github.com/gin-gonic/gin"
 	"testing"
 	"time"
 
@@ -15,16 +16,23 @@ func TestInfoSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockRepo := repo.NewMockLambda(ctrl)
+	mockLambRepo := repo.NewMockLambda(ctrl)
+	mockOAuthRepo := repo.NewMockOAuth(ctrl)
 
-	ctx := context.TODO()
+	ctx := new(gin.Context)
+	ctx.Set(constant.ClaimSub.Str(), "account_name")
 	request := &dto.ReqURILambda{Lambda: "name/arn"}
+	distinguisher := "name/arn"
+	accountID := uint64(123)
 
 	now := time.Now().UTC()
 	sha256 := "E2X2ZXxocZcefGFb8lu2QnbYV8higgV2yYcJSwPLAA4="
 	schARN := "arn:aws:scheduler:...:schedule/default/transfer"
 
-	mockRepo.EXPECT().LambdaInfo(ctx, request).Times(1).
+	mockOAuthRepo.EXPECT().FindUserByAcn(ctx, "account_name").Times(1).
+		Return(&dto.RespUser{ID: accountID}, nil)
+
+	mockLambRepo.EXPECT().LambdaInfo(ctx, accountID, distinguisher).Times(1).
 		Return(
 			&dto.RespInfo{
 
@@ -47,7 +55,8 @@ func TestInfoSuccess(t *testing.T) {
 		)
 
 	cd := &service{
-		lambdaRepo: mockRepo,
+		lambdaRepo: mockLambRepo,
+		oauthRepo:  mockOAuthRepo,
 	}
 	info, err := cd.Info(ctx, request)
 	assert.NoError(t, err)

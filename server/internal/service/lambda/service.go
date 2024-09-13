@@ -35,6 +35,7 @@ type (
 	Service interface {
 		Register(c context.Context, r *dto.ReqRegister) ([]*dto.RespRegister, error)
 		Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error)
+		List(c context.Context, isFull bool) (interface{}, error)
 		Info(c context.Context, r *dto.ReqURILambda) (*dto.RespInfo, error)
 		Logs(c context.Context, r *dto.ReqURILambda) error
 		Remove(c context.Context, r *dto.ReqURILambda) (*dto.RespRemove, error)
@@ -273,8 +274,45 @@ func (svc *service) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke
 	return dto.BuildRespInvoke(dto.WithInvokeResp(invokeOutput)), nil
 }
 
+func (svc *service) List(c context.Context, isFull bool) (interface{}, error) {
+	jwtAccount, _ := c.(*gin.Context).Get(constant.ClaimSub.Str())
+
+	user, err := svc.oauthRepo.FindUserByAcn(c, jwtAccount.(string))
+	if err != nil {
+		return nil, err
+	}
+
+	lambs, err := svc.lambdaRepo.FindByAccount(c, user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	if isFull {
+		return lambs, nil
+	}
+
+	respBrief := make([]*dto.RespInList, 0, len(lambs))
+	for _, lamb := range lambs {
+		respBrief = append(respBrief, &dto.RespInList{
+			FunctionName: lamb.FunctionName,
+			FunctionArn:  lamb.FunctionArn,
+			Description:  lamb.Description,
+			CreatedAt:    lamb.CreatedAt,
+		})
+	}
+
+	return respBrief, nil
+}
+
 func (svc *service) Info(c context.Context, r *dto.ReqURILambda) (*dto.RespInfo, error) {
-	info, err := svc.lambdaRepo.LambdaInfo(c, r)
+	jwtAccount, _ := c.(*gin.Context).Get(constant.ClaimSub.Str())
+
+	user, err := svc.oauthRepo.FindUserByAcn(c, jwtAccount.(string))
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := svc.lambdaRepo.LambdaInfo(c, user.ID, r.Lambda)
 	if err != nil {
 		return nil, err
 	}

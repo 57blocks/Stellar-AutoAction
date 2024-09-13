@@ -87,18 +87,18 @@ func (mr *MockLambdaMockRecorder) FindByNameOrARN(c, input interface{}) *gomock.
 }
 
 // LambdaInfo mocks base method.
-func (m *MockLambda) LambdaInfo(c context.Context, req *dto.ReqURILambda) (*dto.RespInfo, error) {
+func (m *MockLambda) LambdaInfo(c context.Context, acnID uint64, distinguish string) (*dto.RespInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LambdaInfo", c, req)
+	ret := m.ctrl.Call(m, "LambdaInfo", c, acnID, distinguish)
 	ret0, _ := ret[0].(*dto.RespInfo)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // LambdaInfo indicates an expected call of LambdaInfo.
-func (mr *MockLambdaMockRecorder) LambdaInfo(c, req interface{}) *gomock.Call {
+func (mr *MockLambdaMockRecorder) LambdaInfo(c, acnID, distinguish interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LambdaInfo", reflect.TypeOf((*MockLambda)(nil).LambdaInfo), c, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LambdaInfo", reflect.TypeOf((*MockLambda)(nil).LambdaInfo), c, acnID, distinguish)
 }
 
 // PersistRegResult mocks base method.

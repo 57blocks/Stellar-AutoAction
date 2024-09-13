@@ -12,12 +12,27 @@ type ReqURILambda struct {
 	Lambda string `uri:"lambda" json:"lambda"`
 }
 
+// RespInList the response of listing lambdas
+type (
+	ReqList struct {
+		//Full bool `uri:"full" query:"full" json:"full"`
+		Full bool `form:"full"`
+	}
+	RespInList struct {
+		_            struct{}
+		FunctionName string     `json:"function_name,omitempty"`
+		FunctionArn  string     `json:"function_arn,omitempty"`
+		Description  string     `json:"description,omitempty"`
+		CreatedAt    *time.Time `json:"created_at,omitempty"`
+	}
+)
+
 // Info
 type (
 	RespInfo struct {
 		_            struct{}
 		ID           uint64     `json:"-"`
-		AccountId    uint64     `json:"account_id"`
+		AccountId    uint64     `json:"-"`
 		FunctionName string     `json:"function_name"`
 		FunctionArn  string     `json:"function_arn"`
 		Runtime      string     `json:"runtime"`
