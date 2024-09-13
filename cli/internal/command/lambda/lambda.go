@@ -9,7 +9,7 @@ import (
 // lambdaGroup represents the lambda command
 var lambdaGroup = &cobra.Command{
 	Use:   "lambda",
-	Short: "A brief description of your command",
+	Short: "Lambda action management",
 }
 
 func init() {

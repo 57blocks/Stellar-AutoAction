@@ -8,7 +8,7 @@ import (
 
 var wallet = &cobra.Command{
 	Use:   "wallet",
-	Short: "Wallet Address Management",
+	Short: "Wallet address management",
 	Long: `
 Description:
   The wallet address management command is used to 
