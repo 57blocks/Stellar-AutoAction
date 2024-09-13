@@ -410,18 +410,20 @@ func (svc *service) Remove(c context.Context, r *dto.ReqURILambda) (*dto.RespRem
 		rmvLamb.ResultMetadata,
 	))
 
-	rmvSchInput := &scheduler.DeleteScheduleInput{
-		Name: aws.String(lamb.Scheduler.ScheduleName),
+	if lamb.Scheduler.ScheduleArn != "" {
+		rmvSchInput := &scheduler.DeleteScheduleInput{
+			Name: aws.String(lamb.Scheduler.ScheduleName),
+		}
+		rmvSch, err := svc.amazon.RemoveScheduler(c, rmvSchInput)
+		if err != nil {
+			return nil, err
+		}
+		logx.Logger.INFO(fmt.Sprintf(
+			"scheduler <%s/%s> removed metadata %v",
+			lamb.Scheduler.ScheduleName, lamb.Scheduler.ScheduleArn,
+			rmvSch.ResultMetadata,
+		))
 	}
-	rmvSch, err := svc.amazon.RemoveScheduler(c, rmvSchInput)
-	if err != nil {
-		return nil, err
-	}
-	logx.Logger.INFO(fmt.Sprintf(
-		"scheduler <%s/%s> removed metadata %v",
-		lamb.Scheduler.ScheduleName, lamb.Scheduler.ScheduleArn,
-		rmvSch.ResultMetadata,
-	))
 
 	if err := svc.lambdaRepo.DeleteLambdaTX(
 		c,
