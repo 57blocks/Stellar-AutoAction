@@ -31,13 +31,13 @@ module "sg_alb" {
   vpc_id = var.sg_vpc_id
 
   name        = var.sg_alb_name
-  description = "Security group for ALB"
+  description = var.sg_alb_description
 
-  ingress_cidr_blocks = ["0.0.0.0/0"]
-  ingress_rules       = ["http-80-tcp", "https-443-tcp"] // why two 80s in the rule?
+  ingress_cidr_blocks = var.ingress_cidr_blocks
+  ingress_rules       = var.ingress_rules // why two 80s in the rule?
 
-  egress_cidr_blocks = ["0.0.0.0/0"]
-  egress_rules       = ["all-all"]
+  egress_cidr_blocks = var.egress_cidr_blocks
+  egress_rules       = var.egress_rules
 }
 
 module "sg_ecs" {
@@ -49,11 +49,11 @@ module "sg_ecs" {
   name        = var.sg_ecs_name
   description = "Security group for applications hosted on ECS"
 
-  ingress_cidr_blocks                   = ["0.0.0.0/0"]
+  ingress_cidr_blocks                   = var.ingress_cidr_blocks
   ingress_with_source_security_group_id = [module.sg_alb.security_group_id]
 
-  egress_cidr_blocks = ["0.0.0.0/0"]
-  egress_rules       = ["all-all"]
+  egress_cidr_blocks = var.egress_cidr_blocks
+  egress_rules       = var.egress_rules
 }
 
 module "sg_rds" {
