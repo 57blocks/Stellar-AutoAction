@@ -1,11 +1,6 @@
-# module "iam_role" {
-#   source  = "terraform-aws-modules/iam/aws"
-#   version = "~>5.44.0"
-#
-#
-#
 resource "aws_iam_role" "this" {
   name               = var.role_name
+  description        = var.role_description
   assume_role_policy = var.assume_role_policy
 }
 

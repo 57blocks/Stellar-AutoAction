@@ -4,40 +4,28 @@ variable "sg_vpc_id" {
   default     = ""
 }
 
-variable "sg_alb_name" {
+variable "sg_name" {
   description = "ALB security group name"
   type        = string
   default     = ""
 }
 
-variable "sg_alb_description" {
+variable "sg_description" {
   description = "ALB security group description"
   type        = string
   default     = ""
 }
 
-variable "sg_ecs_name" {
-  description = "Application security group name"
-  type        = string
-  default     = ""
-}
-
-variable "sg_rds_name" {
-  description = "RDS security group name"
-  type        = string
-  default     = ""
-}
-
 variable "ingress_cidr_blocks" {
-    description = "CIDR blocks to allow ingress traffic"
-    type        = list(string)
-    default     = []
+  description = "CIDR blocks to allow ingress traffic"
+  type        = list(string)
+  default     = []
 }
 
 variable "ingress_rules" {
-    description = "List of ingress rules"
-    type        = list(string)
-    default     = []
+  description = "List of ingress rules"
+  type        = list(string)
+  default     = []
 }
 
 variable "ingress_with_source_security_group_id" {
@@ -47,13 +35,13 @@ variable "ingress_with_source_security_group_id" {
 }
 
 variable "egress_cidr_blocks" {
-    description = "CIDR blocks to allow egress traffic"
-    type        = list(string)
-    default     = []
+  description = "CIDR blocks to allow egress traffic"
+  type        = list(string)
+  default     = []
 }
 
 variable "egress_rules" {
-    description = "List of egress rules"
-    type        = list(string)
-    default     = []
+  description = "List of egress rules"
+  type        = list(string)
+  default     = []
 }

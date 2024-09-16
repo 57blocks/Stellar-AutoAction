@@ -1,15 +1,29 @@
 variable "role_name" {
-  default = ""
+  description = "Name of the IAM role"
+  type        = string
+  default     = ""
+}
+
+variable "role_description" {
+  description = "Description of the IAM role"
+  type        = string
+  default     = ""
 }
 
 variable "assume_role_policy" {
-  default = ""
+  description = "Assume role policy document of the IAM role"
+  type        = string
+  default     = ""
 }
 
 variable "role_policy_name" {
-  default = ""
+  description = "Policy name of the IAM role"
+  type        = string
+  default     = ""
 }
 
 variable "policy" {
-  default = ""
+  description = "Policy of the IAM role"
+  type        = string
+  default     = ""
 }
