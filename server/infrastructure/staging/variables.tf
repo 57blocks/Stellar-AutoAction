@@ -78,3 +78,9 @@ variable "alb_target_groups" {
   type        = any
   default     = {}
 }
+
+variable "ecs_cluster_name" {
+  description = "ECS cluster name"
+  type        = string
+  default     = ""
+}
