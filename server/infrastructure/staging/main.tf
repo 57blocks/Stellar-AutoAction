@@ -72,6 +72,7 @@ module "alb" {
   alb_target_groups   = var.alb_target_groups
 }
 
+// IAM roles
 module "scheduler_execution_role" {
   source = "../modules/iam"
 
@@ -101,7 +102,8 @@ module "scheduler_execution_role" {
           "lambda:InvokeFunction"
         ],
         "Resource" : [
-          "arn:aws:lambda:us-east-2:123340007534:function:*" // TODO: dynamic subject
+          // TODO: dynamic subject?
+          "arn:aws:lambda:us-east-2:123340007534:function:*"
         ]
       }
     ]
@@ -153,72 +155,141 @@ module "ecs_execution_role" {
   })
 }
 
+// Secrets Manager
+module "jwt_private_key" {
+  source = "./../modules/secretmanager"
+
+  secret_name  = var.jwt_private_key
+  secret_value = jsonencode({
+    jwt_private_key = var.jwt_private_key_value
+  })
+}
+
+module "jwt_public_key" {
+  source = "./../modules/secretmanager"
+
+  secret_name  = var.jwt_public_key
+  secret_value = jsonencode({
+    jwt_public_key = var.jwt_public_key_value
+  })
+}
+
+module "rds_password" {
+  source = "./../modules/secretmanager"
+
+  secret_name  = var.rds_password
+  secret_value = jsonencode({
+    rds_password = var.rds_password_value
+  })
+}
+
+//
+# 创建一个秘密
+resource "aws_secretsmanager_secret" "rds_password_secret" {
+  name = "my-rds-password-secret"
+}
+
+# 设置秘密的值
+resource "aws_secretsmanager_secret_version" "rds_password_version" {
+  secret_id = aws_secretsmanager_secret.rds_password_secret.id
+  secret_string = jsonencode({
+    password = var.rds_password
+  })
+}
+
+// RDS
+module "rds" {
+  source = "./../modules/rds"
+
+  rds_identifier = var.rds_identifier
+
+  rds_db_name  = var.rds_db_name
+  rds_username = var.rds_username
+  rds_password = module.rds_password.secret_value
+
+  rds_db_subnet_group_name   = module.vpc.vpc_database_subnet_group_name
+  rds_vpc_security_group_ids = module.vpc.vpc_private_subnets
+
+  #   vpc_id             = module.vpc.vpc_id
+  #   subnet_ids         = module.vpc.vpc_private_subnets
+  #   security_group_ids = [module.sg_rds.sg_id]
+}
+
+// ECR
+module "ecr" {
+  source = "./../modules/ecr"
+
+  ecr_repository_name               = var.ecr_repository_name
+  repository_read_write_access_arns = [module.ecs_execution_role.role_arn]
+}
+
 // ECS module
 module "ecs" {
   source = "./../modules/ecs"
 
-  cluster_name = var.ecs_cluster_name
-  services = {
-    aa-service = {
-      cpu    = 512
-      memory = 1024
+  ecs_cluster_name = var.ecs_cluster_name
 
+  ecs_fargate_capacity_providers = var.ecs_fargate_capacity_providers
+
+  ecs_services = {
+    aa-service = {
+      cpu    = 1024
+      memory = 4096
+
+      # Container definition(s)
       container_definitions = {
-        aa-cli-server = {
-          name      = "cli-server"
+        aa-service = {
           cpu       = 512
           memory    = 1024
           essential = true
-          image     = var.user_service_image
-          port_mappings = [
-            {
-              name          = "aa-cli-server"
-              containerPort = 8080
-              hostPort      = 8080
-              protocol      = "tcp"
-              appProtocol   = "http"
-            }
-          ]
+          image     = nonsensitive(module.ecr.ecr_repository_arn) // TODO: image tag?
+          firelens_configuration = {
+            type = "fluentbit"
+          }
+          memory_reservation = 50
+          port_mappings = [{
+            containerPort = 8080
+            hostPort      = 8080
+            protocol      = "tcp"
+            appProtocol   = "http"
+          }]
           readonly_root_filesystem = false
           log_configuration = {
             logDriver = "awslogs"
             options = {
-              awslogs-group         = "/aws/ecs/aa-service/aa-cli-server"
+              awslogs-group         = "/aws/ecs/ecs-services/aa-service"
               awslogs-region        = var.region
-              awslogs-stream-prefix = "user"
+              awslogs-stream-prefix = "auto-actions"
               awslogs-create-group  = "true"
             }
           }
-
-          environment = var.user_service_environment
-        }
-      }
-
-      create_tasks_iam_role = false
-
-      create_task_exec_iam_role = false
-      task_exec_iam_role_arn    = "arn:aws:iam::281657013469:role/ecsTaskExecutionRole"
-      service_connect_configuration = {
-        namespace = module.ecs_execution_role.role_arn
-        service = {
-          client_alias = {
-            port     = 8081
-            dns_name = "user-service"
+          environment = {
+            JWT_PRIVATE_KEY = nonsensitive(module.jwt_private_key.secret_arn)
+            JWT_PUBLIC_KEY  = nonsensitive(module.jwt_public_key.secret_arn)
           }
-          port_name      = "user-service"
-          discovery_name = "user-service"
         }
       }
+
+      create_tasks_iam_role     = false
+      create_task_exec_iam_role = false
+      task_exec_iam_role_arn    = module.ecs_execution_role.role_arn
+
+      vpc_id      = module.vpc.vpc_id
+      vpc_subnets = module.vpc.vpc_public_subnets
+      subnet_ids  = module.vpc.vpc_public_subnets
+
       load_balancer = {
         service = {
           target_group_arn = module.alb.target_groups
-          container_name   = "user-service"
-          container_port   = 8081
+          container_name   = "aa-service"
+          container_port   = 8080
         }
       }
-      subnet_ids            = module.vpc.vpc_private_subnets
+
       create_security_group = false
       security_group_ids    = [module.sg_ecs.sg_id]
+
+      // TODO: 网络配置-服务角色: AWSServiceRoleForECS ?
     }
   }
 }
