@@ -83,7 +83,7 @@ func (svc *service) Create(c context.Context) (*dto.RespCreateWallet, error) {
 		return nil, err
 	}
 
-	keyId, err := svc.addCSKey(csToken, user)
+	keyId, err := svc.addCSKey(csToken)
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +233,7 @@ func (svc *service) Verify(c context.Context, r *dto.ReqVerifyWallet) (*dto.Resp
 	}, nil
 }
 
-func (svc *service) addCSKey(csToken string, user *dto.RespUser) (string, error) {
+func (svc *service) addCSKey(csToken string) (string, error) {
 	URL := fmt.Sprintf(
 		"%s/v0/org/%s/keys",
 		config.GlobalConfig.CS.Endpoint,
@@ -248,7 +248,6 @@ func (svc *service) addCSKey(csToken string, user *dto.RespUser) (string, error)
 		SetBody(map[string]interface{}{
 			"count":    1,
 			"key_type": "Ed25519StellarAddr",
-			"owner":    user.CubeSignerUser,
 			"policy":   []string{"AllowRawBlobSigning"},
 		}).
 		SetResult(&keyResp).

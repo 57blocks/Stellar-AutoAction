@@ -86,7 +86,6 @@ type (
 		Account        string   `json:"account"`
 		Password       string   `json:"-"`
 		Description    string   `json:"-"`
-		CubeSignerUser string   `json:"cube_signer_user"`
 		OrganizationId int32    `json:"-"`
 		Organization   *RespOrg `json:"organization,omitempty" gorm:"foreignKey:organization_id"`
 	}

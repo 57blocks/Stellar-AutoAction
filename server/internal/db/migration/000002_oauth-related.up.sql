@@ -9,7 +9,6 @@ CREATE TABLE "user" (
     "password" text NOT NULL,
     "description" text NULL,
     "organization_id" integer NOT NULL,
-    "cube_signer_user" varchar NOT NULL,
     "created_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL,
     "updated_at" timestamptz DEFAULT CURRENT_TIMESTAMP(2) NOT NULL,
     UNIQUE ("account", "organization_id")
