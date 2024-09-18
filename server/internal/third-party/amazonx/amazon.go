@@ -5,6 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -51,6 +52,10 @@ type (
 			c context.Context,
 			input *scheduler.DeleteScheduleInput,
 		) (*scheduler.DeleteScheduleOutput, error)
+		GetRole(
+			c context.Context,
+			input *iam.GetRoleInput,
+		) (*iam.GetRoleOutput, error)
 	}
 
 	amazon struct {
@@ -59,6 +64,7 @@ type (
 		lambdaClient         *lambda.Client
 		schedulerClient      *scheduler.Client
 		cloudWatchLogsClient *cloudwatchlogs.Client
+		iamClient            *iam.Client
 	}
 	amazonOpt func(*amazon)
 )
@@ -99,6 +105,12 @@ func withSchedulerClient(client *scheduler.Client) amazonOpt {
 func withCloudWatchLogsClient(client *cloudwatchlogs.Client) amazonOpt {
 	return func(a *amazon) {
 		a.cloudWatchLogsClient = client
+	}
+}
+
+func withIamClient(client *iam.Client) amazonOpt {
+	return func(a *amazon) {
+		a.iamClient = client
 	}
 }
 
@@ -155,4 +167,11 @@ func (a *amazon) RemoveScheduler(
 	input *scheduler.DeleteScheduleInput,
 ) (*scheduler.DeleteScheduleOutput, error) {
 	return a.schedulerClient.DeleteSchedule(c, input)
+}
+
+func (a *amazon) GetRole(
+	c context.Context,
+	input *iam.GetRoleInput,
+) (*iam.GetRoleOutput, error) {
+	return a.iamClient.GetRole(c, input)
 }

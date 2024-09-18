@@ -93,8 +93,14 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) ([]*dto.Resp
 	toBePersist := make([]toBePersistPair, 0, len(files))
 	resp := make([]*dto.RespRegister, 0, len(files))
 
+	roleName := util.GetRoleName(c, jwtOrg.(string), jwtAccount.(string))
+	roleARN, err := util.GetRoleARN(c, roleName)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, file := range files {
-		newLamResp, err := svc.registerLambda(c, file)
+		newLamResp, err := svc.registerLambda(c, file, roleARN)
 		if err != nil {
 			return nil, err
 		}
@@ -115,7 +121,7 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) ([]*dto.Resp
 		}
 
 		if strings.TrimSpace(expression) != "" {
-			newSchResp, err := svc.boundScheduler(c, newLamResp, expression, r.Payload)
+			newSchResp, err := svc.boundScheduler(c, newLamResp, expression, r.Payload, roleARN)
 			if err != nil {
 				return nil, err
 			}
@@ -147,7 +153,7 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) ([]*dto.Resp
 	return resp, nil
 }
 
-func (svc *service) registerLambda(c context.Context, file *dto.ReqFile) (*lambda.CreateFunctionOutput, error) {
+func (svc *service) registerLambda(c context.Context, file *dto.ReqFile, roleARN string) (*lambda.CreateFunctionOutput, error) {
 	splits := strings.Split(file.Name, ".")
 	fileName := splits[0]
 
@@ -162,7 +168,7 @@ func (svc *service) registerLambda(c context.Context, file *dto.ReqFile) (*lambd
 			// TODO: put into env when the infrastructure is ready, the same as `VpcConfig` below.
 			Environment: &lambTypes.Environment{Variables: map[string]string{"ENV_AWS_REGION": "us-east-2"}},
 			// This execution role has full access of CloudWatch and Lambda execution access.
-			Role:        aws.String("arn:aws:iam::123340007534:role/LambdaExecutionRole"),
+			Role:        aws.String(roleARN),
 			Runtime:     lambTypes.RuntimeNodejs20x,
 			Timeout:     aws.Int32(30),
 			Description: nil,
@@ -182,7 +188,9 @@ func (svc *service) registerLambda(c context.Context, file *dto.ReqFile) (*lambd
 func (svc *service) boundScheduler(
 	c context.Context,
 	lambdaFun *lambda.CreateFunctionOutput,
-	expression string, inputPayload string,
+	expression string,
+	inputPayload string,
+	roleARN string,
 ) (*scheduler.CreateScheduleOutput, error) {
 	event, err := util.GenEventPayload(c, inputPayload)
 	if err != nil {
@@ -202,7 +210,7 @@ func (svc *service) boundScheduler(
 		Target: &scheTypes.Target{
 			Arn: lambdaFun.FunctionArn,
 			// This role has the Lambda invoke access to all Lambda functions in current AWS account.
-			RoleArn: aws.String("arn:aws:iam::123340007534:role/service-role/Amazon_EventBridge_Scheduler_LAMBDA_25a70bed22"),
+			RoleArn: aws.String(roleARN),
 			Input:   aws.String(string(eventJSON)),
 		},
 		ActionAfterCompletion:      scheTypes.ActionAfterCompletionNone,
