@@ -50,8 +50,6 @@ func (svc *service) APIKey(c context.Context) (string, error) {
 
 	secretResp, err := svc.amazon.GetSecretValue(c, input)
 	if err != nil {
-		// For a list of exceptions thrown, see
-		// https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
 		return "", errorx.Internal(err.Error())
 	}
 
@@ -91,8 +89,6 @@ func (svc *service) CubeSignerToken(c context.Context) (string, error) {
 
 	resp, err := svc.amazon.GetSecretValue(c, input)
 	if err != nil {
-		// For a list of exceptions thrown, see
-		// https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
 		return "", errorx.Internal(err.Error())
 	}
 
@@ -112,8 +108,6 @@ func (svc *service) GetSecRole(c context.Context, secret string) (string, error)
 
 	resp, err := svc.amazon.GetSecretValue(c, input)
 	if err != nil {
-		// For a list of exceptions thrown, see
-		// https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
 		return "", errorx.Internal(err.Error())
 	}
 
@@ -122,5 +116,5 @@ func (svc *service) GetSecRole(c context.Context, secret string) (string, error)
 		return "", errorx.Internal(fmt.Sprintf("json unmarshal error when parse secret value: %s", err.Error()))
 	}
 
-	return resMap["token"].(string), nil
+	return resMap["cs_role"].(string), nil
 }
