@@ -20,6 +20,7 @@ type (
 		APIKey(c context.Context) (string, error)
 		ToSign(c context.Context, req *dto.ReqToSign) (*dto.RespCSKey, error)
 		CubeSignerToken(c context.Context) (string, error)
+		GetSecRole(c context.Context, secret string) (string, error)
 	}
 	service struct {
 		csRepo    repo.CubeSigner
@@ -86,6 +87,27 @@ func (svc *service) ToSign(c context.Context, req *dto.ReqToSign) (*dto.RespCSKe
 func (svc *service) CubeSignerToken(c context.Context) (string, error) {
 	input := &secretsmanager.GetSecretValueInput{
 		SecretId:     aws.String("AA_CS_Token"),
+		VersionStage: aws.String("AWSCURRENT"),
+	}
+
+	resp, err := svc.amazon.GetSecretValue(c, input)
+	if err != nil {
+		// For a list of exceptions thrown, see
+		// https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+		return "", errorx.Internal(err.Error())
+	}
+
+	resMap := make(map[string]interface{})
+	if err := json.Unmarshal([]byte(*resp.SecretString), &resMap); err != nil {
+		return "", errorx.Internal(fmt.Sprintf("json unmarshal error when parse secret value: %s", err.Error()))
+	}
+
+	return resMap["token"].(string), nil
+}
+
+func (svc *service) GetSecRole(c context.Context, secret string) (string, error) {
+	input := &secretsmanager.GetSecretValueInput{
+		SecretId:     aws.String(secret),
 		VersionStage: aws.String("AWSCURRENT"),
 	}
 

@@ -77,12 +77,18 @@ func (svc *service) Create(c context.Context) (*dto.RespCreateWallet, error) {
 		return nil, err
 	}
 
+	secretName := util.GetSecretName(c, jwtOrg.(string), jwtAccount.(string))
+	role, err := svcCS.ServiceImpl.GetSecRole(c, secretName)
+	if err != nil {
+		return nil, err
+	}
+
 	keyId, err := svc.addCSKey(csToken, user)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = svc.addKeyToRole(csToken, keyId); err != nil {
+	if err = svc.addKeyToRole(csToken, keyId, role); err != nil {
 		return nil, err
 	}
 
@@ -126,7 +132,13 @@ func (svc *service) Remove(c context.Context, r *dto.ReqRemoveWallet) error {
 		return err
 	}
 
-	if err = svc.deleteKeyFromRole(csToken, keyId); err != nil {
+	secretName := util.GetSecretName(c, jwtOrg.(string), jwtAccount.(string))
+	role, err := svcCS.ServiceImpl.GetSecRole(c, secretName)
+	if err != nil {
+		return err
+	}
+
+	if err = svc.deleteKeyFromRole(csToken, keyId, role); err != nil {
 		return err
 	}
 
@@ -254,12 +266,12 @@ func (svc *service) addCSKey(csToken string, user *dto.RespUser) (string, error)
 	return keyId, nil
 }
 
-func (svc *service) addKeyToRole(csToken string, keyId string) error {
+func (svc *service) addKeyToRole(csToken string, keyId string, role string) error {
 	URL := fmt.Sprintf(
 		"%s/v0/org/%s/roles/%s/add_keys",
 		config.GlobalConfig.CS.Endpoint,
 		url.PathEscape(config.GlobalConfig.CS.Organization),
-		url.PathEscape(config.GlobalConfig.CS.Role),
+		url.PathEscape(role),
 	)
 
 	// TODO: using member to do the request for ut
@@ -321,12 +333,12 @@ func (svc *service) deleteCSKey(csToken string, keyId string) error {
 	return nil
 }
 
-func (svc *service) deleteKeyFromRole(csToken string, keyId string) error {
+func (svc *service) deleteKeyFromRole(csToken string, keyId string, role string) error {
 	URL := fmt.Sprintf(
 		"%s/v0/org/%s/roles/%s/keys/%s",
 		config.GlobalConfig.CS.Endpoint,
 		url.PathEscape(config.GlobalConfig.CS.Organization),
-		url.PathEscape(config.GlobalConfig.CS.Role),
+		url.PathEscape(role),
 		url.PathEscape(keyId),
 	)
 
