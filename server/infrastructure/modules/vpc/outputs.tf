@@ -17,3 +17,8 @@ output "vpc_private_subnets" {
   description = "The IDs of the private subnets"
   value       = module.vpc.private_subnets
 }
+
+output "vpc_database_subnet_group_name" {
+  description = "The name of the subnet group"
+  value = module.vpc.database_subnet_group_name
+}
