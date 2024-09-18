@@ -6,39 +6,12 @@ import (
 
 	"github.com/57blocks/auto-action/server/internal/constant"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	"github.com/57blocks/auto-action/server/internal/service/cs"
 	"github.com/57blocks/auto-action/server/internal/third-party/eslint"
 	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 
 	"github.com/gin-gonic/gin"
 )
-
-func SecretKey() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		key := c.GetHeader(constant.APIKey.Str())
-		if key == "" {
-			c.Error(errorx.UnauthorizedWithMsg("missing api key"))
-			c.Abort()
-			return
-		}
-
-		apiKey, err := cs.ServiceImpl.APIKey(c)
-		if err != nil {
-			c.Error(err)
-			c.Abort()
-			return
-		}
-
-		if apiKey != key {
-			c.Error(errorx.UnauthorizedWithMsg("invalid api key"))
-			c.Abort()
-			return
-		}
-
-		c.Next()
-	}
-}
 
 func AuthHeader() gin.HandlerFunc {
 	return func(c *gin.Context) {
