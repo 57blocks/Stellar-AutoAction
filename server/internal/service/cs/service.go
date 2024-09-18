@@ -124,5 +124,4 @@ func (svc *service) GetSecRole(c context.Context, secret string) (string, error)
 	}
 
 	return resMap["token"].(string), nil
-
 }
