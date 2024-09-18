@@ -78,8 +78,6 @@ jobs:
           image: ${{ env.AWS_ECR_IMAGE_TAG }}
           environment-variables: |
             AWS_REGION=${{ vars.AWS_REGION }}
-            AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-            AWS_SECRET_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
             BOUND_ENDPOINT=${{ vars.BOUND_ENDPOINT }}
             BOUND_NAME=${{ vars.BOUND_NAME }}
             JWT_PROTOCOL=${{ vars.JWT_PROTOCOL }}

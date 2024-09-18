@@ -44,6 +44,7 @@ func GenEventPayload(c context.Context, payload string) (*map[string]interface{}
 	return &inputPayload, nil
 }
 
+// TODO: remove later, trigger ci
 func GetRoleName(c context.Context, org, account string) string {
 	return fmt.Sprintf("AA-%s-%s-Role", org, account)
 }
