@@ -60,3 +60,7 @@ func GetRoleARN(c context.Context, roleName string) (string, error) {
 
 	return *result.Role.Arn, nil
 }
+
+func GetSecretName(c context.Context, org string, account string) string {
+	return fmt.Sprintf("AA_%s_%s_SEC", org, account)
+}
