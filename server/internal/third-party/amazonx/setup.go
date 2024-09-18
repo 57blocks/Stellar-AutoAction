@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -23,6 +24,7 @@ var (
 	lambdaClient         *lambda.Client
 	schedulerClient      *scheduler.Client
 	cloudWatchLogsClient *cloudwatchlogs.Client
+	iamClient            *iam.Client
 )
 
 func Setup() error {
@@ -42,6 +44,7 @@ func Setup() error {
 		schedulerClient = scheduler.NewFromConfig(amazonConfig)
 		cloudWatchLogsClient = cloudwatchlogs.NewFromConfig(amazonConfig)
 		secretManagerClient = secretsmanager.NewFromConfig(amazonConfig)
+		iamClient = iam.NewFromConfig(amazonConfig)
 
 		Conductor = buildAmazonConductor(
 			withConfig(amazonConfig),
@@ -49,6 +52,7 @@ func Setup() error {
 			withLambdaClient(lambdaClient),
 			withSchedulerClient(schedulerClient),
 			withCloudWatchLogsClient(cloudWatchLogsClient),
+			withIamClient(iamClient),
 		)
 	})
 
