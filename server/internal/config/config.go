@@ -67,7 +67,6 @@ type (
 		_            struct{}
 		Endpoint     string `mapstructure:"endpoint"`
 		Organization string `mapstructure:"organization"`
-		Role         string `mapstructure:"role"`
 	}
 
 	Wallet struct {
