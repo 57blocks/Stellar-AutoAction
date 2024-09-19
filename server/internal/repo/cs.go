@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/57blocks/auto-action/server/internal/db"
-	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 
@@ -16,8 +15,6 @@ import (
 //go:generate mockgen -destination ./cs_mock.go -package repo -source cs.go CubeSigner
 type (
 	CubeSigner interface {
-		ToSign(c context.Context, userID uint64, from string) (*dto.RespCSKey, error)
-
 		SyncCSKey(c context.Context, key *model.CubeSignerKey) error
 		FindCSKey(c context.Context, key string, accountId uint64) (*model.CubeSignerKey, error)
 		DeleteCSKey(c context.Context, key string, accountId uint64) error
@@ -36,27 +33,6 @@ func NewCubeSigner() {
 			Instance: db.Inst,
 		}
 	}
-}
-
-func (cs *cubeSigner) ToSign(c context.Context, userID uint64, from string) (*dto.RespCSKey, error) {
-	csKey := new(dto.RespCSKey)
-	if err := cs.Instance.Conn(c).
-		Table(model.TabNameCSKey()).
-		Where(map[string]interface{}{
-			"account_id": userID,
-			"key":        from,
-		}).
-		Preload("Account", func(db *gorm.DB) *gorm.DB {
-			return db.Table(model.TabNameUser())
-		}).
-		First(csKey).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errorx.NotFound("cube signer key not found")
-		}
-		return nil, errorx.Internal(err.Error())
-	}
-
-	return csKey, nil
 }
 
 func (cs *cubeSigner) SyncCSKey(c context.Context, key *model.CubeSignerKey) error {

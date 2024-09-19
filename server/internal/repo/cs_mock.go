@@ -8,7 +8,6 @@ import (
 	context "context"
 	reflect "reflect"
 
-	dto "github.com/57blocks/auto-action/server/internal/dto"
 	model "github.com/57blocks/auto-action/server/internal/model"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -92,19 +91,4 @@ func (m *MockCubeSigner) SyncCSKey(c context.Context, key *model.CubeSignerKey) 
 func (mr *MockCubeSignerMockRecorder) SyncCSKey(c, key interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SyncCSKey", reflect.TypeOf((*MockCubeSigner)(nil).SyncCSKey), c, key)
-}
-
-// ToSign mocks base method.
-func (m *MockCubeSigner) ToSign(c context.Context, userID uint64, from string) (*dto.RespCSKey, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ToSign", c, userID, from)
-	ret0, _ := ret[0].(*dto.RespCSKey)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ToSign indicates an expected call of ToSign.
-func (mr *MockCubeSignerMockRecorder) ToSign(c, userID, from interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToSign", reflect.TypeOf((*MockCubeSigner)(nil).ToSign), c, userID, from)
 }

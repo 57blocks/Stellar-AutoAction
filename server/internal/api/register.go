@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/57blocks/auto-action/server/internal/api/middleware"
-	"github.com/57blocks/auto-action/server/internal/service/cs"
 	"github.com/57blocks/auto-action/server/internal/service/lambda"
 	"github.com/57blocks/auto-action/server/internal/service/oauth"
 	"github.com/57blocks/auto-action/server/internal/service/wallet"
@@ -36,11 +35,6 @@ func RegisterHandlers(g *gin.Engine) http.Handler {
 		walletGroup.POST("", wallet.Create)
 		walletGroup.DELETE("/:address", wallet.Remove)
 		walletGroup.POST("/:address", wallet.Verify)
-	}
-
-	sdkGroup := g.Group("/sign", middleware.SecretKey())
-	{
-		sdkGroup.POST("/keys", cs.ToSign)
 	}
 
 	return g
