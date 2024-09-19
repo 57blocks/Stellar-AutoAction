@@ -109,6 +109,14 @@ module "alb" {
   }
 }
 
+// ECR
+module "ecr" {
+  source = "./../modules/ecr"
+
+  ecr_repository_name               = var.ecr_repository_name
+  repository_read_write_access_arns = [module.ecs_task_execution_role.role_arn]
+}
+
 // IAM roles
 module "scheduler_invocation_role" {
   source = "../modules/iam"
@@ -237,14 +245,6 @@ module "rds_password" {
 #   rds_subnet_ids             = module.vpc.vpc_private_subnets
 # }
 
-# // ECR
-# module "ecr" {
-#   source = "./../modules/ecr"
-#
-#   ecr_repository_name               = var.ecr_repository_name
-#   repository_read_write_access_arns = [module.ecs_execution_role.role_arn]
-# }
-#
 # // ECS module
 # module "ecs" {
 #   source = "./../modules/ecs"
