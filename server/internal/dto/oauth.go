@@ -22,7 +22,7 @@ type (
 		_            struct{}
 		Account      string `json:"account"`
 		Organization string `json:"organization"`
-		Password     []byte `json:"password"`
+		Password     string `json:"password"`
 		Environment  string `json:"environment"`
 	}
 

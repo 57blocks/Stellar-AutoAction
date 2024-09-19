@@ -80,6 +80,7 @@ jobs:
             AWS_REGION=${{ vars.AWS_REGION }}
             BOUND_ENDPOINT=${{ vars.BOUND_ENDPOINT }}
             BOUND_NAME=${{ vars.BOUND_NAME }}
+            PEM_PRIVATE_KEY=${{ secrets.PEM_PRIVATE_KEY }}
             JWT_PROTOCOL=${{ vars.JWT_PROTOCOL }}
             JWT_PRIVATE_KEY=${{ secrets.JWT_PRIVATE_KEY }}
             JWT_PUBLIC_KEY=${{ secrets.JWT_PUBLIC_KEY }}
