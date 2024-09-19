@@ -95,7 +95,7 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) ([]*dto.Resp
 	resp := make([]*dto.RespRegister, 0, len(files))
 
 	roleName := util.GetRoleName(c, jwtOrg.(string), jwtAccount.(string))
-	roleARN, err := GetRoleARN(c, roleName)
+	roleARN, err := svc.getRoleARN(c, roleName)
 	if err != nil {
 		return nil, err
 	}
@@ -474,12 +474,12 @@ func (svc *service) Remove(c context.Context, r *dto.ReqURILambda) (*dto.RespRem
 	}, nil
 }
 
-func GetRoleARN(c context.Context, roleName string) (string, error) {
+func (svc *service) getRoleARN(c context.Context, roleName string) (string, error) {
 	input := &iam.GetRoleInput{
 		RoleName: aws.String(roleName),
 	}
 
-	result, err := amazonx.Conductor.GetRole(c, input)
+	result, err := svc.amazon.GetRole(c, input)
 	if err != nil {
 		return "", errorx.Internal(fmt.Sprintf("get role arn error: %v", err))
 	}
