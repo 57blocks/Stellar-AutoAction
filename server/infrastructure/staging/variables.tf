@@ -67,17 +67,17 @@ variable "alb_name" {
   default     = ""
 }
 
-variable "alb_listener" {
-  description = "ALB listener"
-  type        = any
-  default     = {}
-}
-
-variable "alb_target_groups" {
-  description = "ALB target groups"
-  type        = any
-  default     = {}
-}
+# variable "alb_listener" {
+#   description = "ALB listener"
+#   type        = any
+#   default     = {}
+# }
+#
+# variable "alb_target_groups" {
+#   description = "ALB target groups"
+#   type        = any
+#   default     = {}
+# }
 
 // Secrets Manager instances
 variable "jwt_private_key" {

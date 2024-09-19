@@ -6,7 +6,7 @@ module "rds" {
 
   # All available versions: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts
   engine                   = "postgres"
-  engine_version           = "16"
+  engine_version           = "16.4"
   engine_lifecycle_support = "open-source-rds-extended-support-disabled"
   family                   = "postgres16" # DB parameter group
   major_engine_version     = "16"         # DB option group
@@ -22,20 +22,10 @@ module "rds" {
   username = var.rds_username
   port     = 5432
 
-#   # Setting manage_master_user_password_rotation to false after it
-#   # has previously been set to true disables automatic rotation
-#   # however using an initial value of false (default) does not disable
-#   # automatic rotation and rotation will be handled by RDS.
-#   # manage_master_user_password_rotation allows users to configure
-#   # a non-default schedule and is not meant to disable rotation
-#   # when initially creating / enabling the password management feature
-#   manage_master_user_password_rotation              = true
-#   master_user_password_rotate_immediately           = false
-#   master_user_password_rotation_schedule_expression = "rate(15 days)"
-
   multi_az               = true
-  db_subnet_group_name   = var.rds_db_subnet_group_name
+  db_subnet_group_name   = var.rds_db_subnet_group
   vpc_security_group_ids = var.rds_vpc_security_group_ids
+  subnet_ids             = var.rds_subnet_ids
 
   maintenance_window              = "Mon:00:00-Mon:03:00"
   backup_window                   = "03:00-06:00"
@@ -45,14 +35,6 @@ module "rds" {
   backup_retention_period = 1
   skip_final_snapshot     = true
   deletion_protection     = false
-
-  performance_insights_enabled          = true
-  performance_insights_retention_period = 7
-  create_monitoring_role                = true
-  monitoring_interval                   = 60
-  monitoring_role_name                  = "example-monitoring-role-name"
-  monitoring_role_use_name_prefix       = true
-  monitoring_role_description           = "Description for monitoring role"
 
   parameters = [
     {
@@ -64,12 +46,4 @@ module "rds" {
       value = "utf8"
     }
   ]
-
-#   tags = local.tags
-#   db_option_group_tags = {
-#     "Sensitive" = "low"
-#   }
-#   db_parameter_group_tags = {
-#     "Sensitive" = "low"
-#   }
 }

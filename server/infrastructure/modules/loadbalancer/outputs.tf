@@ -5,5 +5,5 @@ output "alb_dns" {
 
 output "target_groups" {
   description = "The target groups of the ALB"
-  value       = module.alb.target_groups
+  value       = module.alb.target_groups["ecs_app"].arn
 }
