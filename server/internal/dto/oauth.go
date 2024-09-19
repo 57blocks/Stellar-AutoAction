@@ -21,7 +21,7 @@ type (
 	ReqSignup struct {
 		Account      string  `json:"account"`
 		Organization string  `json:"organization"`
-		Password     []byte  `json:"password"`
+		Password     string  `json:"password"`
 		Description  *string `json:"description,omitempty"`
 	}
 )

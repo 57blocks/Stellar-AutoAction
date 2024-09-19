@@ -90,10 +90,15 @@ func (svc *service) Signup(c context.Context, req dto.ReqSignup) error {
 		return err
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	rawPwdBytes, err := svc.decrypter.Decrypt([]byte(req.Password))
 	if err != nil {
 		return err
 	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(rawPwdBytes), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
 	description := ""
 	if req.Description != nil {
 		description = *req.Description

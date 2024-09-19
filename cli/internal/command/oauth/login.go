@@ -1,19 +1,14 @@
 package oauth
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/sha256"
-	"crypto/x509"
-	"encoding/base64"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"os"
 
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/constant"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
@@ -101,11 +96,11 @@ func loginFunc(cmd *cobra.Command, args []string) error {
 		return errorx.BadRequest("empty cryptPwd error")
 	}
 
-	key, err := loadPublicKey()
+	key, err := util.LoadPublicKey()
 	if err != nil {
 		return err
 	}
-	encodedPwd, err := encryptPassword(string(pwdBytes), key)
+	encodedPwd, err := util.EncryptPassword(string(pwdBytes), key)
 	if err != nil {
 		return err
 	}
@@ -114,6 +109,8 @@ func loginFunc(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	logx.Logger.Info("Login success! ")
 
 	return syncLogin(success)
 }
@@ -151,36 +148,4 @@ func syncLogin(resp *resty.Response) error {
 	}
 
 	return config.SyncConfigByFlags()
-}
-
-func loadPublicKey() (*rsa.PublicKey, error) {
-	pubPEMBytes, err := base64.StdEncoding.DecodeString(constant.PublicKey)
-	if err != nil {
-		return nil, errorx.Internal("decode public key failed")
-	}
-
-	block, _ := pem.Decode(pubPEMBytes)
-	if block == nil || block.Type != "PUBLIC KEY" {
-		return nil, errorx.Internal("failed to decode PEM block containing public key")
-	}
-
-	pubKey, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		return nil, err
-	}
-
-	switch pubKey := pubKey.(type) {
-	case *rsa.PublicKey:
-		return pubKey, nil
-	default:
-		return nil, errorx.Internal("not an RSA public key")
-	}
-}
-
-func encryptPassword(password string, publicKey *rsa.PublicKey) (string, error) {
-	encryptedBytes, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, publicKey, []byte(password), nil)
-	if err != nil {
-		return "", err
-	}
-	return base64.StdEncoding.EncodeToString(encryptedBytes), nil
 }

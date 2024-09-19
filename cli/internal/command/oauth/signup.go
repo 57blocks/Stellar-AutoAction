@@ -66,7 +66,7 @@ type ReqSignup struct {
 	Account      string  `json:"account"`
 	Organization string  `json:"organization"`
 	Description  *string `json:"description,omitempty"`
-	Password     []byte  `json:"password"`
+	Password     string  `json:"password"`
 }
 
 func signupFunc(cmd *cobra.Command, args []string) error {
@@ -81,17 +81,26 @@ func signupFunc(cmd *cobra.Command, args []string) error {
 		return errorx.BadRequest("empty cryptPwd error")
 	}
 
-	err = supplierSignup(pwdBytes)
+	key, err := util.LoadPublicKey()
+	if err != nil {
+		return err
+	}
+	encodedPwd, err := util.EncryptPassword(string(pwdBytes), key)
 	if err != nil {
 		return err
 	}
 
-	logx.Logger.Info("signup success")
+	err = supplierSignup(encodedPwd)
+	if err != nil {
+		return err
+	}
+
+	logx.Logger.Info("Signup success! Please login. ")
 
 	return nil
 }
 
-func supplierSignup(cryptPwdBytes []byte) error {
+func supplierSignup(pwdHash string) error {
 	URL := util.ParseReqPath(fmt.Sprintf("%s/oauth/signup", config.Vp.GetString("bound_with.endpoint")))
 
 	description := config.Vp.GetString(constant.FlagDescription.ValStr())
@@ -106,7 +115,7 @@ func supplierSignup(cryptPwdBytes []byte) error {
 			Account:      config.Vp.GetString(constant.FlagAccount.ValStr()),
 			Organization: config.Vp.GetString(constant.FlagOrganization.ValStr()),
 			Description:  descPtr,
-			Password:     cryptPwdBytes,
+			Password:     pwdHash,
 		}).
 		Post(URL)
 	if err != nil {
