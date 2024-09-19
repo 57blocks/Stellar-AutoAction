@@ -9,9 +9,12 @@ module "vpc" {
   public_subnets  = var.vpc_pub_subnets
   private_subnets = var.vpc_pri_subnets
 
-  enable_nat_gateway           = true
-  single_nat_gateway           = true
-  enable_dns_hostnames         = true
   create_database_subnet_group = true
+  database_subnets             = var.vpc_database_subnets
+
+  enable_ipv6          = false
+  enable_nat_gateway   = true
+  single_nat_gateway   = true
+  enable_dns_hostnames = true
 }
 

@@ -20,6 +20,7 @@ module "rds" {
   # user cannot be used as it is a reserved word used by the engine"
   db_name  = var.rds_db_name
   username = var.rds_username
+  password = var.rds_password
   port     = 5432
 
   multi_az               = true
