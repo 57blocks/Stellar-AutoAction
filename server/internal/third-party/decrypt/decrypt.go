@@ -45,7 +45,7 @@ func loadPrivateKey() (*rsa.PrivateKey, error) {
 	}
 
 	block, _ := pem.Decode(priPEMBytes)
-	if block == nil || block.Type != "RSADecrypter PRIVATE KEY" {
+	if block == nil || block.Type != "RSA PRIVATE KEY" {
 		return nil, errorx.Internal("failed to decode PEM block containing private key")
 	}
 

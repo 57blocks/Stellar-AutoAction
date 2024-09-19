@@ -18,6 +18,7 @@ type (
 	OAuth interface {
 		FindUserByAcn(c context.Context, acn string) (*dto.RespUser, error)
 		FindUserByOrgAcn(c context.Context, req *dto.ReqOrgAcn) (*dto.RespUser, error)
+		CreateUser(c context.Context, user *model.User) error
 
 		FindOrg(c context.Context, id uint64) (*dto.RespOrg, error)
 		FindOrgByName(c context.Context, name string) (*dto.RespOrg, error)
@@ -76,6 +77,20 @@ func (o *oauth) FindUserByOrgAcn(c context.Context, req *dto.ReqOrgAcn) (*dto.Re
 	}
 
 	return u, nil
+}
+
+func (o *oauth) CreateUser(c context.Context, user *model.User) error {
+	if err := o.Instance.Conn(c).
+		Table(user.TableName()).
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "id"}},
+			UpdateAll: true,
+		}).
+		Create(user).Error; err != nil {
+		return errorx.Internal(err.Error())
+	}
+
+	return nil
 }
 
 func (o *oauth) FindOrg(c context.Context, id uint64) (*dto.RespOrg, error) {

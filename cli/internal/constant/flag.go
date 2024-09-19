@@ -10,6 +10,11 @@ const (
 	FlagEndPoint   FlagName = "endpoint"
 )
 
+// Flags for the signup command
+const (
+	FlagDescription FlagName = "description"
+)
+
 // Flags for the login command
 const (
 	FlagAccount      FlagName = "account"

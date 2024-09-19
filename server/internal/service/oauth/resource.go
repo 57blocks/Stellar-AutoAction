@@ -12,6 +12,24 @@ import (
 
 var ServiceImpl Service
 
+func Signup(c *gin.Context) {
+	req := new(dto.ReqSignup)
+
+	if err := c.BindJSON(req); err != nil {
+		c.Error(errorx.BadRequest(err.Error()))
+		c.Abort()
+		return
+	}
+
+	if err := ServiceImpl.Signup(c, *req); err != nil {
+		c.Error(err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
+}
+
 func Login(c *gin.Context) {
 	req := new(dto.ReqLogin)
 

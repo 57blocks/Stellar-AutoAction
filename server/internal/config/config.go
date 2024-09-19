@@ -57,6 +57,7 @@ type (
 		Region          string `mapstructure:"region"`
 		AccessKeyID     string `mapstructure:"access_key_id"`
 		SecretAccessKey string `mapstructure:"secret_access_key"`
+		EcsTaskRole     string `mapstructure:"ecs_task_role"`
 	}
 
 	RDS struct {
