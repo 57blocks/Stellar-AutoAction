@@ -9,6 +9,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	"github.com/57blocks/auto-action/server/internal/repo"
+	"github.com/57blocks/auto-action/server/internal/third-party/decrypt"
 	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
 
 	"github.com/dgrijalva/jwt-go"
@@ -23,6 +24,7 @@ type (
 	}
 	service struct {
 		jwtx      jwtx.JWT
+		decrypter decrypt.Decrypter
 		oauthRepo repo.OAuth
 	}
 )
@@ -33,6 +35,7 @@ func NewOAuthService() {
 
 		ServiceImpl = &service{
 			jwtx:      jwtx.RS256,
+			decrypter: decrypt.RSADecrypter,
 			oauthRepo: repo.OAuthRepo,
 		}
 	}
@@ -47,7 +50,12 @@ func (svc *service) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredent
 		return nil, err
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), req.Password); err != nil {
+	rawPwdBytes, err := svc.decrypter.Decrypt([]byte(req.Password))
+	if err != nil {
+		return nil, err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), rawPwdBytes); err != nil {
 		return nil, errorx.BadRequest("password not match")
 	}
 

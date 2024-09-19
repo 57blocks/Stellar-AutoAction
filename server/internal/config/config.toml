@@ -8,6 +8,9 @@ endpoint = "BOUND_ENDPOINT"
 level = "LOG_LEVEL"
 encoding = "LOG_ENCODING"
 
+[pem]
+private_key = "PEM_PRIVATE_KEY"
+
 [jwt]
 protocol = "JWT_PROTOCOL"
 private_key = "JWT_PRIVATE_KEY"

@@ -70,7 +70,7 @@ func (aac *AAClaims) Valid() error {
 type rs256 struct{}
 
 func (rs *rs256) Assign(claim jwt.Claims) (string, error) {
-	pem, err := base64.StdEncoding.DecodeString(config.GlobalConfig.PrivateKey)
+	pem, err := base64.StdEncoding.DecodeString(config.GlobalConfig.JWT.PrivateKey)
 	if err != nil {
 		return "", errorx.Internal("decode private key failed")
 	}
@@ -91,7 +91,7 @@ func (rs *rs256) Assign(claim jwt.Claims) (string, error) {
 }
 
 func (rs *rs256) Parse(raw string) (jwt.Claims, error) {
-	pem, err := base64.StdEncoding.DecodeString(config.GlobalConfig.PublicKey)
+	pem, err := base64.StdEncoding.DecodeString(config.GlobalConfig.JWT.PublicKey)
 	if err != nil {
 		return nil, errorx.Internal("decode public key failed")
 	}

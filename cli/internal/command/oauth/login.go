@@ -1,7 +1,13 @@
 package oauth
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"os"
 
@@ -79,7 +85,7 @@ If ignored, the default environment: Horizon will be used.'`)
 type ReqLogin struct {
 	Account      string `json:"account"`
 	Organization string `json:"organization"`
-	Password     []byte `json:"password"`
+	Password     string `json:"password"`
 	Environment  string `json:"environment"`
 }
 
@@ -95,7 +101,16 @@ func loginFunc(cmd *cobra.Command, args []string) error {
 		return errorx.BadRequest("empty cryptPwd error")
 	}
 
-	success, err := supplierLogin(pwdBytes)
+	key, err := loadPublicKey()
+	if err != nil {
+		return err
+	}
+	encodedPwd, err := encryptPassword(string(pwdBytes), key)
+	if err != nil {
+		return err
+	}
+
+	success, err := supplierLogin(encodedPwd)
 	if err != nil {
 		return err
 	}
@@ -103,7 +118,7 @@ func loginFunc(cmd *cobra.Command, args []string) error {
 	return syncLogin(success)
 }
 
-func supplierLogin(cryptPwdBytes []byte) (*resty.Response, error) {
+func supplierLogin(pwdHash string) (*resty.Response, error) {
 	URL := util.ParseReqPath(fmt.Sprintf("%s/oauth/login", config.Vp.GetString("bound_with.endpoint")))
 
 	response, err := restyx.Client.R().
@@ -111,7 +126,7 @@ func supplierLogin(cryptPwdBytes []byte) (*resty.Response, error) {
 		SetBody(ReqLogin{
 			Account:      config.Vp.GetString(constant.FlagAccount.ValStr()),
 			Organization: config.Vp.GetString(constant.FlagOrganization.ValStr()),
-			Password:     cryptPwdBytes,
+			Password:     pwdHash,
 			Environment:  config.Vp.GetString(constant.FlagEnvironment.ValStr()),
 		}).
 		Post(URL)
@@ -136,4 +151,36 @@ func syncLogin(resp *resty.Response) error {
 	}
 
 	return config.SyncConfigByFlags()
+}
+
+func loadPublicKey() (*rsa.PublicKey, error) {
+	pubPEMBytes, err := base64.StdEncoding.DecodeString(constant.PublicKey)
+	if err != nil {
+		return nil, errorx.Internal("decode public key failed")
+	}
+
+	block, _ := pem.Decode(pubPEMBytes)
+	if block == nil || block.Type != "PUBLIC KEY" {
+		return nil, errorx.Internal("failed to decode PEM block containing public key")
+	}
+
+	pubKey, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	switch pubKey := pubKey.(type) {
+	case *rsa.PublicKey:
+		return pubKey, nil
+	default:
+		return nil, errorx.Internal("not an RSA public key")
+	}
+}
+
+func encryptPassword(password string, publicKey *rsa.PublicKey) (string, error) {
+	encryptedBytes, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, publicKey, []byte(password), nil)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(encryptedBytes), nil
 }

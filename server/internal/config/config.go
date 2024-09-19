@@ -20,6 +20,7 @@ type (
 		Mode   string `mapstructure:"mode"`
 		Bound  `mapstructure:"bound"`
 		Log    `mapstructure:"log"`
+		PEM    `mapstructure:"pem"`
 		JWT    `mapstructure:"jwt"`
 		Amazon `mapstructure:"aws"`
 		RDS    `mapstructure:"rds"`
@@ -37,6 +38,11 @@ type (
 		_        struct{}
 		Level    string `mapstructure:"level"`
 		Encoding string `mapstructure:"encoding"`
+	}
+
+	PEM struct {
+		_          struct{}
+		PrivateKey string `mapstructure:"private_key"`
 	}
 
 	JWT struct {
