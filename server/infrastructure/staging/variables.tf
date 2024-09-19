@@ -41,6 +41,12 @@ variable "vpc_pri_subnets" {
   default     = []
 }
 
+variable "vpc_database_subnets" {
+  description = "A list of database subnets inside the VPC"
+  type        = list(string)
+  default     = []
+}
+
 // Security Groups
 variable "sg_alb_name" {
   description = "ALB security group name"
@@ -66,18 +72,6 @@ variable "alb_name" {
   type        = string
   default     = ""
 }
-
-# variable "alb_listener" {
-#   description = "ALB listener"
-#   type        = any
-#   default     = {}
-# }
-#
-# variable "alb_target_groups" {
-#   description = "ALB target groups"
-#   type        = any
-#   default     = {}
-# }
 
 // Secrets Manager instances
 variable "jwt_private_key" {
