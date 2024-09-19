@@ -8,10 +8,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/constant"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 	svcOrg "github.com/57blocks/auto-action/server/internal/service/organization"
-	"github.com/57blocks/auto-action/server/internal/third-party/amazonx"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/gin-gonic/gin"
 )
 
@@ -46,19 +43,6 @@ func GenEventPayload(c context.Context, payload string) (*map[string]interface{}
 
 func GetRoleName(c context.Context, org, account string) string {
 	return fmt.Sprintf("AA-%s-%s-Role", org, account)
-}
-
-func GetRoleARN(c context.Context, roleName string) (string, error) {
-	input := &iam.GetRoleInput{
-		RoleName: aws.String(roleName),
-	}
-
-	result, err := amazonx.Conductor.GetRole(c, input)
-	if err != nil {
-		return "", errorx.Internal(fmt.Sprintf("get role arn error: %v", err))
-	}
-
-	return *result.Role.Arn, nil
 }
 
 func GetSecretName(c context.Context, org string, account string) string {

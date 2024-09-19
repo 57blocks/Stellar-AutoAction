@@ -22,6 +22,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	lambTypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
@@ -94,7 +95,7 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) ([]*dto.Resp
 	resp := make([]*dto.RespRegister, 0, len(files))
 
 	roleName := util.GetRoleName(c, jwtOrg.(string), jwtAccount.(string))
-	roleARN, err := util.GetRoleARN(c, roleName)
+	roleARN, err := GetRoleARN(c, roleName)
 	if err != nil {
 		return nil, err
 	}
@@ -471,4 +472,17 @@ func (svc *service) Remove(c context.Context, r *dto.ReqURILambda) (*dto.RespRem
 			Arn: lamb.Scheduler.ScheduleArn,
 		},
 	}, nil
+}
+
+func GetRoleARN(c context.Context, roleName string) (string, error) {
+	input := &iam.GetRoleInput{
+		RoleName: aws.String(roleName),
+	}
+
+	result, err := amazonx.Conductor.GetRole(c, input)
+	if err != nil {
+		return "", errorx.Internal(fmt.Sprintf("get role arn error: %v", err))
+	}
+
+	return *result.Role.Arn, nil
 }
