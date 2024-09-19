@@ -66,10 +66,59 @@ module "alb" {
   source = "./../modules/loadbalancer"
 
   alb_name            = var.alb_name
+  alb_vpc_id          = module.vpc.vpc_id
   alb_subnets         = module.vpc.vpc_public_subnets
-  alb_security_groups = [module.sg_alb.sg_id] // List?
-  alb_listener        = var.alb_listener
-  alb_target_groups   = var.alb_target_groups
+  alb_security_groups = [module.sg_alb.sg_id]
+  alb_listener = {
+    ex_http = {
+      port     = 80
+      protocol = "HTTP"
+
+      forward = {
+        target_group_key = "ecs_app"
+      }
+
+      rules = {
+        ex_http = {
+          priority = 1
+          actions = [
+            {
+              type             = "forward"
+              target_group_key = "ecs_app"
+            }
+          ]
+          conditions = [{
+            path_pattern = {
+              values = ["/*"]
+            }
+          }]
+        }
+      }
+    }
+  }
+  alb_target_groups = {
+    ecs_app = {
+      protocol                          = "HTTP"
+      port                              = 8080
+      target_type                       = "ip"
+      deregistration_delay              = 5
+      load_balancing_cross_zone_enabled = true
+      protocol_version                  = "HTTP1"
+
+      health_check = {
+        enabled             = true
+        healthy_threshold   = 5
+        interval            = 300
+        matcher             = "200"
+        path                = "/up"
+        port                = "traffic-port"
+        protocol            = "HTTP"
+        timeout             = 5
+        unhealthy_threshold = 2
+      }
+      create_attachment = false
+    }
+  }
 }
 
 // IAM roles
@@ -159,7 +208,7 @@ module "ecs_execution_role" {
 module "jwt_private_key" {
   source = "./../modules/secretmanager"
 
-  secret_name  = var.jwt_private_key
+  secret_name = var.jwt_private_key
   secret_value = jsonencode({
     jwt_private_key = var.jwt_private_key_value
   })
@@ -168,7 +217,7 @@ module "jwt_private_key" {
 module "jwt_public_key" {
   source = "./../modules/secretmanager"
 
-  secret_name  = var.jwt_public_key
+  secret_name = var.jwt_public_key
   secret_value = jsonencode({
     jwt_public_key = var.jwt_public_key_value
   })
@@ -177,23 +226,9 @@ module "jwt_public_key" {
 module "rds_password" {
   source = "./../modules/secretmanager"
 
-  secret_name  = var.rds_password
+  secret_name = var.rds_password
   secret_value = jsonencode({
     rds_password = var.rds_password_value
-  })
-}
-
-//
-# 创建一个秘密
-resource "aws_secretsmanager_secret" "rds_password_secret" {
-  name = "my-rds-password-secret"
-}
-
-# 设置秘密的值
-resource "aws_secretsmanager_secret_version" "rds_password_version" {
-  secret_id = aws_secretsmanager_secret.rds_password_secret.id
-  secret_string = jsonencode({
-    password = var.rds_password
   })
 }
 
@@ -207,12 +242,9 @@ module "rds" {
   rds_username = var.rds_username
   rds_password = module.rds_password.secret_value
 
-  rds_db_subnet_group_name   = module.vpc.vpc_database_subnet_group_name
-  rds_vpc_security_group_ids = module.vpc.vpc_private_subnets
-
-  #   vpc_id             = module.vpc.vpc_id
-  #   subnet_ids         = module.vpc.vpc_private_subnets
-  #   security_group_ids = [module.sg_rds.sg_id]
+  rds_db_subnet_group        = module.vpc.vpc_database_subnet_group
+  rds_vpc_security_group_ids = [module.sg_rds.sg_id]
+  rds_subnet_ids             = module.vpc.vpc_private_subnets
 }
 
 // ECR
@@ -242,10 +274,8 @@ module "ecs" {
           cpu       = 512
           memory    = 1024
           essential = true
-          image     = nonsensitive(module.ecr.ecr_repository_arn) // TODO: image tag?
-          firelens_configuration = {
-            type = "fluentbit"
-          }
+          # image              = nonsensitive("${module.ecr.ecr_repository_url}:latest")
+          image              = "busybox"
           memory_reservation = 50
           port_mappings = [{
             containerPort = 8080
@@ -263,10 +293,17 @@ module "ecs" {
               awslogs-create-group  = "true"
             }
           }
-          environment = {
-            JWT_PRIVATE_KEY = nonsensitive(module.jwt_private_key.secret_arn)
-            JWT_PUBLIC_KEY  = nonsensitive(module.jwt_public_key.secret_arn)
-          }
+          environment = [{
+            #             JWT_PRIVATE_KEY = nonsensitive(module.jwt_private_key.secret_value)
+            #             JWT_PUBLIC_KEY  = nonsensitive(module.jwt_public_key.secret_value)
+            name  = "JWT_PRIVATE_KEY"
+            value = nonsensitive(module.jwt_public_key.secret_value)
+
+            },
+            {
+              name  = "JWT_PUBLIC_KEY"
+              value = nonsensitive("jwt_public")
+          }]
         }
       }
 
@@ -274,9 +311,7 @@ module "ecs" {
       create_task_exec_iam_role = false
       task_exec_iam_role_arn    = module.ecs_execution_role.role_arn
 
-      vpc_id      = module.vpc.vpc_id
-      vpc_subnets = module.vpc.vpc_public_subnets
-      subnet_ids  = module.vpc.vpc_public_subnets
+      subnet_ids = module.vpc.vpc_private_subnets
 
       load_balancer = {
         service = {
@@ -288,8 +323,6 @@ module "ecs" {
 
       create_security_group = false
       security_group_ids    = [module.sg_ecs.sg_id]
-
-      // TODO: 网络配置-服务角色: AWSServiceRoleForECS ?
     }
   }
 }
