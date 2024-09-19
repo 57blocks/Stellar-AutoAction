@@ -16,6 +16,16 @@ type (
 	}
 )
 
+// Signup related dto
+type (
+	ReqSignup struct {
+		Account      string  `json:"account"`
+		Organization string  `json:"organization"`
+		Password     []byte  `json:"password"`
+		Description  *string `json:"description,omitempty"`
+	}
+)
+
 // Login related dto
 type (
 	ReqLogin struct {
@@ -93,7 +103,7 @@ type (
 
 // RespOrg organization related dto
 type RespOrg struct {
-	ID          uint64 `json:"-"`
+	ID          uint64 `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }

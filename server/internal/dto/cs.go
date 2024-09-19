@@ -7,4 +7,9 @@ type (
 			KeyID string `json:"key_id"`
 		} `json:"keys"`
 	}
+
+	RespAddCsRole struct {
+		Name   string `json:"name"`
+		RoleId string `json:"role_id"`
+	}
 )

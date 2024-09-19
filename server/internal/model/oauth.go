@@ -32,7 +32,7 @@ type User struct {
 	Account        string `json:"account"`
 	Password       string `json:"password"`
 	Description    string `json:"description"`
-	OrganizationId int32  `json:"organization_id"`
+	OrganizationId uint64 `json:"organization_id"`
 }
 
 func (u *User) TableName() string {

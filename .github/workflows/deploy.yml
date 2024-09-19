@@ -96,6 +96,7 @@ jobs:
             CS_ORGANIZATION=${{ secrets.CS_ORGANIZATION }}
             WALLET_MAX=${{ vars.WALLET_MAX}}
             LAMBDA_MAX=${{ vars.LAMBDA_MAX }}
+            AWS_ECS_TASK_ROLE=${{ vars.AWS_ECS_TASK_ROLE }}
 
       - name: Deploy to Amazon ECS task definition
         id: deploy-task-def

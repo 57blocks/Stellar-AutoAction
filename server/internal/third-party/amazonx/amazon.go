@@ -56,6 +56,22 @@ type (
 			c context.Context,
 			input *iam.GetRoleInput,
 		) (*iam.GetRoleOutput, error)
+		CreateRole(
+			c context.Context,
+			input *iam.CreateRoleInput,
+		) (*iam.CreateRoleOutput, error)
+		PutRolePolicy(
+			c context.Context,
+			input *iam.PutRolePolicyInput,
+		) (*iam.PutRolePolicyOutput, error)
+		CreateSecret(
+			c context.Context,
+			input *secretsmanager.CreateSecretInput,
+		) (*secretsmanager.CreateSecretOutput, error)
+		PutResourcePolicy(
+			c context.Context,
+			input *secretsmanager.PutResourcePolicyInput,
+		) (*secretsmanager.PutResourcePolicyOutput, error)
 	}
 
 	amazon struct {
@@ -174,4 +190,32 @@ func (a *amazon) GetRole(
 	input *iam.GetRoleInput,
 ) (*iam.GetRoleOutput, error) {
 	return a.iamClient.GetRole(c, input)
+}
+
+func (a *amazon) CreateRole(
+	c context.Context,
+	input *iam.CreateRoleInput,
+) (*iam.CreateRoleOutput, error) {
+	return a.iamClient.CreateRole(c, input)
+}
+
+func (a *amazon) PutRolePolicy(
+	c context.Context,
+	input *iam.PutRolePolicyInput,
+) (*iam.PutRolePolicyOutput, error) {
+	return a.iamClient.PutRolePolicy(c, input)
+}
+
+func (a *amazon) CreateSecret(
+	c context.Context,
+	input *secretsmanager.CreateSecretInput,
+) (*secretsmanager.CreateSecretOutput, error) {
+	return a.secretManagerClient.CreateSecret(c, input)
+}
+
+func (a *amazon) PutResourcePolicy(
+	c context.Context,
+	input *secretsmanager.PutResourcePolicyInput,
+) (*secretsmanager.PutResourcePolicyOutput, error) {
+	return a.secretManagerClient.PutResourcePolicy(c, input)
 }
