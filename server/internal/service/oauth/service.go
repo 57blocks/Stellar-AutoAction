@@ -339,6 +339,15 @@ func (svc *service) addAwsRole(c context.Context, orgName string, account string
 				"secretsmanager:DescribeSecret"
 			],
 			"Resource": "*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": [
+				"logs:CreateLogGroup",
+				"logs:CreateLogStream",
+				"logs:PutLogEvents"
+			],
+			"Resource": "*"
 		}
 	]
 }`,
