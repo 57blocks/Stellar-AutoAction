@@ -251,6 +251,8 @@ module "rds" {
 # module "ecs" {
 #   source = "./../modules/ecs"
 #
+#   depends_on = [module.jwt_key_pairs]
+#
 #   ecs_cluster_name = var.ecs_cluster_name
 #
 #   ecs_fargate_capacity_providers = var.ecs_fargate_capacity_providers
@@ -266,8 +268,8 @@ module "rds" {
 #           cpu       = 512
 #           memory    = 1024
 #           essential = true
-#           # image              = nonsensitive("${module.ecr.ecr_repository_url}:latest")
-#           image              = "busybox"
+#           image     = nonsensitive("${module.ecr.ecr_repository_url}:latest")
+#           #           image              = "busybox"
 #           memory_reservation = 50
 #           port_mappings = [{
 #             containerPort = 8080
@@ -286,22 +288,29 @@ module "rds" {
 #             }
 #           }
 #           environment = [{
-#             #             JWT_PRIVATE_KEY = nonsensitive(module.jwt_private_key.secret_value)
-#             #             JWT_PUBLIC_KEY  = nonsensitive(module.jwt_public_key.secret_value)
 #             name  = "JWT_PRIVATE_KEY"
-#             value = nonsensitive(module.jwt_public_key.secret_value)
-#
+#             value = jsondecode(module.jwt_key_pairs.secret_value).private_key
 #             },
 #             {
 #               name  = "JWT_PUBLIC_KEY"
-#               value = nonsensitive("jwt_public")
+#               value = jsondecode(module.jwt_key_pairs.secret_value).public_key
 #           }]
+#           secrets = [
+#             {
+#               name      = "JWT_PRIVATE_KEY"
+#               valueFrom = module.jwt_key_pairs.secret_arn # Use the ARN of the secret from Secrets Manager
+#             },
+#             {
+#               name      = "JWT_PUBLIC_KEY"
+#               valueFrom = module.jwt_key_pairs.secret_arn # Adjust if public_key is a different secret
+#             }
+#           ]
 #         }
 #       }
 #
 #       create_tasks_iam_role     = false
 #       create_task_exec_iam_role = false
-#       task_exec_iam_role_arn    = module.ecs_execution_role.role_arn
+#       task_exec_iam_role_arn    = module.ecs_task_execution_role.role_arn
 #
 #       subnet_ids = module.vpc.vpc_private_subnets
 #
