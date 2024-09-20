@@ -27,6 +27,7 @@ type (
 		CS     `mapstructure:"cs"`
 		Wallet `mapstructure:"wallet"`
 		Lambda `mapstructure:"lambda"`
+		TF     `mapstructure:"tf"`
 	}
 
 	Bound struct {
@@ -85,6 +86,13 @@ type (
 		_   struct{}
 		Max int `mapstructure:"max"`
 	}
+
+	TF struct {
+		_           struct{}
+		LogEncoding string `mapstructure:"log_encoding"`
+		PrivateKey  string `mapstructure:"private_key"`
+		PublicKey   string `mapstructure:"public_key"`
+	}
 )
 
 func Setup() error {
@@ -114,6 +122,7 @@ func Setup() error {
 
 	cfgLogger.Debug(fmt.Sprintf("config path: %#v", Vp.ConfigFileUsed()))
 	cfgLogger.Debug(fmt.Sprintf("config: %#v", GlobalConfig.DebugStr()))
+	cfgLogger.Info(fmt.Sprintf("config from Terraform: %#v", GlobalConfig.TF))
 
 	return nil
 }

@@ -120,7 +120,7 @@ module "ecr" {
 module "scheduler_invocation_role" {
   source = "../modules/iam"
 
-  role_name        = "aa_scheduler_invocation_role"
+  role_name        = "auac_scheduler_invocation_role"
   role_description = "Execution role for EventBridge Scheduler to invoke Lambda function"
 
   assume_role_policy = jsonencode({
@@ -156,7 +156,7 @@ module "scheduler_invocation_role" {
 module "ecs_task_execution_role" {
   source = "../modules/iam"
 
-  role_name        = "aa_ecs_task_execution_role"
+  role_name        = "auac_ecs_task_execution_role"
   role_description = "Execution role for ECS tasks"
 
   assume_role_policy = jsonencode({
@@ -196,7 +196,14 @@ module "ecs_task_execution_role" {
           "logs:DescribeLogGroups"
         ]
         Resource = "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:*"
-      }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:*"
+      },
     ]
   })
 }
@@ -237,93 +244,94 @@ module "rds" {
   rds_subnet_ids             = aws_db_subnet_group.default.subnet_ids
 }
 
-# // ECS module
-# module "jwt_key_pairs" {
-#   source = "./../modules/secretmanager"
-#
-#   secret_name = var.jwt_key_pairs
-#   secret_value = jsonencode({
-#     public_key  = var.jwt_public_key
-#     private_key = var.jwt_private_key
-#   })
-# }
-#
-# module "ecs" {
-#   source = "./../modules/ecs"
-#
-#   depends_on = [module.jwt_key_pairs]
-#
-#   ecs_cluster_name = var.ecs_cluster_name
-#
-#   ecs_fargate_capacity_providers = var.ecs_fargate_capacity_providers
-#
-#   ecs_services = {
-#     aa-service = {
-#       cpu    = 1024
-#       memory = 4096
-#
-#       # Container definition(s)
-#       container_definitions = {
-#         aa-service = {
-#           cpu       = 512
-#           memory    = 1024
-#           essential = true
-#           image     = nonsensitive("${module.ecr.ecr_repository_url}:latest")
-#           #           image              = "busybox"
-#           memory_reservation = 50
-#           port_mappings = [{
-#             containerPort = 8080
-#             hostPort      = 8080
-#             protocol      = "tcp"
-#             appProtocol   = "http"
-#           }]
-#           readonly_root_filesystem = false
-#           log_configuration = {
-#             logDriver = "awslogs"
-#             options = {
-#               awslogs-group         = "/aws/ecs/ecs-services/aa-service"
-#               awslogs-region        = var.region
-#               awslogs-stream-prefix = "auto-actions"
-#               awslogs-create-group  = "true"
-#             }
-#           }
-#           environment = [{
-#             name  = "JWT_PRIVATE_KEY"
-#             value = jsondecode(module.jwt_key_pairs.secret_value).private_key
-#             },
-#             {
-#               name  = "JWT_PUBLIC_KEY"
-#               value = jsondecode(module.jwt_key_pairs.secret_value).public_key
-#           }]
-#           secrets = [
-#             {
-#               name      = "JWT_PRIVATE_KEY"
-#               valueFrom = module.jwt_key_pairs.secret_arn # Use the ARN of the secret from Secrets Manager
-#             },
-#             {
-#               name      = "JWT_PUBLIC_KEY"
-#               valueFrom = module.jwt_key_pairs.secret_arn # Adjust if public_key is a different secret
-#             }
-#           ]
-#         }
-#       }
-#
-#       create_tasks_iam_role     = false
-#       create_task_exec_iam_role = false
-#       task_exec_iam_role_arn    = module.ecs_task_execution_role.role_arn
-#
-#       subnet_ids = module.vpc.vpc_private_subnets
-#
-#       load_balancer = {
-#         service = {
-#           target_group_arn = module.alb.target_groups
-#           container_name   = "aa-service"
-#           container_port   = 8080
-#         }
-#       }
-#
-#       create_security_group = false
-#       security_group_ids    = [module.sg_ecs.sg_id]
-#     }
-#   }
-# }
+// ECS module
+module "jwt_key_pairs" {
+  source = "./../modules/secretmanager"
+
+  secret_name = var.jwt_key_pairs
+  secret_value = jsonencode({
+    public_key  = var.jwt_public_key
+    private_key = var.jwt_private_key
+  })
+}
+
+module "ecs" {
+  source = "./../modules/ecs"
+
+  depends_on = [module.jwt_key_pairs]
+
+  ecs_cluster_name = var.ecs_cluster_name
+
+  ecs_fargate_capacity_providers = var.ecs_fargate_capacity_providers
+
+  ecs_services = {
+    auac-service = {
+      cpu    = 1024
+      memory = 4096
+
+      # Container definition(s)
+      container_definitions = {
+        auac-service = {
+          cpu       = 512
+          memory    = 1024
+          essential = true
+          #           image     = nonsensitive("${module.ecr.ecr_repository_url}:latest")
+          image              = "busybox"
+          memory_reservation = 50
+          port_mappings = [{
+            containerPort = 8080
+            hostPort      = 8080
+            protocol      = "tcp"
+            appProtocol   = "http"
+          }]
+          readonly_root_filesystem = false
+          log_configuration = {
+            logDriver = "awslogs"
+            options = {
+              awslogs-group         = "/aws/ecs/ecs-services/auac-service"
+              awslogs-region        = var.region
+              awslogs-stream-prefix = "auto-actions"
+              awslogs-create-group  = "true"
+            }
+          }
+          environment = [
+            {
+              name  = "TF_LOG_ENCODING"
+              value = "tf_json"
+            }
+          ]
+          secrets = [
+            {
+              name      = "TF_PRIVATE_KEY"
+              valueFrom = "${module.jwt_key_pairs.secret_arn}:private_key::"
+#               valueFrom = jsondecode(module.jwt_key_pairs.secret_value).private_key
+            },
+            {
+              name      = "TF_PUBLIC_KEY"
+              valueFrom = "${module.jwt_key_pairs.secret_arn}:public_key::"
+#               valueFrom = jsondecode(module.jwt_key_pairs.secret_value).public_key
+            }
+          ]
+        }
+      }
+
+      #       create_task_definition    = false
+      create_tasks_iam_role     = false
+      create_task_exec_iam_role = false
+      task_exec_iam_role_arn    = module.ecs_task_execution_role.role_arn
+
+      subnet_ids = module.vpc.vpc_private_subnets
+
+      load_balancer = {
+        service = {
+          target_group_arn = module.alb.target_groups
+          container_name   = "auac-service"
+          container_port   = 8080
+        }
+      }
+
+      create_security_group = false
+      security_group_ids    = [module.sg_ecs.sg_id]
+    }
+  }
+}
