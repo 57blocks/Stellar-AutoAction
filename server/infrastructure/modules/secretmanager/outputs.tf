@@ -8,4 +8,5 @@ output "secret_value_id" {
 
 output "secret_value" {
   value = aws_secretsmanager_secret_version.secret_version.secret_string
+  sensitive = true
 }

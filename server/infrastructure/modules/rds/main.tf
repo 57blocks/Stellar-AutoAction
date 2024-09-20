@@ -24,18 +24,25 @@ module "rds" {
   port     = 5432
 
   multi_az               = true
-  db_subnet_group_name   = var.rds_db_subnet_group
   vpc_security_group_ids = var.rds_vpc_security_group_ids
-  subnet_ids             = var.rds_subnet_ids
 
-  maintenance_window              = "Mon:00:00-Mon:03:00"
-  backup_window                   = "03:00-06:00"
-  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
+  db_subnet_group_name = var.rds_db_subnet_group_name
+  subnet_ids           = var.rds_subnet_ids
+
+  auto_minor_version_upgrade = true
+  maintenance_window         = "Mon:00:00-Mon:03:00"
+
   create_cloudwatch_log_group     = true
+  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
 
-  backup_retention_period = 1
-  skip_final_snapshot     = true
-  deletion_protection     = false
+  backup_window           = "03:00-05:00"
+  backup_retention_period = 0
+
+  // default: true. The password provided will not be used if `manage_master_user_password` is set to true.
+  manage_master_user_password = false
+  deletion_protection         = false
+  skip_final_snapshot         = true
+  publicly_accessible         = true
 
   parameters = [
     {
