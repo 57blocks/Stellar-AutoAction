@@ -23,7 +23,7 @@ The variable file `variables.auto.tfvars` is ignored by git.
 3. Add default values to keep hcl validate. And also, it's recommended that keep the type and default value as it in 
    modules.
 
-Here are some samples in `variables.auto.tfvars`:  
+Here are some samples/notes for `variables.auto.tfvars` usage:  
 - General
     ```hcl
     region = "us-west-2"
@@ -58,6 +58,27 @@ Here are some samples in `variables.auto.tfvars`:
     
     **_Note_**: The JWT key paris are base64-encoded string, which is aiming at keeping the RSA PEM format.
 
+- ECS  
+
+  1. The cluster name must consist of alphanumerics, hyphens, and underscores.
+  2. The farget capacity provider is fixed in `variables.auto.tfvars` now:
+    ```hcl
+    ecs_fargate_capacity_providers = {
+      FARGATE = {
+        default_capacity_provider_strategy = {
+          weight = 50
+          base   = 20
+        }
+      }
+      FARGATE_SPOT = {
+        default_capacity_provider_strategy = {
+          weight = 50
+        }
+      }
+    }
+    ```
+  3. The key in env should be matched with code reference. Like: `JWT_PRIVATE_KEY`
+
 - Apply Order  
   If the relationship between multiple modules is explicit, terraform will handle the order automatically. Like:  
   ```hcl
@@ -73,9 +94,10 @@ Here are some samples in `variables.auto.tfvars`:
   If the relationship/dependency is implicit, you need to use `depends_on` to specify the order for terraform.
 
 ### Apply
-```hcl
+```shell
 terraform init
-terraform validate/fmt
+terraform fmt
+terraform validate
 terraform plan
 terraform apply
 ```
