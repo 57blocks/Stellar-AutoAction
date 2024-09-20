@@ -54,7 +54,7 @@ If it's the first time, or ignored, the default path will be used.'`)
 		config.Vp.GetString(flagEnv),
 		`
 The execution environment about to be bound.
-If ignored, the default environment: Horizon will be used.'`)
+If ignored, the default environment: Horizon-Testnet will be used.'`)
 
 	flagAcc := constant.FlagAccount.ValStr()
 	login.Flags().StringP(
@@ -143,7 +143,12 @@ func syncLogin(resp *resty.Response) error {
 		return errorx.Internal(fmt.Sprintf("unmarshaling json response error: %s", err.Error()))
 	}
 
-	if err := config.WriteCredential(config.Vp.GetString(constant.FlagCredential.ValStr()), cred); err != nil {
+	credPath := config.Vp.GetString(constant.FlagCredential.ValStr())
+	if credPath == "" {
+		credPath = util.DefaultCredPath()
+	}
+
+	if err := config.WriteCredential(credPath, cred); err != nil {
 		return err
 	}
 
