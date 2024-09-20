@@ -36,6 +36,20 @@ func (m *MockOAuth) EXPECT() *MockOAuthMockRecorder {
 	return m.recorder
 }
 
+// CreateUser mocks base method.
+func (m *MockOAuth) CreateUser(c context.Context, user *model.User) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateUser", c, user)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateUser indicates an expected call of CreateUser.
+func (mr *MockOAuthMockRecorder) CreateUser(c, user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockOAuth)(nil).CreateUser), c, user)
+}
+
 // DeleteTokenByAccess mocks base method.
 func (m *MockOAuth) DeleteTokenByAccess(c context.Context, access string) error {
 	m.ctrl.T.Helper()
