@@ -8,12 +8,11 @@ data "aws_caller_identity" "current" {}
 module "vpc" {
   source = "./../modules/vpc"
 
-  vpc_name             = var.vpc_name
-  vpc_cidr             = var.vpc_cidr
-  vpc_azs              = var.vpc_azs
-  vpc_pub_subnets      = var.vpc_pub_subnets
-  vpc_pri_subnets      = var.vpc_pri_subnets
-  vpc_database_subnets = var.vpc_database_subnets
+  vpc_name        = var.vpc_name
+  vpc_cidr        = var.vpc_cidr
+  vpc_azs         = var.vpc_azs
+  vpc_pub_subnets = var.vpc_pub_subnets
+  vpc_pri_subnets = var.vpc_pri_subnets
 }
 
 // SG modules
@@ -25,7 +24,7 @@ module "sg_alb" {
   sg_description = "Security group for ALB"
 
   ingress_cidr_blocks = ["0.0.0.0/0"]
-  ingress_rules       = ["http-80-tcp", "https-443-tcp"] // why two 80s in the rule?
+  ingress_rules       = ["http-80-tcp", "https-443-tcp"]
 
   egress_cidr_blocks = ["0.0.0.0/0"]
   egress_rules       = ["all-all"]
@@ -58,7 +57,7 @@ module "sg_rds" {
   sg_description = "Security group for RDS"
 
   ingress_cidr_blocks = ["0.0.0.0/0"]
-  ingress_rules       = ["postgresql-tcp"] // why two 80s in the rule?
+  ingress_rules       = ["postgresql-tcp"]
 
   egress_cidr_blocks = ["0.0.0.0/0"]
   egress_rules       = ["all-all"]
@@ -202,50 +201,53 @@ module "ecs_task_execution_role" {
   })
 }
 
-# // Secrets Manager
-# module "jwt_private_key" {
-#   source = "./../modules/secretmanager"
-#
-#   secret_name = var.jwt_private_key
-#   secret_value = jsonencode({
-#     jwt_private_key = var.jwt_private_key_value
-#   })
-# }
-#
-# module "jwt_public_key" {
-#   source = "./../modules/secretmanager"
-#
-#   secret_name = var.jwt_public_key
-#   secret_value = jsonencode({
-#     jwt_public_key = var.jwt_public_key_value
-#   })
-# }
+// RDS
+resource "aws_db_subnet_group" "default" {
+  name       = "${var.vpc_name}-db-subnet-group"
+  subnet_ids = module.vpc.vpc_public_subnets
+
+  tags = {
+    Name = "${var.vpc_name}-db-subnet-group"
+  }
+}
 
 module "rds_password" {
   source = "./../modules/secretmanager"
 
-  secret_name = var.rds_password
+  secret_name = var.rds_key_pairs
   secret_value = jsonencode({
-    rds_password = var.rds_password_value
+    rds_username = var.rds_username
+    rds_password = var.rds_password
   })
 }
 
-# // RDS
-# module "rds" {
-#   source = "./../modules/rds"
-#
-#   rds_identifier = var.rds_identifier
-#
-#   rds_db_name  = var.rds_db_name
-#   rds_username = var.rds_username
-#   rds_password = module.rds_password.secret_value
-#
-#   rds_db_subnet_group        = module.vpc.vpc_database_subnet_group
-#   rds_vpc_security_group_ids = [module.sg_rds.sg_id]
-#   rds_subnet_ids             = module.vpc.vpc_private_subnets
-# }
+module "rds" {
+  source = "./../modules/rds"
+
+  depends_on = [module.rds_password, aws_db_subnet_group.default]
+
+  rds_identifier = var.rds_identifier
+
+  rds_db_name  = var.rds_db_name
+  rds_username = jsondecode(module.rds_password.secret_value).rds_username
+  rds_password = jsondecode(module.rds_password.secret_value).rds_password
+
+  rds_vpc_security_group_ids = [module.sg_rds.sg_id]
+  rds_db_subnet_group_name   = aws_db_subnet_group.default.name
+  rds_subnet_ids             = aws_db_subnet_group.default.subnet_ids
+}
 
 # // ECS module
+# module "jwt_key_pairs" {
+#   source = "./../modules/secretmanager"
+#
+#   secret_name = var.jwt_key_pairs
+#   secret_value = jsonencode({
+#     public_key  = var.jwt_public_key
+#     private_key = var.jwt_private_key
+#   })
+# }
+#
 # module "ecs" {
 #   source = "./../modules/ecs"
 #

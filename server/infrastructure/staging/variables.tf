@@ -41,12 +41,6 @@ variable "vpc_pri_subnets" {
   default     = []
 }
 
-variable "vpc_database_subnets" {
-  description = "A list of database subnets inside the VPC"
-  type        = list(string)
-  default     = []
-}
-
 // Security Groups
 variable "sg_alb_name" {
   description = "ALB security group name"
@@ -74,13 +68,13 @@ variable "alb_name" {
 }
 
 // Secrets Manager instances
-variable "jwt_private_key" {
-  description = "The private key name to sign JWT tokens"
+variable "jwt_key_pairs" {
+  description = "The JWT key pair name"
   type        = string
   default     = ""
 }
 
-variable "jwt_private_key_value" {
+variable "jwt_private_key" {
   description = "The private key to sign JWT tokens"
   type        = string
   default     = ""
@@ -92,19 +86,13 @@ variable "jwt_public_key" {
   default     = ""
 }
 
-variable "jwt_public_key_value" {
-  description = "The public key to verify JWT tokens"
-  type        = string
-  default     = ""
-}
-
-variable "rds_password" {
+variable "rds_key_pairs" {
   description = "The RDS password key name"
   type        = string
   default     = ""
 }
 
-variable "rds_password_value" {
+variable "rds_password" {
   description = "The RDS password value"
   type        = string
   default     = ""

@@ -25,8 +25,3 @@ output "vpc_private_subnets" {
 output "vpc_private_subnets_cidr_blocks" {
   value = module.vpc.private_subnets_cidr_blocks
 }
-
-output "vpc_database_subnet_group" {
-  description = "The vpc database subnet group"
-  value       = module.vpc.database_subnet_group
-}

@@ -27,9 +27,3 @@ variable "vpc_pri_subnets" {
   type        = list(string)
   default     = []
 }
-
-variable "vpc_database_subnets" {
-  description = "A list of database subnets inside the VPC"
-  type        = list(string)
-  default     = []
-}
