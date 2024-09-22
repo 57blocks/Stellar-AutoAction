@@ -20,14 +20,13 @@ type (
 		Mode   string `mapstructure:"mode"`
 		Bound  `mapstructure:"bound"`
 		Log    `mapstructure:"log"`
-		PEM    `mapstructure:"pem"`
+		RSA    `mapstructure:"rsa"`
 		JWT    `mapstructure:"jwt"`
 		Amazon `mapstructure:"aws"`
 		RDS    `mapstructure:"rds"`
 		CS     `mapstructure:"cs"`
 		Wallet `mapstructure:"wallet"`
 		Lambda `mapstructure:"lambda"`
-		TF     `mapstructure:"tf"`
 	}
 
 	Bound struct {
@@ -41,7 +40,7 @@ type (
 		Encoding string `mapstructure:"encoding"`
 	}
 
-	PEM struct {
+	RSA struct {
 		_          struct{}
 		PrivateKey string `mapstructure:"private_key"`
 	}
@@ -86,13 +85,6 @@ type (
 		_   struct{}
 		Max int `mapstructure:"max"`
 	}
-
-	TF struct {
-		_           struct{}
-		LogEncoding string `mapstructure:"log_encoding"`
-		PrivateKey  string `mapstructure:"private_key"`
-		PublicKey   string `mapstructure:"public_key"`
-	}
 )
 
 func Setup() error {
@@ -122,7 +114,7 @@ func Setup() error {
 
 	cfgLogger.Debug(fmt.Sprintf("config path: %#v", Vp.ConfigFileUsed()))
 	cfgLogger.Debug(fmt.Sprintf("config: %#v", GlobalConfig.DebugStr()))
-	cfgLogger.Info(fmt.Sprintf("config from Terraform: %#v", GlobalConfig.TF))
+	cfgLogger.Info(fmt.Sprintf("config by Terraform: %#v", GlobalConfig))
 
 	return nil
 }

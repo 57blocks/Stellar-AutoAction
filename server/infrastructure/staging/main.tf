@@ -184,7 +184,8 @@ module "ecs_task_execution_role" {
           "ecr:GetDownloadUrlForLayer",
           "ecr:BatchGetImage"
         ]
-        Resource = "arn:aws:ecr:${var.region}:${data.aws_caller_identity.current.account_id}:repository/*"
+        Resource = "*"
+#         Resource = "arn:aws:ecr:${var.region}:${data.aws_caller_identity.current.account_id}:repository/*"
       },
       {
         Effect = "Allow"
@@ -244,7 +245,7 @@ module "rds" {
   rds_subnet_ids             = aws_db_subnet_group.default.subnet_ids
 }
 
-// ECS module
+// ECS
 module "jwt_key_pairs" {
   source = "./../modules/secretmanager"
 
@@ -252,6 +253,16 @@ module "jwt_key_pairs" {
   secret_value = jsonencode({
     public_key  = var.jwt_public_key
     private_key = var.jwt_private_key
+  })
+}
+
+module "rsa_key_pairs" {
+  source = "./../modules/secretmanager"
+
+  secret_name = var.rsa_key_pairs
+  secret_value = jsonencode({
+    public_key  = var.rsa_public_key
+    private_key = var.rsa_private_key
   })
 }
 
@@ -303,9 +314,61 @@ module "ecs" {
             {
               name  = "TF_LOG_ENCODING"
               value = "tf_json"
+            },
+            {
+              name  = "AWS_REGION"
+              value = "us-west-2"
+            },
+            {
+              name  = "BOUND_ENDPOINT"
+              value = "busybox"
+            },
+            {
+              name  = "BOUND_NAME"
+              value = "Horizon"
+            },
+            {
+              name  = "TF_LOG_ENCODING"
+              value = "tf_json"
+            },
+            {
+              name  = "TF_LOG_ENCODING"
+              value = "tf_json"
+            },
+            {
+              name  = "TF_LOG_ENCODING"
+              value = "tf_json"
+            },
+            {
+              name  = "TF_LOG_ENCODING"
+              value = "tf_json"
+            },
+            {
+              name  = "TF_LOG_ENCODING"
+              value = "tf_json"
+            },
+            {
+              name  = "TF_LOG_ENCODING"
+              value = "tf_json"
+            },
+            {
+              name  = "TF_LOG_ENCODING"
+              value = "tf_json"
+            },
+            {
+              name  = "TF_LOG_ENCODING"
+              value = "tf_json"
+            },
+            {
+              name  = "TF_LOG_ENCODING"
+              value = "tf_json"
             }
           ]
           secrets = [
+            {
+              name      = "PEM_PRIVATE_KEY"
+              valueFrom = "${module.jwt_key_pairs.secret_arn}:private_key::"
+            },
             {
               name      = "TF_PRIVATE_KEY"
               valueFrom = "${module.jwt_key_pairs.secret_arn}:private_key::"
@@ -327,7 +390,7 @@ module "ecs" {
       load_balancer = {
         service = {
           target_group_arn = module.alb.target_groups
-          container_name   = "auac-service"
+          container_name   = "auac-container"
           container_port   = 8080
         }
       }

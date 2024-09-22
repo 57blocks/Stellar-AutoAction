@@ -8,12 +8,11 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 
-	"github.com/57blocks/auto-action/cli/internal/constant"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
 )
 
-func LoadPublicKey() (*rsa.PublicKey, error) {
-	pubPEMBytes, err := base64.StdEncoding.DecodeString(constant.PublicKey)
+func LoadPublicKey(base64Str string) (*rsa.PublicKey, error) {
+	pubPEMBytes, err := base64.StdEncoding.DecodeString(base64Str)
 	if err != nil {
 		return nil, errorx.Internal("decode public key failed")
 	}

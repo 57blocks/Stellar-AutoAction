@@ -67,7 +67,7 @@ variable "alb_name" {
   default     = ""
 }
 
-// Secrets Manager instances
+// JWT Secrets Manager
 variable "jwt_key_pairs" {
   description = "The JWT key pair name"
   type        = string
@@ -86,6 +86,7 @@ variable "jwt_public_key" {
   default     = ""
 }
 
+// RDS Secrets Manager
 variable "rds_key_pairs" {
   description = "The RDS password key name"
   type        = string
@@ -94,6 +95,31 @@ variable "rds_key_pairs" {
 
 variable "rds_password" {
   description = "The RDS password value"
+  type        = string
+  default     = ""
+}
+
+variable "rds_username" {
+  description = "The RDS username"
+  type        = string
+  default     = ""
+}
+
+// RSA PEM Secrets Manager
+variable "rsa_key_pairs" {
+  description = "The name of the RSA key pair"
+  type        = string
+  default     = ""
+}
+
+variable "rsa_public_key" {
+  description = "The public RSA key"
+  type        = string
+  default     = ""
+}
+
+variable "rsa_private_key" {
+  description = "The private RSA key"
   type        = string
   default     = ""
 }
@@ -107,12 +133,6 @@ variable "rds_identifier" {
 
 variable "rds_db_name" {
   description = "The RDS database name"
-  type        = string
-  default     = ""
-}
-
-variable "rds_username" {
-  description = "The RDS username"
   type        = string
   default     = ""
 }
