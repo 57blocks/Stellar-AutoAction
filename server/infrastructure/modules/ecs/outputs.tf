@@ -1,3 +1,3 @@
-# output "ecs_services" {
-#   value = module.ecs.services
-# }
+output "ecs_services" {
+  value = module.ecs.services
+}

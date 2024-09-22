@@ -39,8 +39,3 @@ max = "WALLET_MAX"
 
 [lambda]
 max = "LAMBDA_MAX"
-
-[tf]
-log_encoding = "TF_LOG_ENCODING"
-private_key = "TF_PRIVATE_KEY"
-public_key = "TF_PUBLIC_KEY"

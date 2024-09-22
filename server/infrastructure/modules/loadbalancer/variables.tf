@@ -1,9 +1,3 @@
-# variable "region" {
-#   description = "The AWS region to deploy the VPC"
-#   type        = string
-#   default     = ""
-# }
-
 variable "alb_name" {
   description = "Name to be used on all the resources as identifier"
   type        = string
