@@ -258,7 +258,14 @@ module "jwt_key_pairs" {
 module "ecs" {
   source = "./../modules/ecs"
 
-  depends_on = [module.jwt_key_pairs]
+  depends_on = [
+    module.vpc,
+    module.ecs_task_execution_role,
+    module.alb,
+    module.sg_ecs,
+    module.jwt_key_pairs,
+    module.ecr,
+  ]
 
   ecs_cluster_name = var.ecs_cluster_name
 
@@ -269,14 +276,12 @@ module "ecs" {
       cpu    = 1024
       memory = 4096
 
-      # Container definition(s)
       container_definitions = {
-        auac-service = {
-          cpu       = 512
-          memory    = 1024
-          essential = true
-          #           image     = nonsensitive("${module.ecr.ecr_repository_url}:latest")
-          image              = "busybox"
+        auac-container = {
+          cpu                = 512
+          memory             = 1024
+          essential          = true
+          image              = nonsensitive("${module.ecr.ecr_repository_url}:latest")
           memory_reservation = 50
           port_mappings = [{
             containerPort = 8080
@@ -304,18 +309,15 @@ module "ecs" {
             {
               name      = "TF_PRIVATE_KEY"
               valueFrom = "${module.jwt_key_pairs.secret_arn}:private_key::"
-#               valueFrom = jsondecode(module.jwt_key_pairs.secret_value).private_key
             },
             {
               name      = "TF_PUBLIC_KEY"
               valueFrom = "${module.jwt_key_pairs.secret_arn}:public_key::"
-#               valueFrom = jsondecode(module.jwt_key_pairs.secret_value).public_key
             }
           ]
         }
       }
 
-      #       create_task_definition    = false
       create_tasks_iam_role     = false
       create_task_exec_iam_role = false
       task_exec_iam_role_arn    = module.ecs_task_execution_role.role_arn
