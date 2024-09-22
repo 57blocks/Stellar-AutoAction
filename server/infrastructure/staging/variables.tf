@@ -124,6 +124,25 @@ variable "rsa_private_key" {
   default     = ""
 }
 
+// CubeSigner Secrets Manager
+variable "cs_key_pairs" {
+  description = "The name of the RSA key pair"
+  type        = string
+  default     = ""
+}
+
+variable "cs_endpoint" {
+  description = "The CubeSigner endpoint"
+  type        = string
+  default     = ""
+}
+
+variable "cs_organization" {
+  description = "The CubeSigner organization"
+  type        = string
+  default     = ""
+}
+
 // RDS
 variable "rds_identifier" {
   description = "The RDS instance identifier"

@@ -93,13 +93,75 @@ Here are some samples/notes for `variables.auto.tfvars` usage:
 
   If the relationship/dependency is implicit, you need to use `depends_on` to specify the order for terraform.
 
-### Apply
-```shell
-terraform init
-terraform fmt
-terraform validate
-terraform plan
-terraform apply
+
+### Complete Sample
+```hcl
+region = "us-west-2"
+env    = "staging"
+
+// VPC
+vpc_name        = "auac-staging"
+vpc_cidr        = "172.64.0.0/24"
+vpc_azs         = ["us-west-2a", "us-west-2b", "us-west-2c"]
+vpc_pub_subnets = ["172.64.0.0/28", "172.64.0.16/28", "172.64.0.32/28"]
+vpc_pri_subnets = ["172.64.0.128/28", "172.64.0.144/28", "172.64.0.160/28"]
+
+// Security Groups
+sg_alb_name = "auac-staging-alb-sg"
+sg_ecs_name = "auac-staging-ecs-sg"
+sg_rds_name = "auac-staging-rds-sg"
+
+// ALB
+alb_name = "auac-staging-alb"
+
+// ECR
+ecr_repository_name = "auto-actions"
+
+// RDS SecretsManager
+rds_key_pairs = "auac_rds_key_pairs"
+rds_username  = "RDS_USERNAME"
+rds_password  = "RDS_PASSWORD"
+
+// RDS
+rds_identifier = "auac-staging-postgres"
+rds_db_name    = "auac"
+
+// ECS SecretsManager
+jwt_key_pairs   = "auac_jwt_key_pairs"
+jwt_private_key = "LS0tLS1CRUdJTiBQUklW..."
+jwt_public_key  = "LS0tLS1CRUdJTiBQVUJM..."
+
+rsa_key_pairs   = "auac_rsa_key_pairs"
+rsa_private_key = "LS0tLS1CRUdJTiBSU0Eg..."
+rsa_public_key  = "LS0tLS1CRUdJTiBQVUJM..."
+
+ecs_cluster_name = "auac-staging"
+ecs_fargate_capacity_providers = {
+  FARGATE = {
+    default_capacity_provider_strategy = {
+      weight = 50
+      base   = 20
+    }
+  }
+  FARGATE_SPOT = {
+    default_capacity_provider_strategy = {
+      weight = 50
+    }
+  }
+}
 ```
-Also, you could `terraform init` in each module directory, or check in the [Terraform Registry](https://registry.terraform.io/)  
-to use more attributes from module.
+
+
+### Apply
+
+#### Preparation
+
+1. Generate RSA key pairs for JWT
+2. Generate RSA key pairs for sensitive data encryption
+3. Make them above base64-encoded
+
+#### Terraform Apply
+
+1. Comment the ECS module to apply the data required in it.
+2. `terraform apply`
+3. Uncomment the ECS module and apply again.

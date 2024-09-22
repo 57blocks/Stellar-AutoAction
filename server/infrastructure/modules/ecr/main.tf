@@ -25,5 +25,6 @@ module "ecr" {
     ]
   })
 
-  repository_force_delete = true
+  repository_force_delete         = true
+  repository_image_tag_mutability = "MUTABLE"
 }

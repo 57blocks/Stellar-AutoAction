@@ -185,7 +185,6 @@ module "ecs_task_execution_role" {
           "ecr:BatchGetImage"
         ]
         Resource = "*"
-#         Resource = "arn:aws:ecr:${var.region}:${data.aws_caller_identity.current.account_id}:repository/*"
       },
       {
         Effect = "Allow"
@@ -266,6 +265,16 @@ module "rsa_key_pairs" {
   })
 }
 
+module "cs_key_pairs" {
+  source = "./../modules/secretmanager"
+
+  secret_name = var.cs_key_pairs
+  secret_value = jsonencode({
+    endpoint     = var.cs_endpoint
+    organization = var.cs_organization
+  })
+}
+
 module "ecs" {
   source = "./../modules/ecs"
 
@@ -312,70 +321,82 @@ module "ecs" {
           }
           environment = [
             {
-              name  = "TF_LOG_ENCODING"
-              value = "tf_json"
-            },
-            {
               name  = "AWS_REGION"
               value = "us-west-2"
             },
             {
               name  = "BOUND_ENDPOINT"
-              value = "busybox"
+              value = module.alb.alb_dns
             },
             {
               name  = "BOUND_NAME"
               value = "Horizon"
             },
             {
-              name  = "TF_LOG_ENCODING"
-              value = "tf_json"
+              name  = "LOG_LEVEL"
+              value = "Info"
             },
             {
-              name  = "TF_LOG_ENCODING"
-              value = "tf_json"
+              name  = "LOG_ENCODING"
+              value = "json"
             },
             {
-              name  = "TF_LOG_ENCODING"
-              value = "tf_json"
+              name  = "RDS_HOST"
+              value = module.rds.db_endpoint
             },
             {
-              name  = "TF_LOG_ENCODING"
-              value = "tf_json"
+              name  = "RDS_PORT"
+              value = 5432
             },
             {
-              name  = "TF_LOG_ENCODING"
-              value = "tf_json"
+              name  = "RDS_DATABASE"
+              value = "auac"
             },
             {
-              name  = "TF_LOG_ENCODING"
-              value = "tf_json"
+              name  = "RDS_SSLMODE"
+              value = "require"
             },
             {
-              name  = "TF_LOG_ENCODING"
-              value = "tf_json"
+              name  = "WALLET_MAX"
+              value = 10
             },
             {
-              name  = "TF_LOG_ENCODING"
-              value = "tf_json"
+              name  = "LAMBDA_MAX"
+              value = 10
             },
             {
-              name  = "TF_LOG_ENCODING"
-              value = "tf_json"
+              name  = "AWS_ECS_TASK_ROLE"
+              value = "arn:aws:iam::123340007534:role/AA-ECS-Task-Role" // TODO: tobe confirmed with Jimmy
             }
           ]
           secrets = [
             {
-              name      = "PEM_PRIVATE_KEY"
-              valueFrom = "${module.jwt_key_pairs.secret_arn}:private_key::"
+              name      = "RSA_PRIVATE_KEY"
+              valueFrom = "${module.rsa_key_pairs.secret_arn}:private_key::"
             },
             {
-              name      = "TF_PRIVATE_KEY"
-              valueFrom = "${module.jwt_key_pairs.secret_arn}:private_key::"
-            },
-            {
-              name      = "TF_PUBLIC_KEY"
+              name      = "JWT_PUBLIC_KEY"
               valueFrom = "${module.jwt_key_pairs.secret_arn}:public_key::"
+            },
+            {
+              name      = "JWT_PRIVATE_KEY"
+              valueFrom = "${module.jwt_key_pairs.secret_arn}:private_key::"
+            },
+            {
+              name      = "RDS_USER"
+              valueFrom = "${module.rds_password.secret_arn}:rds_username::"
+            },
+            {
+              name      = "RDS_PASSWORD"
+              valueFrom = "${module.rds_password.secret_arn}:rds_password::"
+            },
+            {
+              name      = "CS_ENDPOINT"
+              valueFrom = "${module.cs_key_pairs.secret_arn}:endpoint::"
+            },
+            {
+              name      = "CS_ORGANIZATION"
+              valueFrom = "${module.cs_key_pairs.secret_arn}:organization::"
             }
           ]
         }
