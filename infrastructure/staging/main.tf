@@ -6,7 +6,7 @@ data "aws_caller_identity" "current" {}
 
 // VPC module
 module "vpc" {
-  source = "./../modules/vpc"
+  source = "../modules/vpc"
 
   vpc_name        = var.vpc_name
   vpc_cidr        = var.vpc_cidr
@@ -17,7 +17,7 @@ module "vpc" {
 
 // SG modules
 module "sg_alb" {
-  source = "./../modules/securitygroup"
+  source = "../modules/securitygroup"
 
   sg_vpc_id      = module.vpc.vpc_id
   sg_name        = var.sg_alb_name
@@ -31,7 +31,7 @@ module "sg_alb" {
 }
 
 module "sg_ecs" {
-  source = "./../modules/securitygroup"
+  source = "../modules/securitygroup"
 
   sg_vpc_id      = module.vpc.vpc_id
   sg_name        = var.sg_ecs_name
@@ -50,7 +50,7 @@ module "sg_ecs" {
 }
 
 module "sg_rds" {
-  source = "./../modules/securitygroup"
+  source = "../modules/securitygroup"
 
   sg_vpc_id      = module.vpc.vpc_id
   sg_name        = var.sg_rds_name
@@ -65,7 +65,7 @@ module "sg_rds" {
 
 // Load Balancer module
 module "alb" {
-  source = "./../modules/loadbalancer"
+  source = "../modules/loadbalancer"
 
   alb_name            = var.alb_name
   alb_vpc_id          = module.vpc.vpc_id
