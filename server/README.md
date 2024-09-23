@@ -1,99 +1,145 @@
-# AutoAction
+# AutoAction Server
 
+## AWS Infrastructure Preparation
 
-## AWS preparation
-Terraform
-1. VPC init with pub/pir subnets, and get the subnet ids.
-2. Security group init for ALB, Application, RDS and public access.
+Use Terraform to set up the following AWS resources:
+
+1. VPC with public and private subnets
+2. Security groups for ALB, Application, RDS, and public access
 3. Execution roles:
-   a. Execution role for Lambda: CloudWatch logs, log groups, log streams and put events.
-   b. Execution role for Scheduler: The `Resource` should involve **all** the Lambdas in the account.
-   c. Execution role for ECS task: ecr and log related.
-4. Secret Manager:
-   1. Server secret key.
+   a. Lambda execution role: Permissions for CloudWatch logs, log groups, log streams, and put events
+   b. Scheduler execution role: Include all Lambda functions in the account as resources
+   c. ECS task execution role: Permissions for ECR and logging
+4. Secret Manager: Store server secret key
 
+## Database Migration
 
-## DB migration
-There is an initial version: `000000_init`, which aims at:
-1. Solve the problem of the dirty version at the beginning. [Issue Ref](https://github.com/golang-migrate/migrate/issues/282#issuecomment-660760237)
-2. The init version does nothing except: establish the changelog table: `schema_migrations`
-3. If any error in migration which leads to a dirty version, fix migrations, then it will be re-executed when the 
-   server starts.
-4. If the fixed version is dirty still, go back to step `3`.
-5. There exists some data migrations required:
-   - Insert the VPC configuration when the Amazon infrastructure is ready.
-     - Which subnets are going to use to host the BE endpoint.
-     - Security groups.
-   - Insert the organization in use.
-   - Insert the initial user account.
-   - CubeSigner related data.
+The initial migration version `000000_init` serves the following purposes:
 
+1. Resolves the "dirty version" issue at the beginning ([Reference](https://github.com/golang-migrate/migrate/issues/282#issuecomment-660760237))
+2. Creates the `schema_migrations` changelog table
+3. Handles migration errors:
+   - If a migration fails, fix the issue and re-run the migration on server start
+   - If the fixed version is still dirty, repeat the process
+4. Required data migrations:
+   - VPC configuration (subnets for BE endpoint, security groups)
+   - Organization data
+   - Initial user account
+   - CubeSigner-related data
 
-## ESLint
+## ESLint Setup
 
-Using `npm install eslint globals` to install ESLint for local environment.
+Install ESLint for the local environment:
 
+```
+npm install eslint globals
+```
 
-## CubeSigner
+## Local Development Setup
 
-### CubeSigner Session
+To run the AutoAction server locally, follow these steps:
+
+1. Clone the repository:
+
+   ```
+   git clone https://github.com/57blocks/AutoAction.git
+   cd server
+   ```
+
+2. Install dependencies:
+
+   ```
+   go mod download
+   ```
+
+3. Set up environment variables:
+
+   - TODO: Add environment variable setup instructions
+
+4. Start the local PostgreSQL database (if not using a remote database):
+
+   Start the local PostgreSQL database:
+
+   ```
+   docker run -d -p 5432:5432 postgres
+   ```
+
+   Create a database with the name `autoaction`(as same as the `RDS_DATABASE` in the env variables).
+
+5. Start the server:
+   ```
+   go run main.go
+   ```
+
+The server should now be running on `http://localhost:8080` (or the port specified in your configuration).
+
+## CubeSigner Integration
+
+### CubeSigner Session Management
+
 1. Login with MFA:
-   - `cs login -s google --session-lifetime 31536000 --auth-lifetime 600 --refresh-lifetime 31536000`
-     - Command above will create a root/admin session with a quick-expired auth token, and a long-lived session and 
-       refresh token.
-     - The refresh frequency is based on the `--auth-lifetime 600`, which will keep the auth token alive and 
-       refreshed short enough at the same time.
-   - Response sample: 
-        ```
-        {
-             "org_id": "Org#...",
-             "role_id": null,
-             "expiration": 1756972127,
-             "purpose": "OIDC-auth session with scopes [ManageAll]",
-             "token": "3d6fd7397:...",
-             "refresh_token": "3d6fd7397:...",
-             "env": {
-                 "Dev-CubeSignerStack": {
-                     "ClientId": "1tiou9ecj058khiidmhj4ds4rj",
-                     "GoogleDeviceClientId": "59575607964-nc9hjnjka7jlb838jmg40qes4dtpsm6e.apps.googleusercontent.com",
-                     "GoogleDeviceClientSecret": "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",
-                     "Region": "us-east-1",
-                     "UserPoolId": "us-east-1_RU7HEslOW",
-                     "SignerApiRoot": "https://gamma.signer.cubist.dev",
-                     "DefaultCredentialRpId": "cubist.dev",
-                     "EncExportS3BucketName": null,
-                     "DeletedKeysS3BucketName": null
-                 }
-             },
-             "session_info": {
-                 "auth_token": "keCmhik9...",
-                 "auth_token_exp": 1725522527,
-                 "epoch": 1,
-                 "epoch_token": "LChINEm9si...",
-                 "refresh_token": "Z9OmjYwih...",
-                 "refresh_token_exp": 1728028127,
-                 "session_id": "7dfa49f5-xx-xx-xx-xx"
-             }
-       }
-       ```
-   - Explanation:
-     - `expiration`: `1756972127`, from the `--session-lifetime 31536000`, which is 12 months later.
-     - `token`: if you use this token to sign, you will get an `ImproperSessionScope` error which indicates that 
-       management token should not be used to sign.
-     - `session_info`: 
-       - This is like a change-log/change-version of the session refreshment, the `epoch` will be added 1 
-         everytime you refreshed the session.
-       - The session expiration will not be longer when refreshed.
-   - Practice:
-     1. Init a root/admin/management session with:
-        1. long **session** lifetime, currently for 1 year.
-        2. long **refresh** lifetime, currently, the same as the session lifetime.
-        3. short **auth** lifetime, currently for 10 minutes.
-     2. Hanging a recurring job to refresh the root session with a fixed interval to keep it alive, which is based 
-        on the `--auth-lifetime`.
-        1. We could make the fixed interval longer or shorter which is depends on your requirement.
-        2. Using the token and required info to refresh, even the token is expired already.
-     3. To log in again manually with MFA annually before the session and refresh expired.
-     4. When a role/signer session is needed, we will use the root session to generate a **role**/**signer** session 
-        with short lifetime for all scopes, which will be used to sign transactions. Generally, in some degree, we 
-        could treat it as an one-time session.
+
+   ```
+   cs login -s google --session-lifetime 31536000 --auth-lifetime 600 --refresh-lifetime 31536000
+   ```
+
+   - Creates a root/admin session with:
+     - Quick-expiring auth token
+     - Long-lived session and refresh token
+   - Refresh frequency based on `--auth-lifetime 600`
+
+2. Session management practice:
+   a. Initialize root/admin session:
+   - Long session lifetime (1 year)
+   - Long refresh lifetime (same as session lifetime)
+   - Short auth lifetime (10 minutes)
+     b. Implement a recurring job to refresh the root session based on `--auth-lifetime`
+     c. Manually re-authenticate with MFA annually before session expiration
+     d. Generate short-lived role/signer sessions from the root session for transaction signing
+
+### CubeSigner Session Details
+
+Login response sample:
+
+```json
+{
+  "org_id": "Org#...",
+  "role_id": null,
+  "expiration": 1756972127,
+  "purpose": "OIDC-auth session with scopes [ManageAll]",
+  "token": "3d6fd7397:...",
+  "refresh_token": "3d6fd7397:...",
+  "env": {
+    "Dev-CubeSignerStack": {
+      "ClientId": "1tiou9ecj058khiidmhj4ds4rj",
+      "GoogleDeviceClientId": "59575607964-nc9hjnjka7jlb838jmg40qes4dtpsm6e.apps.googleusercontent.com",
+      "GoogleDeviceClientSecret": "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",
+      "Region": "us-east-1",
+      "UserPoolId": "us-east-1_RU7HEslOW",
+      "SignerApiRoot": "https://gamma.signer.cubist.dev",
+      "DefaultCredentialRpId": "cubist.dev",
+      "EncExportS3BucketName": null,
+      "DeletedKeysS3BucketName": null
+    }
+  },
+  "session_info": {
+    "auth_token": "keCmhik9...",
+    "auth_token_exp": 1725522527,
+    "epoch": 1,
+    "epoch_token": "LChINEm9si...",
+    "refresh_token": "Z9OmjYwih...",
+    "refresh_token_exp": 1728028127,
+    "session_id": "7dfa49f5-xx-xx-xx-xx"
+  }
+}
+```
+
+Explanation:
+
+- `expiration`: 1756972127 (12 months from session creation)
+- `token`: Management token, not for signing (will result in `ImproperSessionScope` error if used for signing)
+- `session_info`:
+  - Tracks session refreshes (epoch increments with each refresh)
+  - Session expiration remains unchanged after refreshes
+
+Note: When signing transactions, use a short-lived role/signer session generated from the root session.
