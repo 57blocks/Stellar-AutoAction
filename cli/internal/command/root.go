@@ -12,10 +12,10 @@ import (
 // Root represents the base command when called without any subcommands
 var (
 	Root = &cobra.Command{
-		Use:   "st3llar",
-		Short: "The CLI toll for auto-action: st3llar",
+		Use:   "autoaction",
+		Short: "The CLI toll for auto-action: autoaction",
 		Long: `
-A CLI tool: st3llar, which helps users to run their handler on Amazon
+A CLI tool: autoaction, which helps users to run their handler on Amazon
 Lambda quickly, together with tracking the execution logs.
 
 Also, it provides a way to create wallet through the CubeSigner and sign

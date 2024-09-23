@@ -1,6 +1,6 @@
 # AutoAction CLI
 
-The CLI for AutoAction tasks: `st3llar`
+The CLI for AutoAction tasks: `autoaction`
 
 ## Commands
 

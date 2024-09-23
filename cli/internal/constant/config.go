@@ -5,8 +5,8 @@ type Config string
 
 const (
 	ConfigurationType Config = "toml"
-	ConfigName        Config = ".st3llar"
-	CredentialName    Config = ".st3llar-credential"
+	ConfigName        Config = ".autoaction"
+	CredentialName    Config = ".autoaction-credential"
 )
 
 func (cc Config) ValStr() string {
