@@ -51,7 +51,7 @@ jobs:
           GOARCH: ${{ matrix.arch }}
         run: |
           cd cli
-          go build -o "st3llar-${{ matrix.os.name }}-${{ matrix.arch }}"
+          go build -o "autoaction-${{ matrix.os.name }}-${{ matrix.arch }}"
 
       - name: Build windows amd64
         if: matrix.os.name == 'windows'
@@ -61,13 +61,13 @@ jobs:
           GOARCH: ${{ matrix.arch }}
         run: |
           cd cli
-          go build -o "st3llar-${{ matrix.os.name }}-${{ matrix.arch }}.exe"
+          go build -o "autoaction-${{ matrix.os.name }}-${{ matrix.arch }}.exe"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: st3llar-${{ matrix.os.name }}-${{ matrix.arch }}
-          path: ./cli/st3llar-${{ matrix.os.name }}-${{ matrix.arch }}${{ matrix.os.name == 'windows' && '.exe' || '' }}
+          name: autoaction-${{ matrix.os.name }}-${{ matrix.arch }}
+          path: ./cli/autoaction-${{ matrix.os.name }}-${{ matrix.arch }}${{ matrix.os.name == 'windows' && '.exe' || '' }}
           overwrite: true # Optional. Default is 'false'
           if-no-files-found: error # Optional. Default is 'warn'
           retention-days: 1 # Optional. Defaults to repository settings.

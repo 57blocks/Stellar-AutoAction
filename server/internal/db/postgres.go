@@ -102,7 +102,7 @@ func migrateDB(db *gorm.DB) error {
 	mig, err := migrate.NewWithInstance(
 		"httpfs",
 		source,
-		"st3llar",
+		"autoaction",
 		driver,
 	)
 	if err != nil {

@@ -35,14 +35,14 @@ jobs:
       - name: Download artifacts for ${{ matrix.os }} ${{ matrix.arch }}
         uses: actions/download-artifact@v4
         with:
-          name: st3llar-${{ matrix.os }}-${{ matrix.arch }}
+          name: autoaction-${{ matrix.os }}-${{ matrix.arch }}
           path: ./homebrew/
 
       - name: Publish to HomeBrew
         run: |
           echo "TODO: publishing to HomeBrew"
-          ls ./homebrew/st3llar-${{ matrix.os }}-${{ matrix.arch }}
-          ./homebrew/st3llar-${{ matrix.os }}-${{ matrix.arch }} -h
+          ls ./homebrew/autoaction-${{ matrix.os }}-${{ matrix.arch }}
+          ./homebrew/autoaction-${{ matrix.os }}-${{ matrix.arch }} -h
 
   chocolatey:
     runs-on: ubuntu-latest
@@ -56,10 +56,10 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: st3llar-windows-amd64
+          name: autoaction-windows-amd64
           path: ./chocolatey/
 
       - name: Publish to Chocolatey
         run: |
           echo "TODO: Publish to Chocolatey"
-          ./chocolatey/st3llar-windows-amd64.exe -h
+          ./chocolatey/autoaction-windows-amd64.exe -h
