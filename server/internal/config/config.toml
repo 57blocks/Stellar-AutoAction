@@ -9,7 +9,7 @@ level = "LOG_LEVEL"
 encoding = "LOG_ENCODING"
 
 [pem]
-private_key = "PEM_PRIVATE_KEY"
+private_key = "RSA_PRIVATE_KEY"
 
 [jwt]
 protocol = "JWT_PROTOCOL"
