@@ -96,7 +96,7 @@ func loginFunc(cmd *cobra.Command, args []string) error {
 		return errorx.BadRequest("empty cryptPwd error")
 	}
 
-	key, err := util.LoadPublicKey()
+	key, err := util.LoadPublicKey(config.Vp.GetString("general.public_key"))
 	if err != nil {
 		return err
 	}

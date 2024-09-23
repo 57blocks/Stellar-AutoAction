@@ -39,14 +39,14 @@ func (d *rsaDecrypter) Decrypt(data []byte) ([]byte, error) {
 }
 
 func loadPrivateKey() (*rsa.PrivateKey, error) {
-	priPEMBytes, err := base64.StdEncoding.DecodeString(configx.GlobalConfig.PEM.PrivateKey)
+	priPEMBytes, err := base64.StdEncoding.DecodeString(configx.GlobalConfig.RSA.PrivateKey)
 	if err != nil {
 		return nil, errorx.Internal("decode public key failed")
 	}
 
 	block, _ := pem.Decode(priPEMBytes)
 	if block == nil || block.Type != "RSA PRIVATE KEY" {
-		return nil, errorx.Internal("failed to decode PEM block containing private key")
+		return nil, errorx.Internal("failed to decode RSA block containing private key")
 	}
 
 	return x509.ParsePKCS1PrivateKey(block.Bytes)

@@ -21,8 +21,9 @@ type (
 	GlobalConfigOpt func(sc *GlobalConfig)
 
 	General struct {
-		Log    string `toml:"logx"`
-		Source string `toml:"source"`
+		Log       string `toml:"logx"`
+		Source    string `toml:"source"`
+		PublicKey string `toml:"public_key"`
 	}
 
 	BoundWith struct {
@@ -53,6 +54,12 @@ func WithTrackSource(source string) GlobalConfigOpt {
 	}
 }
 
+func WithPublicKey(pubKey string) GlobalConfigOpt {
+	return func(sc *GlobalConfig) {
+		sc.PublicKey = pubKey
+	}
+}
+
 func WithCredential(credential string) GlobalConfigOpt {
 	return func(sc *GlobalConfig) {
 		sc.Credential = credential
@@ -79,9 +86,10 @@ func FindOrInit() (*GlobalConfig, string) {
 
 	cfg := Build(
 		WithCredential(util.DefaultCredPath()),
-		WithEndPoint(constant.Host.String()),
+		WithEndPoint(""),
 		WithLogLevel(constant.GetLogLevel(constant.Info)),
 		WithTrackSource(string(constant.OFF)),
+		WithPublicKey(""),
 	)
 
 	cobra.CheckErr(WriteConfig(cfg))

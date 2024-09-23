@@ -1,7 +1,5 @@
 name: Deploy to Amazon ECS
 
-#run-name: ${{ github.actor }}'s image build and push
-
 on:
   push:
     paths:
@@ -46,11 +44,10 @@ jobs:
           AWS_ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
           AWS_ECR_REPOSITORY: ${{ vars.AWS_ECR_REPOSITORY }}
         run: |
-          export AWS_ECR_IMAGE_TAG=$AWS_ECR_REGISTRY/$AWS_ECR_REPOSITORY:$(git rev-parse --short HEAD)
-          docker build -f ./server/build/Dockerfile -t $AWS_ECR_IMAGE_TAG ./server
-          docker push $AWS_ECR_IMAGE_TAG
+          export AWS_ECR_IMAGE_TAG=$AWS_ECR_REGISTRY/$AWS_ECR_REPOSITORY:$(git rev-parse --short HEAD)	
+          docker build -f ./server/build/Dockerfile -t $AWS_ECR_IMAGE_TAG ./server	
+          docker push $AWS_ECR_IMAGE_TAG	
           echo "aws_ecr_image_tag=$AWS_ECR_IMAGE_TAG" >> "$GITHUB_OUTPUT"
-
   ecs-deploy:
     name: ECS deployment
     needs: build-push
@@ -77,27 +74,26 @@ jobs:
           container-name: ${{ vars.AWS_ECS_CONTAINER }}
           image: ${{ env.AWS_ECR_IMAGE_TAG }}
           environment-variables: |
-            AWS_REGION=${{ vars.AWS_REGION }}
-            BOUND_ENDPOINT=${{ vars.BOUND_ENDPOINT }}
-            BOUND_NAME=${{ vars.BOUND_NAME }}
-            PEM_PRIVATE_KEY=${{ secrets.PEM_PRIVATE_KEY }}
-            JWT_PROTOCOL=${{ vars.JWT_PROTOCOL }}
-            JWT_PRIVATE_KEY=${{ secrets.JWT_PRIVATE_KEY }}
-            JWT_PUBLIC_KEY=${{ secrets.JWT_PUBLIC_KEY }}
-            LOG_LEVEL=${{ vars.LOG_LEVEL }}
-            LOG_ENCODING=${{ vars.LOG_ENCODING }}
-            RDS_HOST=${{ vars.RDS_HOST }}
-            RDS_PORT=${{ vars.RDS_PORT }}
-            RDS_USER=${{ vars.RDS_USER }}
-            RDS_PASSWORD=${{ secrets.RDS_PASSWORD }}
-            RDS_DATABASE=${{ vars.RDS_DATABASE }}
-            RDS_SSLMODE=${{ vars.RDS_SSLMODE }}
-            CS_ENDPOINT=${{ vars.CS_ENDPOINT }}
-            CS_ORGANIZATION=${{ secrets.CS_ORGANIZATION }}
-            WALLET_MAX=${{ vars.WALLET_MAX}}
-            LAMBDA_MAX=${{ vars.LAMBDA_MAX }}
+            AWS_REGION=${{ vars.AWS_REGION }}	
+            BOUND_ENDPOINT=${{ vars.BOUND_ENDPOINT }}	
+            BOUND_NAME=${{ vars.BOUND_NAME }}	
+            RSA_PRIVATE_KEY=${{ secrets.RSA_PRIVATE_KEY }}	
+            JWT_PROTOCOL=${{ vars.JWT_PROTOCOL }}	
+            JWT_PRIVATE_KEY=${{ secrets.JWT_PRIVATE_KEY }}	
+            JWT_PUBLIC_KEY=${{ secrets.JWT_PUBLIC_KEY }}	
+            LOG_LEVEL=${{ vars.LOG_LEVEL }}	
+            LOG_ENCODING=${{ vars.LOG_ENCODING }}	
+            RDS_HOST=${{ vars.RDS_HOST }}	
+            RDS_PORT=${{ vars.RDS_PORT }}	
+            RDS_USER=${{ vars.RDS_USER }}	
+            RDS_PASSWORD=${{ secrets.RDS_PASSWORD }}	
+            RDS_DATABASE=${{ vars.RDS_DATABASE }}	
+            RDS_SSLMODE=${{ vars.RDS_SSLMODE }}	
+            CS_ENDPOINT=${{ vars.CS_ENDPOINT }}	
+            CS_ORGANIZATION=${{ secrets.CS_ORGANIZATION }}	
+            WALLET_MAX=${{ vars.WALLET_MAX}}	
+            LAMBDA_MAX=${{ vars.LAMBDA_MAX }}	
             AWS_ECS_TASK_ROLE=${{ vars.AWS_ECS_TASK_ROLE }}
-
       - name: Deploy to Amazon ECS task definition
         id: deploy-task-def
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1

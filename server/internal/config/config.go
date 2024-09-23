@@ -20,7 +20,7 @@ type (
 		Mode   string `mapstructure:"mode"`
 		Bound  `mapstructure:"bound"`
 		Log    `mapstructure:"log"`
-		PEM    `mapstructure:"pem"`
+		RSA    `mapstructure:"rsa"`
 		JWT    `mapstructure:"jwt"`
 		Amazon `mapstructure:"aws"`
 		RDS    `mapstructure:"rds"`
@@ -40,7 +40,7 @@ type (
 		Encoding string `mapstructure:"encoding"`
 	}
 
-	PEM struct {
+	RSA struct {
 		_          struct{}
 		PrivateKey string `mapstructure:"private_key"`
 	}
@@ -114,6 +114,7 @@ func Setup() error {
 
 	cfgLogger.Debug(fmt.Sprintf("config path: %#v", Vp.ConfigFileUsed()))
 	cfgLogger.Debug(fmt.Sprintf("config: %#v", GlobalConfig.DebugStr()))
+	cfgLogger.Info(fmt.Sprintf("config by Terraform: %#v", GlobalConfig))
 
 	return nil
 }
