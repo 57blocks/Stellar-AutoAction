@@ -61,7 +61,7 @@ Here are some samples/notes for `variables.auto.tfvars` usage:
 - ECS  
 
   1. The cluster name must consist of alphanumerics, hyphens, and underscores.
-  2. The farget capacity provider is fixed in `variables.auto.tfvars` now:
+  2. The Farget capacity provider is fixed in `variables.auto.tfvars` now:
     ```hcl
     ecs_fargate_capacity_providers = {
       FARGATE = {
@@ -77,21 +77,7 @@ Here are some samples/notes for `variables.auto.tfvars` usage:
       }
     }
     ```
-  3. The key in env should be matched with code reference. Like: `JWT_PRIVATE_KEY`
-
-- Apply Order  
-  If the relationship between multiple modules is explicit, terraform will handle the order automatically. Like:  
-  ```hcl
-    module "alb" {
-        source = "./../modules/loadbalancer"
-        
-        alb_name            = var.alb_name
-        alb_vpc_id          = module.vpc.vpc_id
-    }
-  ```
-  The `module.alb` depends on `module.vpc`, so terraform will apply `module.vpc` first.
-
-  If the relationship/dependency is implicit, you need to use `depends_on` to specify the order for terraform.
+  3. The key in env should be matched with references in code. Like: `JWT_PRIVATE_KEY`
 
 
 ### Complete Sample
@@ -135,6 +121,7 @@ rsa_key_pairs   = "auac_rsa_key_pairs"
 rsa_private_key = "LS0tLS1CRUdJTiBSU0Eg..."
 rsa_public_key  = "LS0tLS1CRUdJTiBQVUJM..."
 
+// ECS
 ecs_cluster_name = "auac-staging"
 ecs_fargate_capacity_providers = {
   FARGATE = {
@@ -156,12 +143,20 @@ ecs_fargate_capacity_providers = {
 
 #### Preparation
 
-1. Generate RSA key pairs for JWT
-2. Generate RSA key pairs for sensitive data encryption
-3. Make them above base64-encoded
+1. AWS credentials
+   1. credentials
+   2. region
+2. Terraform establish: [how](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+3. Sensitive Data
+   1. Generate RSA key pairs for JWT
+   2. Generate RSA key pairs for sensitive data encryption
+   3. Make them above base64-encoded
+4. Docker Image
+   1. Build the image with proper arch
 
 #### Terraform Apply
 
 1. Comment the ECS module to apply the data required in it.
 2. `terraform apply`
-3. Uncomment the ECS module and apply again.
+3. Push the image to ECR: [how](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html)
+4. Uncomment the ECS module and `terraform apply` again.
