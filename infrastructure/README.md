@@ -214,7 +214,7 @@ ecs_fargate_capacity_providers = {
     terraform apply
     ```
 
-#### Apply New Updates
+#### Apply New Updates with ECS update
 
 For example, I need to add another env/secrets for the ECS service:
 1. Add the env into config in server side, then build into image and push to ECR.
@@ -225,3 +225,17 @@ For example, I need to add another env/secrets for the ECS service:
     terraform plan
     ```
 4. Apply the changes
+
+
+#### Update the code only
+                       
+If the updates are not involved in the infrastructure.
+
+1. Using the `update.sh`
+   ```shell
+   chmod +x ./update.sh
+   ./update.sh
+   ```
+2. Alternatively, through the AWS CLI step by step according to the shell
+
+3. Finally, you could do it in the Amazon console as well.
