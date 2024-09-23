@@ -1,20 +1,20 @@
 # IaC
 
-### Deploy environment
+### 1. Deploy environment
 
 Currently, there is a sample environment: `staging` for development purposes.  
 If any more environments are needed, create another directory besides the `staging`.  
 And almost of the configurations are the same as the `staging`, except for the `variables.auto.tfvars`, which is suitable for the new environment.
 
 
-### Paths
+### 2. Paths
 `.`: the root path of the project.  
 `./infrastructure`: the path of the IaC.  
 `./server`: the path of the server.  
 `./cli`: the path of the CLI.  
 
 
-### Variables injection
+### 3. Variables injection
 
 The variable file `variables.auto.tfvars` is local-build.  
 
@@ -103,7 +103,7 @@ Here are some samples for `variables.auto.tfvars` usage:
            ```
 
 
-### Complete Sample
+### 4. Complete Sample
 ```hcl
 region = "us-west-2"
 env    = "staging"
@@ -162,7 +162,7 @@ ecs_fargate_capacity_providers = {
 ```
 
 
-### Apply
+### 5. Apply
 
 #### Preparation
 
@@ -191,7 +191,7 @@ ecs_fargate_capacity_providers = {
 1. Push the image to ECR: [How](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html)
 2. Terraform apply except for the ECS module.
     ```shell
-    // `./infrastructure/staging`
+    // ./infrastructure/staging
     terraform apply \
         -target=module.vpc \
         -target=module.sg_alb \
@@ -210,6 +210,18 @@ ecs_fargate_capacity_providers = {
     ```
 3. Apply for the ECS module.
     ```shell
-    // `./infrastructure/staging`
+    // ./infrastructure/staging
     terraform apply
     ```
+
+#### Apply New Updates
+
+For example, I need to add another env/secrets for the ECS service:
+1. Add the env into config in server side, then build into image and push to ECR.
+2. Update the `./infrastructure/staging/main.tf`, to add the env vars.
+3. Check the plan:
+    ```shell
+    // ./infrastructure/staging
+    terraform plan
+    ```
+4. Apply the changes

@@ -325,6 +325,10 @@ module "ecs" {
               value = "us-west-2"
             },
             {
+              name  = "JWT_PROTOCOL"
+              value = "RS256"
+            },
+            {
               name  = "BOUND_ENDPOINT"
               value = module.alb.alb_dns
             },

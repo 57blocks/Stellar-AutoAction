@@ -18,11 +18,11 @@ var (
 type (
 	Configuration struct {
 		Mode   string `mapstructure:"mode"`
+		Amazon `mapstructure:"aws"`
 		Bound  `mapstructure:"bound"`
 		Log    `mapstructure:"log"`
 		RSA    `mapstructure:"rsa"`
 		JWT    `mapstructure:"jwt"`
-		Amazon `mapstructure:"aws"`
 		RDS    `mapstructure:"rds"`
 		CS     `mapstructure:"cs"`
 		Wallet `mapstructure:"wallet"`
@@ -53,11 +53,9 @@ type (
 	}
 
 	Amazon struct {
-		_               struct{}
-		Region          string `mapstructure:"region"`
-		AccessKeyID     string `mapstructure:"access_key_id"`
-		SecretAccessKey string `mapstructure:"secret_access_key"`
-		EcsTaskRole     string `mapstructure:"ecs_task_role"`
+		_           struct{}
+		Region      string `mapstructure:"region"`
+		EcsTaskRole string `mapstructure:"ecs_task_role"`
 	}
 
 	RDS struct {
@@ -114,7 +112,6 @@ func Setup() error {
 
 	cfgLogger.Debug(fmt.Sprintf("config path: %#v", Vp.ConfigFileUsed()))
 	cfgLogger.Debug(fmt.Sprintf("config: %#v", GlobalConfig.DebugStr()))
-	cfgLogger.Info(fmt.Sprintf("config by Terraform: %#v", GlobalConfig))
 
 	return nil
 }
@@ -125,6 +122,8 @@ func (c *Configuration) DebugStr() string {
 	jsonBytes, _ := json.Marshal(debugMap)
 	return string(jsonBytes)
 }
+
+const length = 10
 
 func debugMapRecursive(v reflect.Value, prefix string, debugMap map[string]interface{}) {
 	t := v.Type()
@@ -137,8 +136,8 @@ func debugMapRecursive(v reflect.Value, prefix string, debugMap map[string]inter
 		switch field.Type.Kind() {
 		case reflect.String:
 			strValue := value.String()
-			if len(strValue) > 20 {
-				strValue = strValue[:20] + "..."
+			if len(strValue) > length {
+				strValue = strValue[:length] + "..."
 			}
 			debugMap[fieldName] = strValue
 		case reflect.Struct:
