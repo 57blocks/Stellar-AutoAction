@@ -40,7 +40,7 @@ module "sg_ecs" {
   ingress_with_source_security_group_id = [
     {
       description              = "http from ALB"
-      rule                     = "http-80-tcp"
+      rule                     = "all-all"
       source_security_group_id = module.sg_alb.sg_id
     }
   ]
