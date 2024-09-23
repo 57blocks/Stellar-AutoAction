@@ -1,0 +1,126 @@
+{
+    "containerDefinitions": [
+        {
+            "name": "auac-container",
+            "image": "123340007534.dkr.ecr.us-west-2.amazonaws.com/auto-actions:latest",
+            "cpu": 512,
+            "memory": 1024,
+            "memoryReservation": 50,
+            "portMappings": [
+                {
+                    "containerPort": 8080,
+                    "hostPort": 8080,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "RDS_HOST",
+                    "value": "auac-staging-postgres.cvkld9o7vj37.us-west-2.rds.amazonaws.com"
+                },
+                {
+                    "name": "LAMBDA_MAX",
+                    "value": "10"
+                },
+                {
+                    "name": "AWS_REGION",
+                    "value": "us-west-2"
+                },
+                {
+                    "name": "BOUND_NAME",
+                    "value": "Horizon"
+                },
+                {
+                    "name": "RDS_SSLMODE",
+                    "value": "require"
+                },
+                {
+                    "name": "WALLET_MAX",
+                    "value": "10"
+                },
+                {
+                    "name": "BOUND_ENDPOINT",
+                    "value": "auac-staging-alb-1597187567.us-west-2.elb.amazonaws.com"
+                },
+                {
+                    "name": "JWT_PROTOCOL",
+                    "value": "RS256"
+                },
+                {
+                    "name": "RDS_DATABASE",
+                    "value": "auac"
+                },
+                {
+                    "name": "RDS_PORT",
+                    "value": "5432"
+                },
+                {
+                    "name": "LOG_ENCODING",
+                    "value": "json"
+                },
+                {
+                    "name": "AWS_ECS_TASK_ROLE",
+                    "value": "arn:aws:iam::123340007534:role/AA-ECS-Task-Role"
+                },
+                {
+                    "name": "LOG_LEVEL",
+                    "value": "Info"
+                }
+            ],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "linuxParameters": {
+                "initProcessEnabled": false
+            },
+            "secrets": [
+                {
+                    "name": "RSA_PRIVATE_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:us-west-2:123340007534:secret:auac_rsa_key_pairs-n2qhbJ:private_key::"
+                },
+                {
+                    "name": "JWT_PUBLIC_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:us-west-2:123340007534:secret:auac_jwt_key_pairs-0F3VHe:public_key::"
+                },
+                {
+                    "name": "JWT_PRIVATE_KEY",
+                    "valueFrom": "arn:aws:secretsmanager:us-west-2:123340007534:secret:auac_jwt_key_pairs-0F3VHe:private_key::"
+                },
+                {
+                    "name": "RDS_USER",
+                    "valueFrom": "arn:aws:secretsmanager:us-west-2:123340007534:secret:auac_rds_key_pairs-7DHi0d:rds_username::"
+                },
+                {
+                    "name": "RDS_PASSWORD",
+                    "valueFrom": "arn:aws:secretsmanager:us-west-2:123340007534:secret:auac_rds_key_pairs-7DHi0d:rds_password::"
+                },
+                {
+                    "name": "CS_ENDPOINT",
+                    "valueFrom": "arn:aws:secretsmanager:us-west-2:123340007534:secret:auac_cs_key_pairs-LEKAPv:endpoint::"
+                },
+                {
+                    "name": "CS_ORGANIZATION",
+                    "valueFrom": "arn:aws:secretsmanager:us-west-2:123340007534:secret:auac_cs_key_pairs-LEKAPv:organization::"
+                }
+            ],
+            "startTimeout": 30,
+            "stopTimeout": 120,
+            "user": "0",
+            "privileged": false,
+            "readonlyRootFilesystem": false,
+            "interactive": false,
+            "pseudoTerminal": false,
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/aws/ecs/ecs-services/auac-service",
+                    "awslogs-create-group": "true",
+                    "awslogs-region": "us-west-2",
+                    "awslogs-stream-prefix": "auto-actions"
+                }
+            },
+            "systemControls": []
+        }
+    ]
+}
