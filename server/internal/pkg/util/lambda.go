@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 
@@ -47,4 +48,12 @@ func GetRoleName(c context.Context, org, account string) string {
 
 func GetSecretName(c context.Context, org string, account string) string {
 	return fmt.Sprintf("AA_%s_%s_SEC", org, account)
+}
+
+func DecodeBase64String(encodedStr *string) (string, error) {
+	decodedBytes, err := base64.StdEncoding.DecodeString(*encodedStr)
+	if err != nil {
+		return "", err
+	}
+	return string(decodedBytes), nil
 }

@@ -259,6 +259,9 @@ func (svc *service) persistRegisterResults(c context.Context, pairs []toBePersis
 
 func (svc *service) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error) {
 	lamb, err := svc.lambdaRepo.FindByNameOrARN(c, r.Lambda)
+	if err != nil {
+		return nil, err
+	}
 
 	payload, err := util.GenEventPayload(c, r.Payload)
 	if err != nil {
@@ -277,8 +280,22 @@ func (svc *service) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke
 		Payload:      payloadBytes,
 	})
 	if err != nil {
-		return nil, errorx.Internal(fmt.Sprintf("failed to invoke lambda: %s", lamb.FunctionName))
+		return nil, errorx.Internal(fmt.Sprintf("failed to invoke lambda: %s, error: %s", lamb.FunctionName, err.Error()))
 	}
+
+	// decode log result
+	decodedLogResult, err := util.DecodeBase64String(invokeOutput.LogResult)
+	if err != nil {
+		return nil, errorx.Internal(fmt.Sprintf("failed to decode log result: %s", err.Error()))
+	}
+	invokeOutput.LogResult = &decodedLogResult
+
+	// decode payload
+	decodedPayload, err := util.DecodeBase64String(aws.String(string(invokeOutput.Payload)))
+	if err != nil {
+		return nil, errorx.Internal(fmt.Sprintf("failed to decode payload: %s", err.Error()))
+	}
+	invokeOutput.Payload = []byte(decodedPayload)
 
 	return dto.BuildRespInvoke(dto.WithInvokeResp(invokeOutput)), nil
 }
