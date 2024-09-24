@@ -188,8 +188,7 @@ ecs_fargate_capacity_providers = {
 
 #### Terraform Apply
 
-1. Push the image to ECR: [How](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html)
-2. Terraform apply except for the ECS module.
+1. Terraform apply except for the ECS module.
     ```shell
     // ./infrastructure/staging
     terraform apply \
@@ -200,6 +199,7 @@ ecs_fargate_capacity_providers = {
         -target=module.alb \
         -target=module.ecr \
         -target=module.scheduler_invocation_role \
+        -target=module.ecs_task_role \
         -target=module.ecs_task_execution_role \
         -target=aws_db_subnet_group.default \
         -target=module.rds_password \
@@ -208,10 +208,11 @@ ecs_fargate_capacity_providers = {
         -target=module.rsa_key_pairs \
         -target=module.cs_key_pairs
     ```
+2. Push the image to ECR: [How](https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-push-ecr-image.html)
 3. Apply for the ECS module.
     ```shell
     // ./infrastructure/staging
-    terraform apply
+    terraform apply -target=module.ecs
     ```
 
 #### Apply New Updates with ECS update
