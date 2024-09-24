@@ -2,28 +2,37 @@ package config
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 
 	"github.com/57blocks/auto-action/cli/internal/constant"
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
 	"github.com/BurntSushi/toml"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 type (
 	GlobalConfig struct {
-		Credential string `toml:"credential"`
-		EnvPrefix  string `toml:"env_prefix"`
-		Log        string `toml:"log"`
+		General   `toml:"general"`
+		BoundWith `toml:"bound_with"`
 	}
-	GlobalCfgOpt func(sc *GlobalConfig)
+	GlobalConfigOpt func(sc *GlobalConfig)
+
+	General struct {
+		Log       string `toml:"logx"`
+		Source    string `toml:"source"`
+		PublicKey string `toml:"public_key"`
+	}
+
+	BoundWith struct {
+		Credential string `toml:"credential"`
+		EndPoint   string `toml:"endpoint"`
+	}
 )
 
-func Build(opts ...GlobalCfgOpt) *GlobalConfig {
+func Build(opts ...GlobalConfigOpt) *GlobalConfig {
 	sc := new(GlobalConfig)
 
 	for _, opt := range opts {
@@ -33,21 +42,33 @@ func Build(opts ...GlobalCfgOpt) *GlobalConfig {
 	return sc
 }
 
-func WithLogLevel(logLevel string) GlobalCfgOpt {
+func WithLogLevel(logLevel string) GlobalConfigOpt {
 	return func(sc *GlobalConfig) {
 		sc.Log = logLevel
 	}
 }
 
-func WithEnvPrefix(prefix string) GlobalCfgOpt {
+func WithTrackSource(source string) GlobalConfigOpt {
 	return func(sc *GlobalConfig) {
-		sc.EnvPrefix = prefix
+		sc.Source = source
 	}
 }
 
-func WithCredential(credential string) GlobalCfgOpt {
+func WithPublicKey(pubKey string) GlobalConfigOpt {
+	return func(sc *GlobalConfig) {
+		sc.PublicKey = pubKey
+	}
+}
+
+func WithCredential(credential string) GlobalConfigOpt {
 	return func(sc *GlobalConfig) {
 		sc.Credential = credential
+	}
+}
+
+func WithEndPoint(endpoint string) GlobalConfigOpt {
+	return func(sc *GlobalConfig) {
+		sc.EndPoint = endpoint
 	}
 }
 
@@ -57,7 +78,7 @@ func FindOrInit() (*GlobalConfig, string) {
 	path := util.DefaultPath()
 
 	if util.IsExists(path) {
-		cfg, err := ReadConfig(path)
+		cfg, err := ReadConfig()
 		cobra.CheckErr(err)
 
 		return cfg, path
@@ -65,72 +86,80 @@ func FindOrInit() (*GlobalConfig, string) {
 
 	cfg := Build(
 		WithCredential(util.DefaultCredPath()),
-		WithEnvPrefix(constant.EnvPrefix.ValStr()),
+		WithEndPoint(""),
 		WithLogLevel(constant.GetLogLevel(constant.Info)),
+		WithTrackSource(string(constant.OFF)),
+		WithPublicKey(""),
 	)
 
-	cobra.CheckErr(WriteConfig(cfg, path))
+	cobra.CheckErr(WriteConfig(cfg))
 
 	return cfg, path
 }
 
-func ReadConfig(path string) (*GlobalConfig, error) {
-	data, err := os.ReadFile(path)
+func ReadConfig() (*GlobalConfig, error) {
+	data, err := os.ReadFile(util.DefaultPath())
 	if err != nil {
-		return nil, err
+		return nil, errorx.Internal(fmt.Sprintf("read config error: %s", err.Error()))
 	}
 
 	cfg := new(GlobalConfig)
 
 	if _, err := toml.Decode(string(data), cfg); err != nil {
-		_, e := fmt.Fprintf(
-			os.Stderr,
-			"reading config error: %s\n",
-			err.Error(),
-		)
-		return nil, e
+		return nil, errorx.Internal(fmt.Sprintf("decode config error: %s", err.Error()))
 	}
 
 	return cfg, nil
 }
 
-func WriteConfig(cfg *GlobalConfig, path string) error {
+func WriteConfig(cfg *GlobalConfig) error {
 	tomlBytes, err := toml.Marshal(cfg)
 	if err != nil {
-		return fmt.Errorf("marshalling config error: %w", err)
+		return errorx.Internal(fmt.Sprintf("marshal config error: %s", err))
 	}
 
-	if err := os.WriteFile(path, tomlBytes, 0666); err != nil {
-		_, e := fmt.Fprintf(
-			os.Stderr,
-			"writing config error: %s\n",
-			err.Error(),
-		)
-		return e
+	if err := os.WriteFile(util.DefaultPath(), tomlBytes, 0666); err != nil {
+		return errorx.Internal(fmt.Sprintf("write config error: %s", err.Error()))
 	}
 
 	return nil
 }
 
-func SyncConfig(path string) error {
-	cfg, err := ReadConfig(util.DefaultPath())
+func SyncConfigByFlags() error {
+	cfg, err := ReadConfig()
 	if err != nil {
-		return errors.New(fmt.Sprintf("reading configuration error: %s\n", err.Error()))
+		return errorx.Internal(fmt.Sprintf("read config error: %s", err.Error()))
 	}
 
 	// Update fields if new values are provided
-	if newCred := viper.GetString(constant.FlagCredential.ValStr()); newCred != "" {
-		slog.Debug(fmt.Sprintf("newCredential: %v\n", newCred))
+	if newCred := Vp.GetString(constant.FlagCredential.ValStr()); newCred != "" {
+		logx.Logger.Debug("sync credential", "updated to", newCred)
 		cfg.Credential = newCred
 	}
-	if newEnvPrefix := viper.GetString(constant.FlagEnvPrefix.ValStr()); newEnvPrefix != "" {
-		slog.Debug(fmt.Sprintf("newEnvPrefix: %v\n", newEnvPrefix))
-		cfg.EnvPrefix = newEnvPrefix
+	if newEndPoint := Vp.GetString(constant.FlagEndPoint.ValStr()); newEndPoint != "" {
+		logx.Logger.Debug("sync endpoint", "updated to", newEndPoint)
+		cfg.EndPoint = newEndPoint
 	}
-	if newLogLevel := viper.GetString(constant.FlagLog.ValStr()); newLogLevel != "" {
-		slog.Debug(fmt.Sprintf("newLogLevel: %v\n", newLogLevel))
+	if newLogLevel := Vp.GetString(constant.FlagLog.ValStr()); newLogLevel != "" {
+		logx.Logger.Debug("sync logx level", "updated to", newLogLevel)
 		cfg.Log = newLogLevel
 	}
+	if newSource := Vp.GetString(constant.FlagSource.ValStr()); newSource == string(constant.ON) ||
+		newSource == string(constant.OFF) {
+		logx.Logger.Debug("sync tracking source or not", "updated to", newSource)
+		cfg.Source = newSource
+	}
 
-	return WriteConfig(cfg, path)
+	return WriteConfig(cfg)
+}
+
+func ResetConfigCredential() error {
+	cfg, err := ReadConfig()
+	if err != nil {
+		return errorx.Internal(fmt.Sprintf("read config error: %s", err.Error()))
+	}
+
+	cfg.Credential = ""
+
+	return WriteConfig(cfg)
 }

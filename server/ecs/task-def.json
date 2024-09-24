@@ -14,20 +14,7 @@
         }
       ],
       "essential": true,
-      "environment": [
-        {
-          "name": "ST3LLAR_JWT_PROTOCOL",
-          "value": "ST3LLAR_JWT_PROTOCOL"
-        },
-        {
-          "name": "ST3LLAR_JWT_PRIVATE",
-          "value": "ST3LLAR_JWT_PRIVATE"
-        },
-        {
-          "name": "ST3LLAR_JWT_PUBLIC",
-          "value": "ST3LLAR_JWT_PUBLIC"
-        }
-      ],
+      "environment": [],
       "environmentFiles": [],
       "mountPoints": [],
       "volumesFrom": [],
@@ -35,7 +22,7 @@
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/autotak-defs",
+          "awslogs-group": "/ecs/autotask-supplier",
           "awslogs-create-group": "true",
           "awslogs-region": "us-east-2",
           "awslogs-stream-prefix": "ecs"
@@ -45,8 +32,9 @@
       "systemControls": []
     }
   ],
-  "family": "autotak-defs",
-  "executionRoleArn": "arn:aws:iam::123340007534:role/ecsTaskExecutionRole",
+  "family": "autotask-defs",
+  "taskRoleArn": "arn:aws:iam::123340007534:role/AA-ECS-Task-Role",
+  "executionRoleArn": "arn:aws:iam::123340007534:role/ECS-Task-Execution-Role",
   "networkMode": "awsvpc",
   "volumes": [],
   "placementConstraints": [],

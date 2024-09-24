@@ -2,55 +2,103 @@ package oauth
 
 import (
 	"fmt"
-	"log/slog"
-	"os"
 
-	"github.com/57blocks/auto-action/cli/internal/command"
 	"github.com/57blocks/auto-action/cli/internal/config"
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/logx"
+	"github.com/57blocks/auto-action/cli/internal/pkg/restyx"
 	"github.com/57blocks/auto-action/cli/internal/pkg/util"
 
-	"github.com/pkg/errors"
+	"github.com/go-resty/resty/v2"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // logout represents the logout command
 var logout = &cobra.Command{
 	Use:   "logout",
 	Short: "Logout the current session",
-	Long: `Logout the current session under the path of credential in
-the config.
+	Long: `
+Description:
+  Logout the current session by the path of credential in the config.
 
-For other credentials, they are still alive. It's recommended that
-switching session by using **configure** command to set other 
-credentials to the config`,
+Note:
+  - For other credentials, they are still alive. It's recommended that
+    switching session by using **configure** command to set other 
+    credentials.
+`,
 	Args: cobra.NoArgs,
 	RunE: logoutFunc,
 }
 
 func init() {
-	command.Root.AddCommand(logout)
+	oauthGroup.AddCommand(logout)
+}
+
+type ReqLogout struct {
+	Token string `json:"token"`
 }
 
 func logoutFunc(_ *cobra.Command, _ []string) error {
-	cfg, err := config.ReadConfig(util.DefaultPath())
+	cfg, err := config.ReadConfig()
 	if err != nil {
-		return errors.New(fmt.Sprintf("reading configuration error: %s\n", err.Error()))
+		return err
 	}
 
-	if util.IsExists(cfg.Credential) {
-		if err := os.Remove(cfg.Credential); err != nil {
-			return errors.New(fmt.Sprintf("removing credential error: %s\n", err.Error()))
-		}
-	} else {
-		slog.Info("credential file not found")
+	if cfg.Credential == "" {
+		logx.Logger.Info("you've already logged out", "status", "out")
+
+		return nil
 	}
 
-	cfg.Credential = ""
-	if err := config.WriteConfig(cfg, viper.ConfigFileUsed()); err != nil {
-		return errors.New(fmt.Sprintf("writing configuration error: %s\n", err.Error()))
+	// credential does not exist
+	if !util.IsExists(cfg.Credential) {
+		logx.Logger.Info(
+			"credential not found, reset config directly.",
+			"config",
+			config.Vp.ConfigFileUsed(),
+		)
+		return config.ResetConfigCredential()
 	}
 
-	slog.Info("logout successfully")
+	// logout
+	credential, err := config.ReadCredential(cfg.Credential)
+	if err != nil {
+		return err
+	}
+
+	if _, err := supplierLogout(credential.Access); err != nil {
+		logx.Logger.Warn(fmt.Sprintf("reported waring while logging out: %s", err.Error()))
+	}
+
+	if err := config.RemoveCredential(cfg.Credential); err != nil {
+		logx.Logger.Warn(fmt.Sprintf("reported waring while cleaning up: %s", err.Error()))
+	}
+
+	if err := config.ResetConfigCredential(); err != nil {
+		return err
+	}
+
+	logx.Logger.Info("you've logged out")
+
 	return nil
+}
+
+func supplierLogout(access string) (*resty.Response, error) {
+	URL := util.ParseReqPath(fmt.Sprintf("%s/oauth/logout", config.Vp.GetString("bound_with.endpoint")))
+
+	response, err := restyx.Client.R().
+		EnableTrace().
+		SetHeaders(map[string]string{
+			"Content-Type":  "application/json",
+			"Authorization": access,
+		}).
+		Delete(URL)
+	if err != nil {
+		return nil, errorx.RestyError(err.Error())
+	}
+	if response.IsError() {
+		return nil, errorx.WithRestyResp(response)
+	}
+
+	return response, nil
 }

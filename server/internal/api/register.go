@@ -4,24 +4,38 @@ import (
 	"net/http"
 
 	"github.com/57blocks/auto-action/server/internal/api/middleware"
-	svcLambda "github.com/57blocks/auto-action/server/internal/service/lambda"
-	svcAuth "github.com/57blocks/auto-action/server/internal/service/oauth"
+	"github.com/57blocks/auto-action/server/internal/service/lambda"
+	"github.com/57blocks/auto-action/server/internal/service/oauth"
+	"github.com/57blocks/auto-action/server/internal/service/wallet"
 
 	"github.com/gin-gonic/gin"
 )
 
 func RegisterHandlers(g *gin.Engine) http.Handler {
-	oauth := g.Group("/oauth")
+	oauthGroup := g.Group("/oauth")
 	{
-		oauth.POST("/login", svcAuth.Login)
-
-		oauth.POST("/logout", svcAuth.Logout)
-		oauth.POST("/refresh", svcAuth.Refresh)
+		oauthGroup.POST("/signup", oauth.Signup)
+		oauthGroup.POST("/login", oauth.Login)
+		oauthGroup.DELETE("/logout", middleware.AuthHeader(), oauth.Logout)
+		oauthGroup.POST("/refresh", middleware.AuthHeader(), oauth.Refresh)
 	}
 
-	lambda := g.Group("/lambda", middleware.Authentication(), middleware.Authorization())
+	lambdaGroup := g.Group("/lambda", middleware.Authentication(), middleware.Authorization())
 	{
-		lambda.POST("/register", svcLambda.Register)
+		lambdaGroup.POST("", middleware.RegisterESLintCheck(), lambda.Register)
+		lambdaGroup.POST("/:lambda", lambda.Invoke)
+		lambdaGroup.GET("", lambda.List)
+		lambdaGroup.GET("/:lambda", lambda.Info)
+		lambdaGroup.GET("/:lambda/logs", lambda.Logs)
+		lambdaGroup.DELETE("/:lambda", lambda.Remove)
+	}
+
+	walletGroup := g.Group("/wallet", middleware.Authentication(), middleware.Authorization())
+	{
+		walletGroup.GET("", wallet.ListWallets)
+		walletGroup.POST("", wallet.Create)
+		walletGroup.DELETE("/:address", wallet.Remove)
+		walletGroup.POST("/:address", wallet.Verify)
 	}
 
 	return g

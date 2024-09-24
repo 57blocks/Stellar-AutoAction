@@ -1,29 +1,32 @@
 package config
 
+import (
+	"fmt"
+	"os"
+
+	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
+
+	"github.com/BurntSushi/toml"
+)
+
 type (
 	Credential struct {
+		_            struct{}
 		Account      string `toml:"account" json:"account"`
 		Organization string `toml:"organization" json:"organization"`
-		*Environment `toml:"environment" json:"environment"`
+		Environment  string `toml:"environment" json:"environment"`
 		*Tokens      `toml:"tokens" json:"tokens"`
 	}
 	CredOpt func(cred *Credential)
 
-	Environment struct {
-		_        struct{}
-		Name     string `toml:"name" json:"name"`
-		EndPoint string `toml:"endpoint" json:"endpoint"`
-	}
-	CredEnvOpt func(env *Environment)
-
 	Tokens struct {
 		_       struct{}
-		Token   string `toml:"token" json:"token"`
+		Access  string `toml:"access" json:"access"`
 		Refresh string `toml:"refresh" json:"refresh"`
 	}
-	CredTokenOpt func(tokens *Tokens)
 )
 
+// BuildCred build the credential pair
 func BuildCred(opts ...CredOpt) *Credential {
 	cred := new(Credential)
 
@@ -46,60 +49,67 @@ func WithOrganization(organization string) CredOpt {
 	}
 }
 
-func WithEnvironment(env *Environment) CredOpt {
+func WithEnvironment(env string) CredOpt {
 	return func(cred *Credential) {
 		cred.Environment = env
 	}
 }
 
-func WithSession(session *Tokens) CredOpt {
+func WithAccess(access string) CredOpt {
 	return func(cred *Credential) {
-		cred.Tokens = session
+		cred.Access = access
 	}
 }
 
-// BuildCredEnv build the credential's environment pair
-func BuildCredEnv(opts ...CredEnvOpt) *Environment {
-	env := new(Environment)
-
-	for _, opt := range opts {
-		opt(env)
-	}
-
-	return env
-}
-
-func WithEnvName(name string) CredEnvOpt {
-	return func(env *Environment) {
-		env.Name = name
+func WithRefresh(refresh string) CredOpt {
+	return func(cred *Credential) {
+		cred.Refresh = refresh
 	}
 }
 
-func WithEnvEndPoint(endpoint string) CredEnvOpt {
-	return func(env *Environment) {
-		env.EndPoint = endpoint
+func ReadCredential(path string) (*Credential, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, errorx.Internal(fmt.Sprintf("read credential error: %s", err.Error()))
 	}
+
+	cred := new(Credential)
+
+	if _, err := toml.Decode(string(data), cred); err != nil {
+		return nil, errorx.Internal(fmt.Sprintf("decode credential error: %s", err.Error()))
+	}
+
+	return cred, nil
 }
 
-// BuildCredSession build the credential's session pair
-func BuildCredSession(opts ...CredTokenOpt) *Tokens {
-	session := new(Tokens)
-
-	for _, opt := range opts {
-		opt(session)
+func WriteCredential(path string, cred *Credential) error {
+	tomlBytes, err := toml.Marshal(cred)
+	if err != nil {
+		return errorx.Internal(fmt.Sprintf("marshal credential error: %s", err))
 	}
 
-	return session
+	if err := os.WriteFile(path, tomlBytes, 0666); err != nil {
+		return errorx.Internal(fmt.Sprintf("write credential error: %s", err.Error()))
+	}
+
+	return nil
 }
 
-func WithSessionToken(token string) CredTokenOpt {
-	return func(tokens *Tokens) {
-		tokens.Token = token
+func RemoveCredential(path string) error {
+	if err := os.Remove(path); err != nil {
+		return errorx.Internal(fmt.Sprintf("remove credential error: %s", err.Error()))
 	}
+
+	return nil
 }
 
-func WithSessionRefreshToken(refresh string) CredTokenOpt {
-	return func(tokens *Tokens) {
-		tokens.Refresh = refresh
+func Token() (string, error) {
+	cfg, _ := ReadConfig()
+
+	credential, err := ReadCredential(cfg.Credential)
+	if err != nil {
+		return "", err
 	}
+
+	return credential.Access, nil
 }

@@ -1,27 +1,48 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
+	"reflect"
 	"strings"
 
 	"github.com/spf13/viper"
 )
 
-var Global *Configuration
+var (
+	GlobalConfig *Configuration
+	Vp           *viper.Viper
+)
 
 type (
 	Configuration struct {
 		Mode   string `mapstructure:"mode"`
-		Logger `mapstructure:"logger"`
+		Amazon `mapstructure:"aws"`
+		Bound  `mapstructure:"bound"`
+		Log    `mapstructure:"log"`
+		RSA    `mapstructure:"rsa"`
 		JWT    `mapstructure:"jwt"`
-		Amazon `mapstructure:"amazon"`
+		RDS    `mapstructure:"rds"`
+		CS     `mapstructure:"cs"`
+		Wallet `mapstructure:"wallet"`
+		Lambda `mapstructure:"lambda"`
 	}
 
-	Logger struct {
+	Bound struct {
+		Name     string `mapstructure:"name"`
+		EndPoint string `mapstructure:"endpoint"`
+	}
+
+	Log struct {
 		_        struct{}
 		Level    string `mapstructure:"level"`
 		Encoding string `mapstructure:"encoding"`
+	}
+
+	RSA struct {
+		_          struct{}
+		PrivateKey string `mapstructure:"private_key"`
 	}
 
 	JWT struct {
@@ -32,10 +53,35 @@ type (
 	}
 
 	Amazon struct {
-		_         struct{}
-		Region    string `mapstructure:"region"`
-		AccessKey string `mapstructure:"access_key"`
-		SecretKey string `mapstructure:"secret_key"`
+		_           struct{}
+		Region      string `mapstructure:"region"`
+		EcsTaskRole string `mapstructure:"ecs_task_role"`
+	}
+
+	RDS struct {
+		_        struct{}
+		Host     string `mapstructure:"host"`
+		Port     string `mapstructure:"port"`
+		User     string `mapstructure:"user"`
+		Password string `mapstructure:"password"`
+		Database string `mapstructure:"database"`
+		SSLMode  string `mapstructure:"sslmode"`
+	}
+
+	CS struct {
+		_            struct{}
+		Endpoint     string `mapstructure:"endpoint"`
+		Organization string `mapstructure:"organization"`
+	}
+
+	Wallet struct {
+		_   struct{}
+		Max int `mapstructure:"max"`
+	}
+
+	Lambda struct {
+		_   struct{}
+		Max int `mapstructure:"max"`
 	}
 )
 
@@ -43,41 +89,63 @@ func Setup() error {
 	cfgLogger := slog.Default()
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 
-	viper.NewWithOptions(
-		//viper.EnvKeyReplacer(strings.NewReplacer(".", "_")),
+	Vp = viper.NewWithOptions(
 		viper.WithLogger(cfgLogger),
 	)
 
-	//viper.SetEnvPrefix("ST3LLAR")
-	viper.AddConfigPath("./internal/config/")
-	viper.SetConfigType("toml")
-	viper.SetConfigName("config")
+	Vp.AddConfigPath("./internal/config/")
+	Vp.SetConfigType("toml")
+	Vp.SetConfigName("config")
+	Vp.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
-	viper.SetEnvPrefix("")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
-	if err := viper.ReadInConfig(); err != nil {
+	if err := Vp.ReadInConfig(); err != nil {
 		return err
 	}
 
-	viper.AutomaticEnv()
+	Vp.AutomaticEnv()
 
-	Global = new(Configuration)
+	GlobalConfig = new(Configuration)
 
-	if err := viper.Unmarshal(&Global); err != nil {
+	if err := Vp.Unmarshal(&GlobalConfig); err != nil {
 		return err
 	}
 
-	cfgLogger.Debug(fmt.Sprintf("config path: %#v\n", viper.ConfigFileUsed()))
-	cfgLogger.Debug(fmt.Sprintf("config: %#v\n", Global))
-
-	//fmt.Printf("jwt.protocol: %s\n", viper.GetString("jwt.protocol"))
-	//fmt.Printf("jwt.private : %s\n", viper.GetString("jwt.private"))
-	//fmt.Printf("jwt.public  : %s\n", viper.GetString("jwt.public"))
-	//
-	//fmt.Printf("amazon.region: %s\n", viper.GetString("amazon.region"))
-	//fmt.Printf("amazon.access_key: %s\n", viper.GetString("amazon.access_key"))
-	//fmt.Printf("amazon.secret_key: %s\n", viper.GetString("amazon.secret_key"))
+	cfgLogger.Debug(fmt.Sprintf("config path: %#v", Vp.ConfigFileUsed()))
+	cfgLogger.Debug(fmt.Sprintf("config: %#v", GlobalConfig.DebugStr()))
 
 	return nil
+}
+
+func (c *Configuration) DebugStr() string {
+	debugMap := make(map[string]interface{})
+	debugMapRecursive(reflect.ValueOf(*c), "", debugMap)
+	jsonBytes, _ := json.Marshal(debugMap)
+	return string(jsonBytes)
+}
+
+const length = 10
+
+func debugMapRecursive(v reflect.Value, prefix string, debugMap map[string]interface{}) {
+	t := v.Type()
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		value := v.Field(i)
+		fieldName := prefix + field.Name
+
+		switch field.Type.Kind() {
+		case reflect.String:
+			strValue := value.String()
+			if len(strValue) > length {
+				strValue = strValue[:length] + "..."
+			}
+			debugMap[fieldName] = strValue
+		case reflect.Struct:
+			subMap := make(map[string]interface{})
+			debugMap[fieldName] = subMap
+			debugMapRecursive(value, fieldName+".", subMap)
+		default:
+			debugMap[fieldName] = value.Interface()
+		}
+	}
 }

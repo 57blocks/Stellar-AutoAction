@@ -12,8 +12,10 @@ import (
 	"github.com/57blocks/auto-action/server/internal/api"
 	"github.com/57blocks/auto-action/server/internal/boot"
 	"github.com/57blocks/auto-action/server/internal/config"
-	"github.com/57blocks/auto-action/server/internal/pkg/aws"
-	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
+	"github.com/57blocks/auto-action/server/internal/db"
+	"github.com/57blocks/auto-action/server/internal/service"
+	thirdParty "github.com/57blocks/auto-action/server/internal/third-party"
+	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 )
 
 var server *http.Server
@@ -21,17 +23,20 @@ var server *http.Server
 func main() {
 	if err := boot.Boots(
 		boot.Wrap(config.Setup),
-		boot.Wrap(pkgLog.Setup),
-		boot.Wrap(aws.Setup),
+		boot.Wrap(logx.Setup),
+		boot.Wrap(db.Setup),
+		boot.Wrap(api.Setup),
+		boot.Wrap(thirdParty.Setup),
+		boot.Wrap(service.Setup),
 	); err != nil {
-		log.Panicf("boots components occurred error: %s\n", err.Error())
+		log.Panicf("boots components occurred error: %s", err.Error())
 	}
 
-	pkgLog.Logger.INFO("boots: server")
+	logx.Logger.INFO("boots: server")
 
 	server = &http.Server{
 		Addr:    ":8080",
-		Handler: api.Boot(),
+		Handler: api.GinEngine,
 	}
 
 	go server.ListenAndServe()

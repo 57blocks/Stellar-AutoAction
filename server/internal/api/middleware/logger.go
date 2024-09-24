@@ -3,33 +3,10 @@ package middleware
 import (
 	"fmt"
 
-	pkgLog "github.com/57blocks/auto-action/server/internal/pkg/log"
+	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 
 	"github.com/gin-gonic/gin"
 )
-
-func NewFromCTX(ctx *gin.Context) *RestFormatter {
-	return &RestFormatter{
-		Method: ctx.Request.Method,
-		Path:   ctx.Request.URL.Path,
-		Status: ctx.Writer.Status(),
-	}
-}
-
-type RestFormatter struct {
-	Method string
-	Path   string
-	Status int
-}
-
-func (rf *RestFormatter) Format() string {
-	return fmt.Sprintf(
-		"%s %s - %v",
-		rf.Method,
-		rf.Path,
-		rf.Status,
-	)
-}
 
 type (
 	Formatter interface {
@@ -43,9 +20,32 @@ type (
 	}
 )
 
+type FormatterREST struct {
+	Method string
+	Path   string
+	Status int
+}
+
+func (rf *FormatterREST) Format() string {
+	return fmt.Sprintf(
+		"%s %s - %v",
+		rf.Method,
+		rf.Path,
+		rf.Status,
+	)
+}
+
+func NewFromContext(ctx *gin.Context) *FormatterREST {
+	return &FormatterREST{
+		Method: ctx.Request.Method,
+		Path:   ctx.Request.URL.Path,
+		Status: ctx.Writer.Status(),
+	}
+}
+
 func ZapLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		pkgLog.Logger.DEBUG(NewFromCTX(c).Format())
+		logx.Logger.DEBUG(NewFromContext(c).Format())
 		c.Next()
 	}
 }

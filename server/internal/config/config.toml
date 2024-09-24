@@ -1,15 +1,41 @@
 mode = "development"
 
-[logger]
-level = "DEBUG"
-encoding = "json"
+[bound]
+name = "BOUND_NAME"
+endpoint = "BOUND_ENDPOINT"
+
+[log]
+level = "LOG_LEVEL"
+encoding = "LOG_ENCODING"
+
+[rsa]
+private_key = "RSA_PRIVATE_KEY"
 
 [jwt]
-protocol = "RS256"
-private_key = "PRIVATE_KEY"
-public_key = "PUBLIC_KEy"
+protocol = "JWT_PROTOCOL"
+private_key = "JWT_PRIVATE_KEY"
+public_key = "JWT_PUBLIC_KEY"
 
-[amazon]
-region = "us-east-2"
-access_key = "ACCESS_KEY"
-secret_key = "SECRET_KEY"
+[aws]
+region = "AWS_REGION"
+access_key_id = "AWS_ACCESS_KEY_ID"
+secret_access_key = "AWS_SECRET_ACCESS_KEY"
+ecs_task_role = "AWS_ECS_TASK_ROLE"
+
+[rds]
+host = "RDS_HOST"
+port = "RDS_PORT"
+user = "RDS_USER"
+password = "RDS_PASSWORD"
+database = "RDS_DATABASE"
+sslmode = "disable"
+
+[cs]
+endpoint = "CS_ENDPOINT"
+organization = "CS_ORGANIZATION"
+
+[wallet]
+max = "WALLET_MAX"
+
+[lambda]
+max = "LAMBDA_MAX"
