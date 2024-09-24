@@ -153,6 +153,66 @@ module "scheduler_invocation_role" {
   })
 }
 
+module "ecs_task_role" {
+  source = "../modules/iam"
+
+  role_name        = "auac_ecs_task_role"
+  role_description = "Role for ECS tasks"
+
+  assume_role_policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = ["ecs-tasks.amazonaws.com"]
+        }
+        Action = ["sts:AssumeRole"]
+      }
+    ]
+  })
+
+  role_policy_name = "ecs_role_policy"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:GetRole",
+          "iam:CreateRole",
+          "iam:PutRolePolicy",
+          "secretsmanager:CreateSecret",
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:GetResourcePolicy",
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:PutSecretValue",
+          "secretsmanager:PutResourcePolicy",
+          "lambda:GetFunction",
+          "lambda:ListFunctions",
+          "lambda:CreateFunction",
+          "lambda:DeleteFunction",
+          "lambda:InvokeFunction",
+          "scheduler:ListSchedules",
+          "scheduler:GetSchedule",
+          "scheduler:CreateSchedule",
+          "scheduler:DeleteSchedule",
+          "logs:DescribeLogStreams",
+          "logs:GetLogEvents"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:PassRole",
+        ]
+        Resource = "arn:aws:iam::*:role/*"
+      },
+    ]
+  })
+}
+
 module "ecs_task_execution_role" {
   source = "../modules/iam"
 
@@ -280,6 +340,7 @@ module "ecs" {
 
   depends_on = [
     module.vpc,
+    module.ecs_task_role,
     module.ecs_task_execution_role,
     module.alb,
     module.sg_ecs,
@@ -322,7 +383,7 @@ module "ecs" {
           environment = [
             {
               name  = "AWS_REGION"
-              value = "us-west-2"
+              value = var.region
             },
             {
               name  = "JWT_PROTOCOL"
@@ -334,7 +395,7 @@ module "ecs" {
             },
             {
               name  = "BOUND_NAME"
-              value = "Horizon"
+              value = "Horizon-Testnet"
             },
             {
               name  = "LOG_LEVEL"
@@ -354,7 +415,7 @@ module "ecs" {
             },
             {
               name  = "RDS_DATABASE"
-              value = "auac"
+              value = var.rds_db_name
             },
             {
               name  = "RDS_SSLMODE"
@@ -370,7 +431,7 @@ module "ecs" {
             },
             {
               name  = "AWS_ECS_TASK_ROLE"
-              value = "arn:aws:iam::123340007534:role/AA-ECS-Task-Role" // TODO: tobe confirmed with Jimmy
+              value = module.ecs_task_role.role_arn
             }
           ]
           secrets = [
@@ -408,6 +469,7 @@ module "ecs" {
 
       create_tasks_iam_role     = false
       create_task_exec_iam_role = false
+      tasks_iam_role_arn        = module.ecs_task_role.role_arn
       task_exec_iam_role_arn    = module.ecs_task_execution_role.role_arn
 
       subnet_ids = module.vpc.vpc_private_subnets
