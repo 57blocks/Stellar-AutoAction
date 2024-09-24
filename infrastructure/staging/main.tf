@@ -157,7 +157,7 @@ module "ecs_task_role" {
   source = "../modules/iam"
 
   role_name        = "auac_ecs_task_role"
-  role_description = "Execution role for ECS tasks"
+  role_description = "Role for ECS tasks"
 
   assume_role_policy = jsonencode({
     "Version" : "2012-10-17",
@@ -217,7 +217,7 @@ module "ecs_task_execution_role" {
   source = "../modules/iam"
 
   role_name        = "auac_ecs_task_execution_role"
-  role_description = "Execution role for ECS tasks execution"
+  role_description = "Execution role for ECS tasks"
 
   assume_role_policy = jsonencode({
     "Version" : "2012-10-17",
