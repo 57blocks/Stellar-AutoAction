@@ -45,7 +45,7 @@ func init() {
 		config.Vp.GetString(flagCred),
 		`
 The credential file for the command about to be bound.
-If it's the first time, or ignored, the default path will be used.'`)
+If it's the first time, or ignored, the default path will be used.`)
 
 	flagEnv := constant.FlagEnvironment.ValStr()
 	login.Flags().StringP(
@@ -54,7 +54,7 @@ If it's the first time, or ignored, the default path will be used.'`)
 		config.Vp.GetString(flagEnv),
 		`
 The execution environment about to be bound.
-If ignored, the default environment: Horizon-Testnet will be used.'`)
+If ignored, the default environment: Horizon-Testnet will be used.`)
 
 	flagAcc := constant.FlagAccount.ValStr()
 	login.Flags().StringP(
