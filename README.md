@@ -38,6 +38,7 @@ The server component of AutoAction is built with a robust tech stack to ensure s
 
 For detailed instructions on setting up and using AutoAction, please refer to the following documentation:
 
+- [Init AWS environment](infrastructure/README.md)
 - [CLI Setup and Usage Guide](cli/README.md)
 - [Server Setup and Configuration](server/README.md)
 
