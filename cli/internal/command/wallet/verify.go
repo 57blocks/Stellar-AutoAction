@@ -54,9 +54,9 @@ func verifyFunc(_ *cobra.Command, args []string) error {
 	if err := json.Unmarshal(resp.Body(), &wallet); err != nil {
 		return errorx.Internal(fmt.Sprintf("unmarshaling json response error: %s", err.Error()))
 	}
-	isValid := "invalid"
+	isValid := "INVALID"
 	if wallet["is_valid"] == true {
-		isValid = "valid"
+		isValid = "VALID"
 	}
 	logx.Logger.Info(fmt.Sprintf("The wallet adderss %s is %s", walletAddress, isValid))
 

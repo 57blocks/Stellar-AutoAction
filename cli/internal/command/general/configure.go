@@ -31,6 +31,7 @@ Note:
   - When specifying the tracking source, here are the options below:
     - ON
     - OFF
+    If none matched, using **OFF** as default.
 `,
 	Args: cobra.NoArgs,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
