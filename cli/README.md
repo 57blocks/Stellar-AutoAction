@@ -8,7 +8,57 @@ AutoAction CLI Tool: `autoaction`
 
 ## Installation
 
-Please refer to the installation instructions in the project's root directory for installation.
+You can install the CLI tool in two ways as below.
+
+### Installation from Source
+
+Build the client:
+
+```bash
+# Clone the repository
+git clone https://github.com/57blocks/AutoAction.git
+cd AutoAction
+
+# Install client dependencies
+cd AutoAction/cli
+go mod download
+
+# Build the client
+go build -o autoaction .
+```
+
+After the command executes, a `autoaction` executable file will be generated in the current directory. Running this file will launch the CLI tool.
+
+PS: It is recommended to move the file to a directory in your system’s PATH, so it can be used from any location.
+
+### Running from Source
+
+Run the client:
+
+```bash
+cd AutoAction/cli
+go run main.go
+```
+
+## Configuring the CLI Tool
+
+The first time you run the CLI tool, a configuration file will be automatically generated. This file is usually saved in `~/.autoaction.toml`. The default configuration is as follows:
+
+```toml
+[general]
+  logx = "Info"
+  source = "OFF"
+  public_key = ""
+
+[bound_with]
+  credential = "/Users/{username}/.autoaction-credential"
+  endpoint = ""
+```
+
+There are two configuration items that need manual setup:
+
+- public_key should be set to the value of the Terraform environment variable `rsa_public_key`.
+- endpoint should be the address of the ECS service exposed on AWS. You can find it on AWS: `EC2 -> Load Balancers -> select the relevant Load Balancer -> DNS name`. For example, if the DNS name is `autoaction-alb-365278.us-east-2.elb.amazonaws.com`, the endpoint value will be `http://autoaction-alb-365278.us-east-2.elb.amazonaws.com`.
 
 ## Main Commands
 
