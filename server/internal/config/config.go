@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -88,6 +89,11 @@ type (
 func Setup() error {
 	cfgLogger := slog.Default()
 	slog.SetLogLoggerLevel(slog.LevelDebug)
+
+	// add .env file(local development)
+	if err := godotenv.Load(); err != nil {
+		cfgLogger.Warn(fmt.Sprintf("Error loading .env file: %v", err))
+	}
 
 	Vp = viper.NewWithOptions(
 		viper.WithLogger(cfgLogger),
