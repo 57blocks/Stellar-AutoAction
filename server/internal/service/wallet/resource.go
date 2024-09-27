@@ -41,7 +41,7 @@ func Remove(c *gin.Context) {
 	c.JSON(http.StatusOK, nil)
 }
 
-func ListWallets(c *gin.Context) {
+func List(c *gin.Context) {
 	resp, err := ServiceImpl.List(c)
 	if err != nil {
 		c.Error(err)

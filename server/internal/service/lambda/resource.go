@@ -96,14 +96,14 @@ func Invoke(c *gin.Context) {
 }
 
 func List(c *gin.Context) {
-	reqBody := new(dto.ReqList)
-	if err := c.BindQuery(reqBody); err != nil {
+	queryParams := new(dto.ReqList)
+	if err := c.BindQuery(queryParams); err != nil {
 		c.Error(errorx.BadRequest(err.Error()))
 		c.Abort()
 		return
 	}
 
-	resp, err := ServiceImpl.List(c, reqBody.Full)
+	resp, err := ServiceImpl.List(c, queryParams.Full)
 	if err != nil {
 		c.Error(err)
 		c.Abort()

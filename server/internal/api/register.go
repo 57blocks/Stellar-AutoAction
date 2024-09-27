@@ -32,7 +32,7 @@ func RegisterHandlers(g *gin.Engine) http.Handler {
 
 	walletGroup := g.Group("/wallet", middleware.Authentication(), middleware.Authorization())
 	{
-		walletGroup.GET("", wallet.ListWallets)
+		walletGroup.GET("", wallet.List)
 		walletGroup.POST("", wallet.Create)
 		walletGroup.DELETE("/:address", wallet.Remove)
 		walletGroup.POST("/:address", wallet.Verify)
