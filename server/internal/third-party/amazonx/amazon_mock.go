@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	cloudwatchlogs "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	iam "github.com/aws/aws-sdk-go-v2/service/iam"
 	lambda "github.com/aws/aws-sdk-go-v2/service/lambda"
 	scheduler "github.com/aws/aws-sdk-go-v2/service/scheduler"
 	secretsmanager "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -58,6 +59,36 @@ func (mr *MockAmazonMockRecorder) BoundScheduler(c, input interface{}, opts ...i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BoundScheduler", reflect.TypeOf((*MockAmazon)(nil).BoundScheduler), varargs...)
 }
 
+// CreateRole mocks base method.
+func (m *MockAmazon) CreateRole(c context.Context, input *iam.CreateRoleInput) (*iam.CreateRoleOutput, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateRole", c, input)
+	ret0, _ := ret[0].(*iam.CreateRoleOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateRole indicates an expected call of CreateRole.
+func (mr *MockAmazonMockRecorder) CreateRole(c, input interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRole", reflect.TypeOf((*MockAmazon)(nil).CreateRole), c, input)
+}
+
+// CreateSecret mocks base method.
+func (m *MockAmazon) CreateSecret(c context.Context, input *secretsmanager.CreateSecretInput) (*secretsmanager.CreateSecretOutput, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSecret", c, input)
+	ret0, _ := ret[0].(*secretsmanager.CreateSecretOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSecret indicates an expected call of CreateSecret.
+func (mr *MockAmazonMockRecorder) CreateSecret(c, input interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSecret", reflect.TypeOf((*MockAmazon)(nil).CreateSecret), c, input)
+}
+
 // DescribeLogStreams mocks base method.
 func (m *MockAmazon) DescribeLogStreams(c context.Context, input *cloudwatchlogs.DescribeLogStreamsInput) (*cloudwatchlogs.DescribeLogStreamsOutput, error) {
 	m.ctrl.T.Helper()
@@ -86,6 +117,21 @@ func (m *MockAmazon) GetLogEvents(c context.Context, input *cloudwatchlogs.GetLo
 func (mr *MockAmazonMockRecorder) GetLogEvents(c, input interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLogEvents", reflect.TypeOf((*MockAmazon)(nil).GetLogEvents), c, input)
+}
+
+// GetRole mocks base method.
+func (m *MockAmazon) GetRole(c context.Context, input *iam.GetRoleInput) (*iam.GetRoleOutput, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRole", c, input)
+	ret0, _ := ret[0].(*iam.GetRoleOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRole indicates an expected call of GetRole.
+func (mr *MockAmazonMockRecorder) GetRole(c, input interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRole", reflect.TypeOf((*MockAmazon)(nil).GetRole), c, input)
 }
 
 // GetScheduler mocks base method.
@@ -131,6 +177,36 @@ func (m *MockAmazon) InvokeLambda(c context.Context, input *lambda.InvokeInput) 
 func (mr *MockAmazonMockRecorder) InvokeLambda(c, input interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InvokeLambda", reflect.TypeOf((*MockAmazon)(nil).InvokeLambda), c, input)
+}
+
+// PutResourcePolicy mocks base method.
+func (m *MockAmazon) PutResourcePolicy(c context.Context, input *secretsmanager.PutResourcePolicyInput) (*secretsmanager.PutResourcePolicyOutput, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PutResourcePolicy", c, input)
+	ret0, _ := ret[0].(*secretsmanager.PutResourcePolicyOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PutResourcePolicy indicates an expected call of PutResourcePolicy.
+func (mr *MockAmazonMockRecorder) PutResourcePolicy(c, input interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutResourcePolicy", reflect.TypeOf((*MockAmazon)(nil).PutResourcePolicy), c, input)
+}
+
+// PutRolePolicy mocks base method.
+func (m *MockAmazon) PutRolePolicy(c context.Context, input *iam.PutRolePolicyInput) (*iam.PutRolePolicyOutput, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PutRolePolicy", c, input)
+	ret0, _ := ret[0].(*iam.PutRolePolicyOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PutRolePolicy indicates an expected call of PutRolePolicy.
+func (mr *MockAmazonMockRecorder) PutRolePolicy(c, input interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutRolePolicy", reflect.TypeOf((*MockAmazon)(nil).PutRolePolicy), c, input)
 }
 
 // RegisterLambda mocks base method.
