@@ -8,18 +8,16 @@ import (
 
 	"github.com/57blocks/auto-action/server/internal/constant"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	svcOrg "github.com/57blocks/auto-action/server/internal/service/organization"
 
 	"github.com/gin-gonic/gin"
 )
 
 func GenLambdaFuncName(c context.Context, name string) string {
-	org, _ := svcOrg.ServiceImpl.Organization(c)
-
 	ctx := c.(*gin.Context)
+	org, _ := ctx.Get(constant.ClaimIss.Str())
 	account, _ := ctx.Get(constant.ClaimSub.Str())
 
-	return fmt.Sprintf("%s-%s-%s", org.Name, account, name)
+	return fmt.Sprintf("%s-%s-%s", org, account, name)
 }
 
 func GenEventPayload(c context.Context, payload string) (*map[string]interface{}, error) {
@@ -33,7 +31,10 @@ func GenEventPayload(c context.Context, payload string) (*map[string]interface{}
 
 	inputPayload := make(map[string]interface{})
 	if len(payload) > 0 {
-		json.Unmarshal([]byte(payload), &inputPayload) // the payload is validated in CLI already
+		err := json.Unmarshal([]byte(payload), &inputPayload)
+		if err != nil {
+			return nil, errorx.Internal(fmt.Sprintf("failed to unmarshal payload: %s", err.Error()))
+		}
 	}
 
 	inputPayload["organization"] = jwtOrg.(string)

@@ -86,7 +86,7 @@ type (
 	}
 )
 
-func Setup() error {
+func Setup(cfgPath string) error {
 	cfgLogger := slog.Default()
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 
@@ -99,7 +99,7 @@ func Setup() error {
 		viper.WithLogger(cfgLogger),
 	)
 
-	Vp.AddConfigPath("./internal/config/")
+	Vp.AddConfigPath(cfgPath)
 	Vp.SetConfigType("toml")
 	Vp.SetConfigName("config")
 	Vp.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))

@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
@@ -38,7 +37,7 @@ type (
 		Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error)
 		List(c context.Context, isFull bool) (interface{}, error)
 		Info(c context.Context, r *dto.ReqURILambda) (*dto.RespInfo, error)
-		Logs(c context.Context, r *dto.ReqURILambda) error
+		Logs(c context.Context, r *dto.ReqURILambda, upgrader *websocket.Upgrader) error
 		Remove(c context.Context, r *dto.ReqURILambda) (*dto.RespRemove, error)
 	}
 	service struct {
@@ -128,9 +127,9 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) ([]*dto.Resp
 			}
 
 			respItem.Scheduler = &dto.RespSchBrief{
-				Arn:            *newLamResp.FunctionArn,
+				Arn:            *newSchResp.ScheduleArn,
 				Name:           *newLamResp.FunctionName,
-				BoundLambdaArn: *newSchResp.ScheduleArn,
+				BoundLambdaArn: *newLamResp.FunctionArn,
 			}
 
 			tpp.Scheduler = model.BuildScheduler(
@@ -220,7 +219,7 @@ func (svc *service) boundScheduler(
 		State:                      scheTypes.ScheduleStateEnabled,
 	})
 	if err != nil {
-		return nil, errorx.Internal(fmt.Sprintf("failed to bind scheduler: %s, err: %s", *lambdaFun.FunctionName, err.Error()))
+		return nil, errorx.Internal(fmt.Sprintf("failed to bound scheduler: %s, err: %s", *lambdaFun.FunctionName, err.Error()))
 	}
 
 	logx.Logger.DEBUG(fmt.Sprintf("scheduler created: %s", *newSchResp.ScheduleArn))
@@ -346,19 +345,11 @@ func (svc *service) Info(c context.Context, r *dto.ReqURILambda) (*dto.RespInfo,
 	return info, nil
 }
 
-func (svc *service) Logs(c context.Context, req *dto.ReqURILambda) error {
+func (svc *service) Logs(c context.Context, req *dto.ReqURILambda, upgrader *websocket.Upgrader) error {
 	// websocket
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return errorx.GinContextConv()
-	}
-
-	upgrader := websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-		CheckOrigin: func(r *http.Request) bool {
-			return true
-		},
 	}
 
 	wsConn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
