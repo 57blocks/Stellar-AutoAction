@@ -80,7 +80,7 @@ func (svc *service) Signup(c context.Context, req dto.ReqSignup) error {
 		return err
 	}
 
-	csRole, err := svc.resty.AddCSRole(csToken, req.Organization, req.Account)
+	csRole, err := svc.resty.AddCSRole(c, csToken, req.Organization, req.Account)
 	if err != nil {
 		return err
 	}

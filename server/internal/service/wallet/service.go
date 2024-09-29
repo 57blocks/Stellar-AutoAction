@@ -15,6 +15,7 @@ import (
 	svcCS "github.com/57blocks/auto-action/server/internal/service/cs"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 	"github.com/57blocks/auto-action/server/internal/third-party/restyx"
+	"github.com/57blocks/auto-action/server/internal/third-party/stellarx"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stellar/go/clients/horizonclient"
@@ -31,6 +32,8 @@ type (
 		oauthRepo repo.OAuth
 		csRepo    repo.CubeSigner
 		resty     restyx.Resty
+		csService svcCS.Service
+		stellar   stellarx.Stellar
 	}
 )
 
@@ -43,6 +46,8 @@ func NewWalletService() {
 			oauthRepo: repo.OAuthRepo,
 			csRepo:    repo.CubeSignerRepo,
 			resty:     restyx.Conductor,
+			csService: svcCS.ServiceImpl,
+			stellar:   stellarx.Conductor,
 		}
 	}
 }
@@ -73,23 +78,23 @@ func (svc *service) Create(c context.Context) (*dto.RespCreateWallet, error) {
 		return nil, errorx.Internal(fmt.Sprintf("the number of wallet address is limited to %d", max))
 	}
 
-	csToken, err := svcCS.ServiceImpl.CubeSignerToken(c)
+	csToken, err := svc.csService.CubeSignerToken(c)
 	if err != nil {
 		return nil, err
 	}
 
 	secretName := util.GetSecretName(c, jwtOrg.(string), jwtAccount.(string))
-	role, err := svcCS.ServiceImpl.GetSecRole(c, secretName)
+	role, err := svc.csService.GetSecRole(c, secretName)
 	if err != nil {
 		return nil, err
 	}
 
-	keyId, err := svc.resty.AddCSKey(csToken)
+	keyId, err := svc.resty.AddCSKey(c, csToken)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = svc.resty.AddCSKeyToRole(csToken, keyId, role); err != nil {
+	if err = svc.resty.AddCSKeyToRole(c, csToken, keyId, role); err != nil {
 		return nil, err
 	}
 
@@ -132,22 +137,22 @@ func (svc *service) Remove(c context.Context, r *dto.ReqRemoveWallet) error {
 		return err
 	}
 
-	csToken, err := svcCS.ServiceImpl.CubeSignerToken(c)
+	csToken, err := svc.csService.CubeSignerToken(c)
 	if err != nil {
 		return err
 	}
 
 	secretName := util.GetSecretName(c, jwtOrg.(string), jwtAccount.(string))
-	role, err := svcCS.ServiceImpl.GetSecRole(c, secretName)
+	role, err := svc.csService.GetSecRole(c, secretName)
 	if err != nil {
 		return err
 	}
 
-	if err = svc.resty.DeleteCSKeyFromRole(csToken, keyId, role); err != nil {
+	if err = svc.resty.DeleteCSKeyFromRole(c, csToken, keyId, role); err != nil {
 		return err
 	}
 
-	if err = svc.resty.DeleteCSKey(csToken, keyId); err != nil {
+	if err = svc.resty.DeleteCSKey(c, csToken, keyId); err != nil {
 		return err
 	}
 
@@ -219,11 +224,7 @@ func (svc *service) Verify(c context.Context, r *dto.ReqVerifyWallet) (*dto.Resp
 		return nil, err
 	}
 
-	horizon := horizonclient.DefaultTestNetClient
-	if config.GlobalConfig.Bound.Name == string(constant.StellarNetworkTypeTestNet) {
-		horizon = horizonclient.DefaultPublicNetClient
-	}
-	_, err = horizon.AccountDetail(horizonclient.AccountRequest{AccountID: r.Address})
+	_, err = svc.stellar.AccountDetail(c, horizonclient.AccountRequest{AccountID: r.Address})
 	if err != nil {
 		logx.Logger.ERROR(fmt.Sprintf("verify wallet address %s occurred error: %s", r.Address, err.Error()))
 		return &dto.RespVerifyWallet{

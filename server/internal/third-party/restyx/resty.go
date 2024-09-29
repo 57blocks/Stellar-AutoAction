@@ -1,6 +1,7 @@
 package restyx
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 
@@ -15,21 +16,21 @@ import (
 //go:generate mockgen -destination ./resty_mock.go -package restyx -source resty.go Resty
 type (
 	Resty interface {
-		AddCSRole(csToken string, orgName string, account string) (*dto.RespAddCsRole, error)
-		AddCSKey(csToken string) (string, error)
-		AddCSKeyToRole(csToken string, keyId string, role string) error
-		DeleteCSKey(csToken string, keyId string) error
-		DeleteCSKeyFromRole(csToken string, keyId string, role string) error
+		AddCSRole(c context.Context, csToken string, orgName string, account string) (*dto.RespAddCsRole, error)
+		AddCSKey(c context.Context, csToken string) (string, error)
+		AddCSKeyToRole(c context.Context, csToken string, keyId string, role string) error
+		DeleteCSKey(c context.Context, csToken string, keyId string) error
+		DeleteCSKeyFromRole(c context.Context, csToken string, keyId string, role string) error
 	}
 
-	restyX struct {
+	restyx struct {
 		client *resty.Client
 	}
 )
 
 var Conductor Resty
 
-func (r *restyX) AddCSRole(csToken string, orgName string, account string) (*dto.RespAddCsRole, error) {
+func (r *restyx) AddCSRole(c context.Context, csToken string, orgName string, account string) (*dto.RespAddCsRole, error) {
 	URL := fmt.Sprintf(
 		"%s/v0/org/%s/roles",
 		config.GlobalConfig.CS.Endpoint,
@@ -58,7 +59,7 @@ func (r *restyX) AddCSRole(csToken string, orgName string, account string) (*dto
 	return &roleResp, nil
 }
 
-func (r *restyX) AddCSKey(csToken string) (string, error) {
+func (r *restyx) AddCSKey(c context.Context, csToken string) (string, error) {
 	URL := fmt.Sprintf(
 		"%s/v0/org/%s/keys",
 		config.GlobalConfig.CS.Endpoint,
@@ -89,7 +90,7 @@ func (r *restyX) AddCSKey(csToken string) (string, error) {
 	return keyId, nil
 }
 
-func (r *restyX) AddCSKeyToRole(csToken string, keyId string, role string) error {
+func (r *restyx) AddCSKeyToRole(c context.Context, csToken string, keyId string, role string) error {
 	URL := fmt.Sprintf(
 		"%s/v0/org/%s/roles/%s/add_keys",
 		config.GlobalConfig.CS.Endpoint,
@@ -116,7 +117,7 @@ func (r *restyX) AddCSKeyToRole(csToken string, keyId string, role string) error
 	return nil
 }
 
-func (r *restyX) DeleteCSKey(csToken string, keyId string) error {
+func (r *restyx) DeleteCSKey(c context.Context, csToken string, keyId string) error {
 	URL := fmt.Sprintf(
 		"%s/v0/org/%s/keys/%s",
 		config.GlobalConfig.CS.Endpoint,
@@ -139,7 +140,7 @@ func (r *restyX) DeleteCSKey(csToken string, keyId string) error {
 	return nil
 }
 
-func (r *restyX) DeleteCSKeyFromRole(csToken string, keyId string, role string) error {
+func (r *restyx) DeleteCSKeyFromRole(c context.Context, csToken string, keyId string, role string) error {
 	URL := fmt.Sprintf(
 		"%s/v0/org/%s/roles/%s/keys/%s",
 		config.GlobalConfig.CS.Endpoint,
