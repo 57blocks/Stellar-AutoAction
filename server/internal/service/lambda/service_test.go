@@ -17,7 +17,6 @@ import (
 	"github.com/57blocks/auto-action/server/internal/repo"
 	"github.com/57blocks/auto-action/server/internal/third-party/amazonx"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
-	"github.com/gorilla/websocket"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
@@ -31,6 +30,7 @@ import (
 	"github.com/aws/smithy-go/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
 )
 
