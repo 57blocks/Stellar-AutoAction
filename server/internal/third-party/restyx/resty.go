@@ -12,13 +12,14 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-// TODO: remove Client later
-var Client *resty.Client
-
 //go:generate mockgen -destination ./resty_mock.go -package restyx -source resty.go Resty
 type (
 	Resty interface {
 		AddCSRole(csToken string, orgName string, account string) (*dto.RespAddCsRole, error)
+		AddCSKey(csToken string) (string, error)
+		AddCSKeyToRole(csToken string, keyId string, role string) error
+		DeleteCSKey(csToken string, keyId string) error
+		DeleteCSKeyFromRole(csToken string, keyId string, role string) error
 	}
 
 	restyX struct {
@@ -55,4 +56,109 @@ func (r *restyX) AddCSRole(csToken string, orgName string, account string) (*dto
 	logx.Logger.DEBUG(fmt.Sprintf("create cube signer role success: %s", roleName))
 
 	return &roleResp, nil
+}
+
+func (r *restyX) AddCSKey(csToken string) (string, error) {
+	URL := fmt.Sprintf(
+		"%s/v0/org/%s/keys",
+		config.GlobalConfig.CS.Endpoint,
+		url.PathEscape(config.GlobalConfig.CS.Organization),
+	)
+
+	var keyResp dto.RespAddCsKey
+	resp, err := r.client.R().
+		SetHeader("Authorization", csToken).
+		SetHeader("Content-Type", "application/json").
+		SetBody(map[string]interface{}{
+			"count":    1,
+			"key_type": "Ed25519StellarAddr",
+			"policy":   []string{"AllowRawBlobSigning"},
+		}).
+		SetResult(&keyResp).
+		Post(URL)
+	if err != nil {
+		return "", errorx.Internal(fmt.Sprintf("create cube signer key occurred error: %s", err.Error()))
+	}
+	if resp.IsError() {
+		return "", errorx.Internal(fmt.Sprintf("create cube signer key occurred error: %d, %s", resp.StatusCode(), resp.String()))
+	}
+
+	keyId := keyResp.Keys[0].KeyID
+	logx.Logger.DEBUG(fmt.Sprintf("create cube signer key success: %s", keyId))
+
+	return keyId, nil
+}
+
+func (r *restyX) AddCSKeyToRole(csToken string, keyId string, role string) error {
+	URL := fmt.Sprintf(
+		"%s/v0/org/%s/roles/%s/add_keys",
+		config.GlobalConfig.CS.Endpoint,
+		url.PathEscape(config.GlobalConfig.CS.Organization),
+		url.PathEscape(role),
+	)
+
+	resp, err := r.client.R().
+		SetHeader("Authorization", csToken).
+		SetHeader("Content-Type", "application/json").
+		SetBody(map[string]interface{}{
+			"key_ids": []string{keyId},
+		}).
+		Put(URL)
+	if err != nil {
+		return errorx.Internal(fmt.Sprintf("add cube signer key to role occurred error: %s", err.Error()))
+	}
+	if resp.IsError() {
+		return errorx.Internal(fmt.Sprintf("add cube signer key to role occurred error: %d, %s", resp.StatusCode(), resp.String()))
+	}
+
+	logx.Logger.DEBUG(fmt.Sprintf("add cube signer key to role success: %s", resp.String()))
+
+	return nil
+}
+
+func (r *restyX) DeleteCSKey(csToken string, keyId string) error {
+	URL := fmt.Sprintf(
+		"%s/v0/org/%s/keys/%s",
+		config.GlobalConfig.CS.Endpoint,
+		url.PathEscape(config.GlobalConfig.CS.Organization),
+		url.PathEscape(keyId),
+	)
+
+	resp, err := r.client.R().
+		SetHeader("Authorization", csToken).
+		SetHeader("Content-Type", "application/json").
+		Delete(URL)
+	if err != nil {
+		return errorx.Internal(fmt.Sprintf("delete cube signer key occurred error: %s", err.Error()))
+	}
+	if resp.IsError() {
+		return errorx.Internal(fmt.Sprintf("delete cube signer key occurred error: %d, %s", resp.StatusCode(), resp.String()))
+	}
+	logx.Logger.DEBUG(fmt.Sprintf("delete cube signer key success: %s", keyId))
+
+	return nil
+}
+
+func (r *restyX) DeleteCSKeyFromRole(csToken string, keyId string, role string) error {
+	URL := fmt.Sprintf(
+		"%s/v0/org/%s/roles/%s/keys/%s",
+		config.GlobalConfig.CS.Endpoint,
+		url.PathEscape(config.GlobalConfig.CS.Organization),
+		url.PathEscape(role),
+		url.PathEscape(keyId),
+	)
+
+	resp, err := r.client.R().
+		SetHeader("Authorization", csToken).
+		SetHeader("Content-Type", "application/json").
+		Delete(URL)
+	if err != nil {
+		return errorx.Internal(fmt.Sprintf("delete cube signer key from role occurred error: %s", err.Error()))
+	}
+	if resp.IsError() {
+		return errorx.Internal(fmt.Sprintf("delete cube signer key from role occurred error: %d, %s", resp.StatusCode(), resp.String()))
+	}
+	logx.Logger.DEBUG(fmt.Sprintf("delete cube signer key from role success: %s", resp.String()))
+
+	return nil
 }

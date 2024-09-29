@@ -3,7 +3,6 @@ package wallet
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/57blocks/auto-action/server/internal/config"
@@ -31,6 +30,7 @@ type (
 	service struct {
 		oauthRepo repo.OAuth
 		csRepo    repo.CubeSigner
+		resty     restyx.Resty
 	}
 )
 
@@ -42,6 +42,7 @@ func NewWalletService() {
 		ServiceImpl = &service{
 			oauthRepo: repo.OAuthRepo,
 			csRepo:    repo.CubeSignerRepo,
+			resty:     restyx.Conductor,
 		}
 	}
 }
@@ -83,16 +84,20 @@ func (svc *service) Create(c context.Context) (*dto.RespCreateWallet, error) {
 		return nil, err
 	}
 
-	keyId, err := svc.addCSKey(csToken)
+	keyId, err := svc.resty.AddCSKey(csToken)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = svc.addKeyToRole(csToken, keyId, role); err != nil {
+	if err = svc.resty.AddCSKeyToRole(csToken, keyId, role); err != nil {
 		return nil, err
 	}
 
-	if err = svc.saveCSKey(c, user.ID, keyId); err != nil {
+	if err := svc.csRepo.SyncCSKey(c, &model.CubeSignerKey{
+		AccountID: user.ID,
+		Key:       keyId,
+		Scopes:    []string{"{sign:blob}"},
+	}); err != nil {
 		return nil, err
 	}
 
@@ -138,11 +143,11 @@ func (svc *service) Remove(c context.Context, r *dto.ReqRemoveWallet) error {
 		return err
 	}
 
-	if err = svc.deleteKeyFromRole(csToken, keyId, role); err != nil {
+	if err = svc.resty.DeleteCSKeyFromRole(csToken, keyId, role); err != nil {
 		return err
 	}
 
-	if err = svc.deleteCSKey(csToken, keyId); err != nil {
+	if err = svc.resty.DeleteCSKey(csToken, keyId); err != nil {
 		return err
 	}
 
@@ -231,127 +236,4 @@ func (svc *service) Verify(c context.Context, r *dto.ReqVerifyWallet) (*dto.Resp
 		Address: r.Address,
 		IsValid: true,
 	}, nil
-}
-
-func (svc *service) addCSKey(csToken string) (string, error) {
-	URL := fmt.Sprintf(
-		"%s/v0/org/%s/keys",
-		config.GlobalConfig.CS.Endpoint,
-		url.PathEscape(config.GlobalConfig.CS.Organization),
-	)
-
-	// TODO: using member to do the request for ut
-	var keyResp dto.RespAddCsKey
-	resp, err := restyx.Client.R().
-		SetHeader("Authorization", csToken).
-		SetHeader("Content-Type", "application/json").
-		SetBody(map[string]interface{}{
-			"count":    1,
-			"key_type": "Ed25519StellarAddr",
-			"policy":   []string{"AllowRawBlobSigning"},
-		}).
-		SetResult(&keyResp).
-		Post(URL)
-	if err != nil {
-		return "", errorx.Internal(fmt.Sprintf("create cube signer key occurred error: %s", err.Error()))
-	}
-	if resp.IsError() {
-		return "", errorx.Internal(fmt.Sprintf("create cube signer key occurred error: %d, %s", resp.StatusCode(), resp.String()))
-	}
-
-	keyId := keyResp.Keys[0].KeyID
-	logx.Logger.DEBUG(fmt.Sprintf("create cube signer key success: %s", keyId))
-
-	return keyId, nil
-}
-
-func (svc *service) addKeyToRole(csToken string, keyId string, role string) error {
-	URL := fmt.Sprintf(
-		"%s/v0/org/%s/roles/%s/add_keys",
-		config.GlobalConfig.CS.Endpoint,
-		url.PathEscape(config.GlobalConfig.CS.Organization),
-		url.PathEscape(role),
-	)
-
-	// TODO: using member to do the request for ut
-	resp, err := restyx.Client.R().
-		SetHeader("Authorization", csToken).
-		SetHeader("Content-Type", "application/json").
-		SetBody(map[string]interface{}{
-			"key_ids": []string{keyId},
-		}).
-		Put(URL)
-	if err != nil {
-		return errorx.Internal(fmt.Sprintf("add cube signer key to role occurred error: %s", err.Error()))
-	}
-	if resp.IsError() {
-		return errorx.Internal(fmt.Sprintf("add cube signer key to role occurred error: %d, %s", resp.StatusCode(), resp.String()))
-	}
-
-	logx.Logger.DEBUG(fmt.Sprintf("add cube signer key to role success: %s", resp.String()))
-
-	return nil
-}
-
-func (svc *service) saveCSKey(c context.Context, userID uint64, key string) error {
-	csKey := &model.CubeSignerKey{
-		AccountID: userID,
-		Key:       key,
-		Scopes:    []string{"{sign:blob}"},
-	}
-	if err := svc.csRepo.SyncCSKey(c, csKey); err != nil {
-		return err
-	}
-
-	logx.Logger.DEBUG(fmt.Sprintf("save cube signer key to database success: %s", csKey.Key))
-
-	return nil
-}
-
-func (svc *service) deleteCSKey(csToken string, keyId string) error {
-	URL := fmt.Sprintf(
-		"%s/v0/org/%s/keys/%s",
-		config.GlobalConfig.CS.Endpoint,
-		url.PathEscape(config.GlobalConfig.CS.Organization),
-		url.PathEscape(keyId),
-	)
-
-	// TODO: using member to do the request for ut
-	resp, err := restyx.Client.R().
-		SetHeader("Authorization", csToken).
-		SetHeader("Content-Type", "application/json").
-		Delete(URL)
-	if err != nil {
-		return errorx.Internal(fmt.Sprintf("delete cube signer key occurred error: %s", err.Error()))
-	}
-	if resp.IsError() {
-		return errorx.Internal(fmt.Sprintf("delete cube signer key occurred error: %d, %s", resp.StatusCode(), resp.String()))
-	}
-	logx.Logger.DEBUG(fmt.Sprintf("delete cube signer key success: %s", keyId))
-
-	return nil
-}
-
-func (svc *service) deleteKeyFromRole(csToken string, keyId string, role string) error {
-	URL := fmt.Sprintf(
-		"%s/v0/org/%s/roles/%s/keys/%s",
-		config.GlobalConfig.CS.Endpoint,
-		url.PathEscape(config.GlobalConfig.CS.Organization),
-		url.PathEscape(role),
-		url.PathEscape(keyId),
-	)
-
-	resp, err := restyx.Client.R().
-		SetHeader("Authorization", csToken).
-		SetHeader("Content-Type", "application/json").
-		Delete(URL)
-	if err != nil {
-		return errorx.Internal(fmt.Sprintf("delete cube signer key from role occurred error: %s", err.Error()))
-	}
-	if resp.IsError() {
-		return errorx.Internal(fmt.Sprintf("delete cube signer key from role occurred error: %d, %s", resp.StatusCode(), resp.String()))
-	}
-	logx.Logger.DEBUG(fmt.Sprintf("delete cube signer key from role success: %s", resp.String()))
-
-	return nil
 }
