@@ -8,6 +8,7 @@ import (
 
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
+	"github.com/gorilla/websocket"
 
 	"github.com/gin-gonic/gin"
 )
@@ -141,7 +142,15 @@ func Logs(c *gin.Context) {
 		return
 	}
 
-	if err := ServiceImpl.Logs(c, req); err != nil {
+	upgrader := websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+
+	if err := ServiceImpl.Logs(c, req, &upgrader); err != nil {
 		c.Error(err)
 		c.Abort()
 		return

@@ -31,7 +31,10 @@ func GenEventPayload(c context.Context, payload string) (*map[string]interface{}
 
 	inputPayload := make(map[string]interface{})
 	if len(payload) > 0 {
-		json.Unmarshal([]byte(payload), &inputPayload) // the payload is validated in CLI already
+		err := json.Unmarshal([]byte(payload), &inputPayload)
+		if err != nil {
+			return nil, errorx.Internal(fmt.Sprintf("failed to unmarshal payload: %s", err.Error()))
+		}
 	}
 
 	inputPayload["organization"] = jwtOrg.(string)
