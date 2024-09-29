@@ -119,6 +119,7 @@ jobs:
             WALLET_MAX=${{ vars.WALLET_MAX}}	
             LAMBDA_MAX=${{ vars.LAMBDA_MAX }}	
             AWS_ECS_TASK_ROLE=${{ vars.AWS_ECS_TASK_ROLE }}
+            AWS_SECRET_CREATE_SLEEP_TIME=${{ vars.AWS_SECRET_CREATE_SLEEP_TIME }}
       - name: Deploy to Amazon ECS task definition
         id: deploy-task-def
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1

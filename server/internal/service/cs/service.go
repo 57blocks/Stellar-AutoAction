@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 )
 
+//go:generate mockgen -destination ./service_mock.go -package cs -source service.go Service
 type (
 	Service interface {
 		CubeSignerToken(c context.Context) (string, error)

@@ -34,7 +34,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Before test, setup log
+// Before test, setup log and config
 func TestMain(m *testing.M) {
 	os.Setenv("LAMBDA_MAX", "2")
 	config.Setup("../../config/")
