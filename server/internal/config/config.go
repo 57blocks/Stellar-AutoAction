@@ -54,9 +54,10 @@ type (
 	}
 
 	Amazon struct {
-		_           struct{}
-		Region      string `mapstructure:"region"`
-		EcsTaskRole string `mapstructure:"ecs_task_role"`
+		_                     struct{}
+		Region                string `mapstructure:"region"`
+		EcsTaskRole           string `mapstructure:"ecs_task_role"`
+		SecretCreateSleepTime string `mapstructure:"secret_create_sleep_time"`
 	}
 
 	RDS struct {

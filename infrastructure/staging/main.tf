@@ -432,6 +432,10 @@ module "ecs" {
             {
               name  = "AWS_ECS_TASK_ROLE"
               value = module.ecs_task_role.role_arn
+            },
+            {
+              name  = "AWS_SECRET_CREATE_SLEEP_TIME"
+              value = 10
             }
           ]
           secrets = [
