@@ -657,8 +657,8 @@ func TestSignupSuccess(t *testing.T) {
 	mockCsService.EXPECT().CubeSignerToken(ctx).Times(1).
 		Return(csToken, nil)
 
-	mockResty.EXPECT().AddCSRole(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
-		DoAndReturn(func(token string, orgName string, account string) (*dto.RespAddCsRole, error) {
+	mockResty.EXPECT().AddCSRole(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+		DoAndReturn(func(c context.Context, token string, orgName string, account string) (*dto.RespAddCsRole, error) {
 			assert.Equal(t, csToken, token)
 			assert.Equal(t, orgName, orgName)
 			assert.Equal(t, account, account)
@@ -881,7 +881,7 @@ func TestSignupAddCSRoleError(t *testing.T) {
 	mockCsService.EXPECT().CubeSignerToken(ctx).Times(1).
 		Return(csToken, nil)
 
-	mockResty.EXPECT().AddCSRole(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+	mockResty.EXPECT().AddCSRole(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
 		Return(nil, errors.New("failed to add cs role"))
 
 	svc := &service{
@@ -934,8 +934,8 @@ func TestSignupAddAwsRoleError(t *testing.T) {
 	mockCsService.EXPECT().CubeSignerToken(ctx).Times(1).
 		Return(csToken, nil)
 
-	mockResty.EXPECT().AddCSRole(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
-		DoAndReturn(func(token string, orgName string, account string) (*dto.RespAddCsRole, error) {
+	mockResty.EXPECT().AddCSRole(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+		DoAndReturn(func(c context.Context, token string, orgName string, account string) (*dto.RespAddCsRole, error) {
 			assert.Equal(t, csToken, token)
 			assert.Equal(t, orgName, orgName)
 			assert.Equal(t, account, account)
@@ -1000,8 +1000,8 @@ func TestSignupPutRolePolicyError(t *testing.T) {
 	mockCsService.EXPECT().CubeSignerToken(ctx).Times(1).
 		Return(csToken, nil)
 
-	mockResty.EXPECT().AddCSRole(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
-		DoAndReturn(func(token string, orgName string, account string) (*dto.RespAddCsRole, error) {
+	mockResty.EXPECT().AddCSRole(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+		DoAndReturn(func(c context.Context, token string, orgName string, account string) (*dto.RespAddCsRole, error) {
 			assert.Equal(t, csToken, token)
 			assert.Equal(t, orgName, orgName)
 			assert.Equal(t, account, account)
@@ -1078,9 +1078,9 @@ func TestSignupCreateSecretError(t *testing.T) {
 	mockCsService.EXPECT().CubeSignerToken(ctx).Times(1).
 		Return(csToken, nil)
 
-	mockResty.EXPECT().AddCSRole(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
-		DoAndReturn(func(token string, orgName string, account string) (*dto.RespAddCsRole, error) {
-			assert.Equal(t, csToken, token)
+	mockResty.EXPECT().AddCSRole(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+		DoAndReturn(func(c context.Context, csToken string, orgName string, account string) (*dto.RespAddCsRole, error) {
+			assert.Equal(t, csToken, csToken)
 			assert.Equal(t, orgName, orgName)
 			assert.Equal(t, account, account)
 			return &dto.RespAddCsRole{
@@ -1166,8 +1166,8 @@ func TestSignupPutResourcePolicyError(t *testing.T) {
 	mockCsService.EXPECT().CubeSignerToken(ctx).Times(1).
 		Return(csToken, nil)
 
-	mockResty.EXPECT().AddCSRole(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
-		DoAndReturn(func(token string, orgName string, account string) (*dto.RespAddCsRole, error) {
+	mockResty.EXPECT().AddCSRole(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+		DoAndReturn(func(c context.Context, token string, orgName string, account string) (*dto.RespAddCsRole, error) {
 			assert.Equal(t, csToken, token)
 			assert.Equal(t, orgName, orgName)
 			assert.Equal(t, account, account)
@@ -1262,9 +1262,9 @@ func TestSignupDecryptPwdError(t *testing.T) {
 	mockCsService.EXPECT().CubeSignerToken(ctx).Times(1).
 		Return(csToken, nil)
 
-	mockResty.EXPECT().AddCSRole(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
-		DoAndReturn(func(token string, orgName string, account string) (*dto.RespAddCsRole, error) {
-			assert.Equal(t, csToken, token)
+	mockResty.EXPECT().AddCSRole(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+		DoAndReturn(func(c context.Context, csToken string, orgName string, account string) (*dto.RespAddCsRole, error) {
+			assert.Equal(t, csToken, csToken)
 			assert.Equal(t, orgName, orgName)
 			assert.Equal(t, account, account)
 			return &dto.RespAddCsRole{
@@ -1366,9 +1366,9 @@ func TestSignupCreateUserError(t *testing.T) {
 	mockCsService.EXPECT().CubeSignerToken(ctx).Times(1).
 		Return(csToken, nil)
 
-	mockResty.EXPECT().AddCSRole(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
-		DoAndReturn(func(token string, orgName string, account string) (*dto.RespAddCsRole, error) {
-			assert.Equal(t, csToken, token)
+	mockResty.EXPECT().AddCSRole(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+		DoAndReturn(func(c context.Context, csToken string, orgName string, account string) (*dto.RespAddCsRole, error) {
+			assert.Equal(t, csToken, csToken)
 			assert.Equal(t, orgName, orgName)
 			assert.Equal(t, account, account)
 			return &dto.RespAddCsRole{

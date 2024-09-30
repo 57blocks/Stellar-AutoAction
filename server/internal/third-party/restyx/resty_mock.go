@@ -5,6 +5,7 @@
 package restyx
 
 import (
+	context "context"
 	reflect "reflect"
 
 	dto "github.com/57blocks/auto-action/server/internal/dto"
@@ -34,17 +35,74 @@ func (m *MockResty) EXPECT() *MockRestyMockRecorder {
 	return m.recorder
 }
 
-// AddCSRole mocks base method.
-func (m *MockResty) AddCSRole(csToken, orgName, account string) (*dto.RespAddCsRole, error) {
+// AddCSKey mocks base method.
+func (m *MockResty) AddCSKey(c context.Context, csToken string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddCSRole", csToken, orgName, account)
+	ret := m.ctrl.Call(m, "AddCSKey", c, csToken)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddCSKey indicates an expected call of AddCSKey.
+func (mr *MockRestyMockRecorder) AddCSKey(c, csToken interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddCSKey", reflect.TypeOf((*MockResty)(nil).AddCSKey), c, csToken)
+}
+
+// AddCSKeyToRole mocks base method.
+func (m *MockResty) AddCSKeyToRole(c context.Context, csToken, keyId, role string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddCSKeyToRole", c, csToken, keyId, role)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddCSKeyToRole indicates an expected call of AddCSKeyToRole.
+func (mr *MockRestyMockRecorder) AddCSKeyToRole(c, csToken, keyId, role interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddCSKeyToRole", reflect.TypeOf((*MockResty)(nil).AddCSKeyToRole), c, csToken, keyId, role)
+}
+
+// AddCSRole mocks base method.
+func (m *MockResty) AddCSRole(c context.Context, csToken, orgName, account string) (*dto.RespAddCsRole, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddCSRole", c, csToken, orgName, account)
 	ret0, _ := ret[0].(*dto.RespAddCsRole)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AddCSRole indicates an expected call of AddCSRole.
-func (mr *MockRestyMockRecorder) AddCSRole(csToken, orgName, account interface{}) *gomock.Call {
+func (mr *MockRestyMockRecorder) AddCSRole(c, csToken, orgName, account interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddCSRole", reflect.TypeOf((*MockResty)(nil).AddCSRole), csToken, orgName, account)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddCSRole", reflect.TypeOf((*MockResty)(nil).AddCSRole), c, csToken, orgName, account)
+}
+
+// DeleteCSKey mocks base method.
+func (m *MockResty) DeleteCSKey(c context.Context, csToken, keyId string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteCSKey", c, csToken, keyId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteCSKey indicates an expected call of DeleteCSKey.
+func (mr *MockRestyMockRecorder) DeleteCSKey(c, csToken, keyId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCSKey", reflect.TypeOf((*MockResty)(nil).DeleteCSKey), c, csToken, keyId)
+}
+
+// DeleteCSKeyFromRole mocks base method.
+func (m *MockResty) DeleteCSKeyFromRole(c context.Context, csToken, keyId, role string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteCSKeyFromRole", c, csToken, keyId, role)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteCSKeyFromRole indicates an expected call of DeleteCSKeyFromRole.
+func (mr *MockRestyMockRecorder) DeleteCSKeyFromRole(c, csToken, keyId, role interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCSKeyFromRole", reflect.TypeOf((*MockResty)(nil).DeleteCSKeyFromRole), c, csToken, keyId, role)
 }

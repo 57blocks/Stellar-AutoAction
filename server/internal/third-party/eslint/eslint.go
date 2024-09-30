@@ -22,8 +22,10 @@ const (
 	PathSeparator = string(os.PathSeparator)
 )
 
+var fileSystem util.FileSystem = &util.RealFileSystem{}
+
 func init() {
-	if util.IsRunningInsideDocker() {
+	if util.IsRunningInsideDocker(fileSystem) {
 		output, err := exec.Command("npx", "eslint", "-c", LintConfig, ".").CombinedOutput()
 		if err != nil {
 			panic(fmt.Sprintf("failed to init eslint: %s%s%s", string(output), PathSeparator, err.Error()))
