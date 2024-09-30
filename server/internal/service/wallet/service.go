@@ -106,8 +106,13 @@ func (svc *service) Create(c context.Context) (*dto.RespCreateWallet, error) {
 		return nil, err
 	}
 
+	address, err := util.GetAddressFromCSKey(keyId)
+	if err != nil {
+		return nil, err
+	}
+
 	return &dto.RespCreateWallet{
-		Address: util.GetAddressFromCSKey(keyId),
+		Address: address,
 	}, nil
 }
 
@@ -190,8 +195,12 @@ func (svc *service) List(c context.Context) (*dto.RespListWallets, error) {
 		Data: make([]dto.RespListWallet, len(keys)),
 	}
 	for i, key := range keys {
+		address, err := util.GetAddressFromCSKey(key.Key)
+		if err != nil {
+			return nil, err
+		}
 		response.Data[i] = dto.RespListWallet{
-			Address: util.GetAddressFromCSKey(key.Key),
+			Address: address,
 		}
 	}
 

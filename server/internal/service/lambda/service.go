@@ -283,14 +283,14 @@ func (svc *service) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke
 	}
 
 	// decode log result
-	decodedLogResult, err := util.DecodeBase64String(invokeOutput.LogResult)
+	decodedLogResult, err := util.DecodeBase64String(c, invokeOutput.LogResult)
 	if err != nil {
 		return nil, errorx.Internal(fmt.Sprintf("failed to decode log result: %s", err.Error()))
 	}
 	invokeOutput.LogResult = &decodedLogResult
 
 	// decode payload
-	decodedPayload, err := util.DecodeBase64String(aws.String(string(invokeOutput.Payload)))
+	decodedPayload, err := util.DecodeBase64String(c, aws.String(string(invokeOutput.Payload)))
 	if err != nil {
 		return nil, errorx.Internal(fmt.Sprintf("failed to decode payload: %s", err.Error()))
 	}

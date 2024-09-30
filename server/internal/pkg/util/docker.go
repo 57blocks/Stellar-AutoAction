@@ -6,17 +6,32 @@ import (
 	"strings"
 )
 
-func IsRunningInsideDocker() bool {
-	_, err := os.Stat(filepath.Join("/", ".dockerenv"))
+type FileSystem interface {
+	Stat(name string) (os.FileInfo, error)
+	ReadFile(name string) ([]byte, error)
+}
+
+type RealFileSystem struct{}
+
+func (RealFileSystem) Stat(name string) (os.FileInfo, error) {
+	return os.Stat(name)
+}
+
+func (RealFileSystem) ReadFile(name string) ([]byte, error) {
+	return os.ReadFile(name)
+}
+
+func IsRunningInsideDocker(fs FileSystem) bool {
+	_, err := fs.Stat(filepath.Join("/", ".dockerenv"))
 	if err == nil {
 		return true
 	}
 
-	return isRunningInsideDockerCGroup()
+	return isRunningInsideDockerCGroup(fs)
 }
 
-func isRunningInsideDockerCGroup() bool {
-	data, err := os.ReadFile(filepath.Join("/", "proc", "self", "cgroup"))
+func isRunningInsideDockerCGroup(fs FileSystem) bool {
+	data, err := fs.ReadFile(filepath.Join("/", "proc", "self", "cgroup"))
 	if err != nil {
 		return false
 	}
