@@ -269,3 +269,103 @@ func TestResourceLogoutServiceError(t *testing.T) {
 	assert.NotNil(t, ctx.Errors)
 	assert.Equal(t, "service error", ctx.Errors.Last().Error())
 }
+
+func TestResourceRefreshSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	req := httptest.NewRequest("POST", "/refresh", nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(w)
+	ctx.Set(constant.ClaimRaw.Str(), "test-raw")
+	ctx.Request = req
+
+	mockService := NewMockService(ctrl)
+
+	expectedResp := &dto.RespCredential{}
+	mockService.EXPECT().Refresh(ctx, gomock.Any()).Return(expectedResp, nil)
+
+	cd := &resource{
+		service: mockService,
+	}
+
+	cd.Refresh(ctx)
+
+	assert.Equal(t, http.StatusOK, ctx.Writer.Status())
+	assert.Nil(t, ctx.Errors)
+
+	resp := &dto.RespCredential{}
+	err := json.Unmarshal(w.Body.Bytes(), resp)
+	assert.Nil(t, err)
+	assert.Equal(t, expectedResp, resp)
+}
+
+func TestResourceRefreshUnauthorized(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	req := httptest.NewRequest("POST", "/refresh", nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(w)
+	ctx.Request = req
+
+	cd := &resource{
+		service: NewMockService(ctrl),
+	}
+
+	cd.Refresh(ctx)
+
+	assert.NotNil(t, ctx.Errors)
+	assert.Equal(t, "request unauthorized", ctx.Errors.Last().Error())
+}
+
+func TestResourceRefreshRawNotString(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	req := httptest.NewRequest("POST", "/refresh", nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(w)
+	ctx.Set(constant.ClaimRaw.Str(), 123)
+	ctx.Request = req
+
+	cd := &resource{
+		service: NewMockService(ctrl),
+	}
+
+	cd.Refresh(ctx)
+
+	assert.NotNil(t, ctx.Errors)
+	assert.Equal(t, "raw is not string", ctx.Errors.Last().Error())
+}
+
+func TestResourceRefreshServiceError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	req := httptest.NewRequest("POST", "/refresh", nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(w)
+	ctx.Set(constant.ClaimRaw.Str(), "test-raw")
+	ctx.Request = req
+
+	mockService := NewMockService(ctrl)
+	mockService.EXPECT().Refresh(ctx, gomock.Any()).Return(nil, errors.New("service error"))
+
+	cd := &resource{
+		service: mockService,
+	}
+
+	cd.Refresh(ctx)
+
+	assert.NotNil(t, ctx.Errors)
+	assert.Equal(t, "service error", ctx.Errors.Last().Error())
+}

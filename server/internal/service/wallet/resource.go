@@ -9,10 +9,30 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var ServiceImpl Service
+type (
+	Resource interface {
+		Create(c *gin.Context)
+		Remove(c *gin.Context)
+		List(c *gin.Context)
+		Verify(c *gin.Context)
+	}
+	resource struct {
+		service Service
+	}
+)
 
-func Create(c *gin.Context) {
-	resp, err := ServiceImpl.Create(c)
+var ResourceImpl Resource
+
+func NewWalletResource() {
+	if ResourceImpl == nil {
+		ResourceImpl = &resource{
+			service: ServiceImpl,
+		}
+	}
+}
+
+func (re *resource) Create(c *gin.Context) {
+	resp, err := re.service.Create(c)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
@@ -22,7 +42,7 @@ func Create(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func Remove(c *gin.Context) {
+func (re *resource) Remove(c *gin.Context) {
 	req := new(dto.ReqRemoveWallet)
 
 	if err := c.BindUri(req); err != nil {
@@ -31,7 +51,7 @@ func Remove(c *gin.Context) {
 		return
 	}
 
-	err := ServiceImpl.Remove(c, req)
+	err := re.service.Remove(c, req)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
@@ -41,8 +61,8 @@ func Remove(c *gin.Context) {
 	c.JSON(http.StatusOK, nil)
 }
 
-func List(c *gin.Context) {
-	resp, err := ServiceImpl.List(c)
+func (re *resource) List(c *gin.Context) {
+	resp, err := re.service.List(c)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
@@ -52,7 +72,7 @@ func List(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func Verify(c *gin.Context) {
+func (re *resource) Verify(c *gin.Context) {
 	req := new(dto.ReqVerifyWallet)
 
 	if err := c.BindUri(req); err != nil {
@@ -60,7 +80,7 @@ func Verify(c *gin.Context) {
 		return
 	}
 
-	resp, err := ServiceImpl.Verify(c, req)
+	resp, err := re.service.Verify(c, req)
 	if err != nil {
 		c.Error(err)
 		return

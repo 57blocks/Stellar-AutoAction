@@ -15,6 +15,7 @@ func Setup() error {
 	oauth.NewOAuthService()
 	oauth.NewOAuthResource()
 	wallet.NewWalletService()
+	wallet.NewWalletResource()
 
 	return nil
 }
