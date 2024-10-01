@@ -31,6 +31,7 @@ import (
 	"gorm.io/gorm"
 )
 
+//go:generate mockgen -destination=./service_mock.go -package=lambda -source=service.go Service
 type (
 	Service interface {
 		Register(c context.Context, r *dto.ReqRegister) ([]*dto.RespRegister, error)

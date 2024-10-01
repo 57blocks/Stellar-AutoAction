@@ -22,12 +22,12 @@ func RegisterHandlers(g *gin.Engine) http.Handler {
 
 	lambdaGroup := g.Group("/lambda", middleware.Authentication(), middleware.Authorization())
 	{
-		lambdaGroup.POST("", middleware.RegisterESLintCheck(), lambda.Register)
-		lambdaGroup.POST("/:lambda", lambda.Invoke)
-		lambdaGroup.GET("", lambda.List)
-		lambdaGroup.GET("/:lambda", lambda.Info)
-		lambdaGroup.GET("/:lambda/logs", lambda.Logs)
-		lambdaGroup.DELETE("/:lambda", lambda.Remove)
+		lambdaGroup.POST("", middleware.RegisterESLintCheck(), lambda.ResourceImpl.Register)
+		lambdaGroup.POST("/:lambda", lambda.ResourceImpl.Invoke)
+		lambdaGroup.GET("", lambda.ResourceImpl.List)
+		lambdaGroup.GET("/:lambda", lambda.ResourceImpl.Info)
+		lambdaGroup.GET("/:lambda/logs", lambda.ResourceImpl.Logs)
+		lambdaGroup.DELETE("/:lambda", lambda.ResourceImpl.Remove)
 	}
 
 	walletGroup := g.Group("/wallet", middleware.Authentication(), middleware.Authorization())
