@@ -14,10 +14,10 @@ import (
 func RegisterHandlers(g *gin.Engine) http.Handler {
 	oauthGroup := g.Group("/oauth")
 	{
-		oauthGroup.POST("/signup", oauth.Signup)
-		oauthGroup.POST("/login", oauth.Login)
-		oauthGroup.DELETE("/logout", middleware.AuthHeader(), oauth.Logout)
-		oauthGroup.POST("/refresh", middleware.AuthHeader(), oauth.Refresh)
+		oauthGroup.POST("/signup", oauth.ResourceImpl.Signup)
+		oauthGroup.POST("/login", oauth.ResourceImpl.Login)
+		oauthGroup.DELETE("/logout", middleware.AuthHeader(), oauth.ResourceImpl.Logout)
+		oauthGroup.POST("/refresh", middleware.AuthHeader(), oauth.ResourceImpl.Refresh)
 	}
 
 	lambdaGroup := g.Group("/lambda", middleware.Authentication(), middleware.Authorization())

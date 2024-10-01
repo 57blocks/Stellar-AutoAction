@@ -10,9 +10,29 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var ServiceImpl Service
+type (
+	Resource interface {
+		Signup(c *gin.Context)
+		Login(c *gin.Context)
+		Logout(c *gin.Context)
+		Refresh(c *gin.Context)
+	}
+	resource struct {
+		service Service
+	}
+)
 
-func Signup(c *gin.Context) {
+var ResourceImpl Resource
+
+func NewOAuthResource() {
+	if ResourceImpl == nil {
+		ResourceImpl = &resource{
+			service: ServiceImpl,
+		}
+	}
+}
+
+func (re *resource) Signup(c *gin.Context) {
 	req := new(dto.ReqSignup)
 
 	if err := c.BindJSON(req); err != nil {
@@ -21,7 +41,7 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	if err := ServiceImpl.Signup(c, *req); err != nil {
+	if err := re.service.Signup(c, *req); err != nil {
 		c.Error(err)
 		c.Abort()
 		return
@@ -30,7 +50,7 @@ func Signup(c *gin.Context) {
 	c.JSON(http.StatusOK, nil)
 }
 
-func Login(c *gin.Context) {
+func (re *resource) Login(c *gin.Context) {
 	req := new(dto.ReqLogin)
 
 	if err := c.BindJSON(req); err != nil {
@@ -39,7 +59,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	resp, err := ServiceImpl.Login(c, *req)
+	resp, err := re.service.Login(c, *req)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
@@ -49,7 +69,7 @@ func Login(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func Logout(c *gin.Context) {
+func (re *resource) Logout(c *gin.Context) {
 	raw, ok := c.Get(constant.ClaimRaw.Str())
 	if !ok {
 		c.Error(errorx.Unauthorized())
@@ -63,7 +83,7 @@ func Logout(c *gin.Context) {
 		return
 	}
 
-	resp, err := ServiceImpl.Logout(c, rawStr)
+	resp, err := re.service.Logout(c, rawStr)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
@@ -73,7 +93,7 @@ func Logout(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func Refresh(c *gin.Context) {
+func (re *resource) Refresh(c *gin.Context) {
 	raw, ok := c.Get(constant.ClaimRaw.Str())
 	if !ok {
 		c.Error(errorx.Unauthorized())
@@ -87,7 +107,7 @@ func Refresh(c *gin.Context) {
 		return
 	}
 
-	resp, err := ServiceImpl.Refresh(c, rawStr)
+	resp, err := re.service.Refresh(c, rawStr)
 	if err != nil {
 		c.Error(err)
 		c.Abort()

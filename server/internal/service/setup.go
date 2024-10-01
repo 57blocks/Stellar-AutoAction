@@ -13,6 +13,7 @@ func Setup() error {
 	lambda.NewLambdaService()
 	lambda.NewLambdaResource()
 	oauth.NewOAuthService()
+	oauth.NewOAuthResource()
 	wallet.NewWalletService()
 
 	return nil
