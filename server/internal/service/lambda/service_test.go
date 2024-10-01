@@ -157,6 +157,7 @@ func TestInvokeSuccess(t *testing.T) {
 
 	mockLambRepo := repo.NewMockLambda(ctrl)
 	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := repo.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -165,8 +166,12 @@ func TestInvokeSuccess(t *testing.T) {
 		Lambda:  "name/arn",
 		Payload: "{\"foo\":\"bar\"}",
 	}
+	accountID := uint64(123)
 
-	mockLambRepo.EXPECT().FindByNameOrARN(ctx, "name/arn").Times(1).
+	mockOAuthRepo.EXPECT().FindUserByAcn(ctx, "account_name").Times(1).
+		Return(&dto.RespUser{ID: accountID}, nil)
+
+	mockLambRepo.EXPECT().LambdaInfo(ctx, accountID, "name/arn").Times(1).
 		Return(&dto.RespInfo{
 			FunctionName: "name/arn",
 		}, nil)
@@ -191,6 +196,7 @@ func TestInvokeSuccess(t *testing.T) {
 	cd := &service{
 		lambdaRepo: mockLambRepo,
 		amazon:     mockAmazon,
+		oauthRepo:  mockOAuthRepo,
 	}
 
 	invoke, err := cd.Invoke(ctx, request)
@@ -199,22 +205,54 @@ func TestInvokeSuccess(t *testing.T) {
 	assert.Equal(t, []byte("bar"), invoke.Payload)
 }
 
+func TestInvokeUserNotFound(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+
+	ctx := new(gin.Context)
+	ctx.Set(constant.ClaimSub.Str(), "account_name")
+	request := &dto.ReqInvoke{
+		Lambda: "name/arn",
+	}
+
+	mockOAuthRepo.EXPECT().FindUserByAcn(ctx, "account_name").Times(1).
+		Return(nil, errorx.NotFound("user not found"))
+
+	cd := &service{
+		oauthRepo: mockOAuthRepo,
+	}
+
+	invoke, err := cd.Invoke(ctx, request)
+	assert.Error(t, err)
+	assert.Equal(t, errorx.NotFound("user not found"), err)
+	assert.Nil(t, invoke)
+}
+
 func TestInvokeLambdaNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	mockLambRepo := repo.NewMockLambda(ctrl)
+	mockOAuthRepo := repo.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
+	ctx.Set(constant.ClaimSub.Str(), "account_name")
 	request := &dto.ReqInvoke{
 		Lambda: "name/arn",
 	}
+	accountID := uint64(123)
 
-	mockLambRepo.EXPECT().FindByNameOrARN(ctx, "name/arn").Times(1).
+	mockOAuthRepo.EXPECT().FindUserByAcn(ctx, "account_name").Times(1).
+		Return(&dto.RespUser{ID: accountID}, nil)
+
+	mockLambRepo.EXPECT().LambdaInfo(ctx, accountID, "name/arn").Times(1).
 		Return(nil, errorx.NotFound("lambda not found"))
 
 	cd := &service{
 		lambdaRepo: mockLambRepo,
+		oauthRepo:  mockOAuthRepo,
 	}
 
 	invoke, err := cd.Invoke(ctx, request)
@@ -228,7 +266,7 @@ func TestInvokePayloadInvalid(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockLambRepo := repo.NewMockLambda(ctrl)
-
+	mockOAuthRepo := repo.NewMockOAuth(ctrl)
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
 	ctx.Set(constant.ClaimIss.Str(), "org_name")
@@ -236,14 +274,19 @@ func TestInvokePayloadInvalid(t *testing.T) {
 		Lambda:  "name/arn",
 		Payload: "error payload",
 	}
+	accountID := uint64(123)
 
-	mockLambRepo.EXPECT().FindByNameOrARN(ctx, "name/arn").Times(1).
+	mockOAuthRepo.EXPECT().FindUserByAcn(ctx, "account_name").Times(1).
+		Return(&dto.RespUser{ID: accountID}, nil)
+
+	mockLambRepo.EXPECT().LambdaInfo(ctx, accountID, "name/arn").Times(1).
 		Return(&dto.RespInfo{
 			FunctionName: "name/arn",
 		}, nil)
 
 	cd := &service{
 		lambdaRepo: mockLambRepo,
+		oauthRepo:  mockOAuthRepo,
 	}
 
 	invoke, err := cd.Invoke(ctx, request)
@@ -258,6 +301,7 @@ func TestInvokeLambdaError(t *testing.T) {
 
 	mockLambRepo := repo.NewMockLambda(ctrl)
 	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := repo.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -266,8 +310,12 @@ func TestInvokeLambdaError(t *testing.T) {
 		Lambda:  "name/arn",
 		Payload: "{\"foo\":\"bar\"}",
 	}
+	accountID := uint64(123)
 
-	mockLambRepo.EXPECT().FindByNameOrARN(ctx, "name/arn").Times(1).
+	mockOAuthRepo.EXPECT().FindUserByAcn(ctx, "account_name").Times(1).
+		Return(&dto.RespUser{ID: accountID}, nil)
+
+	mockLambRepo.EXPECT().LambdaInfo(ctx, accountID, "name/arn").Times(1).
 		Return(&dto.RespInfo{
 			FunctionName: "name/arn",
 		}, nil)
@@ -287,6 +335,7 @@ func TestInvokeLambdaError(t *testing.T) {
 	cd := &service{
 		lambdaRepo: mockLambRepo,
 		amazon:     mockAmazon,
+		oauthRepo:  mockOAuthRepo,
 	}
 
 	invoke, err := cd.Invoke(ctx, request)
@@ -301,6 +350,7 @@ func TestInvokeDecodeLogResultError(t *testing.T) {
 
 	mockLambRepo := repo.NewMockLambda(ctrl)
 	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := repo.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -309,8 +359,12 @@ func TestInvokeDecodeLogResultError(t *testing.T) {
 		Lambda:  "name/arn",
 		Payload: "{\"foo\":\"bar\"}",
 	}
+	accountID := uint64(123)
 
-	mockLambRepo.EXPECT().FindByNameOrARN(ctx, "name/arn").Times(1).
+	mockOAuthRepo.EXPECT().FindUserByAcn(ctx, "account_name").Times(1).
+		Return(&dto.RespUser{ID: accountID}, nil)
+
+	mockLambRepo.EXPECT().LambdaInfo(ctx, accountID, "name/arn").Times(1).
 		Return(&dto.RespInfo{
 			FunctionName: "name/arn",
 		}, nil)
@@ -332,6 +386,7 @@ func TestInvokeDecodeLogResultError(t *testing.T) {
 	cd := &service{
 		lambdaRepo: mockLambRepo,
 		amazon:     mockAmazon,
+		oauthRepo:  mockOAuthRepo,
 	}
 
 	invoke, err := cd.Invoke(ctx, request)
@@ -346,7 +401,7 @@ func TestInvokeDecodePayloadError(t *testing.T) {
 
 	mockLambRepo := repo.NewMockLambda(ctrl)
 	mockAmazon := amazonx.NewMockAmazon(ctrl)
-
+	mockOAuthRepo := repo.NewMockOAuth(ctrl)
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
 	ctx.Set(constant.ClaimIss.Str(), "org_name")
@@ -354,8 +409,12 @@ func TestInvokeDecodePayloadError(t *testing.T) {
 		Lambda:  "name/arn",
 		Payload: "{\"foo\":\"bar\"}",
 	}
+	accountID := uint64(123)
 
-	mockLambRepo.EXPECT().FindByNameOrARN(ctx, "name/arn").Times(1).
+	mockOAuthRepo.EXPECT().FindUserByAcn(ctx, "account_name").Times(1).
+		Return(&dto.RespUser{ID: accountID}, nil)
+
+	mockLambRepo.EXPECT().LambdaInfo(ctx, accountID, "name/arn").Times(1).
 		Return(&dto.RespInfo{
 			FunctionName: "name/arn",
 		}, nil)
@@ -379,6 +438,7 @@ func TestInvokeDecodePayloadError(t *testing.T) {
 	cd := &service{
 		lambdaRepo: mockLambRepo,
 		amazon:     mockAmazon,
+		oauthRepo:  mockOAuthRepo,
 	}
 
 	invoke, err := cd.Invoke(ctx, request)
@@ -969,15 +1029,21 @@ func TestRemoveSuccess(t *testing.T) {
 
 	mockLambRepo := repo.NewMockLambda(ctrl)
 	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := repo.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
+	ctx.Set(constant.ClaimSub.Str(), "account_name")
 	request := &dto.ReqURILambda{
 		Lambda: "file1",
 	}
 	functionARN := "arn:aws:lambda:us-east-2:123456789012:function:file1"
 	scheduleARN := "arn:aws:scheduler:us-east-2:123456789012:schedule/default/file1"
+	accountID := uint64(123)
 
-	mockLambRepo.EXPECT().FindByNameOrARN(ctx, "file1").Times(1).
+	mockOAuthRepo.EXPECT().FindUserByAcn(ctx, "account_name").Times(1).
+		Return(&dto.RespUser{ID: accountID}, nil)
+
+	mockLambRepo.EXPECT().LambdaInfo(ctx, accountID, "file1").Times(1).
 		Return(&dto.RespInfo{
 			FunctionName: "org_name-account_name-file1",
 			FunctionArn:  functionARN,
@@ -1017,6 +1083,7 @@ func TestRemoveSuccess(t *testing.T) {
 	cd := &service{
 		lambdaRepo: mockLambRepo,
 		amazon:     mockAmazon,
+		oauthRepo:  mockOAuthRepo,
 	}
 
 	remove, err := cd.Remove(ctx, request)
@@ -1032,22 +1099,53 @@ func TestRemoveSuccess(t *testing.T) {
 	}, remove)
 }
 
+func TestRemoveUserNotFound(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+
+	ctx := new(gin.Context)
+	ctx.Set(constant.ClaimSub.Str(), "account_name")
+	request := &dto.ReqURILambda{
+		Lambda: "file1",
+	}
+
+	mockOAuthRepo.EXPECT().FindUserByAcn(ctx, "account_name").Times(1).
+		Return(nil, errorx.NotFound("user not found"))
+
+	cd := &service{
+		oauthRepo: mockOAuthRepo,
+	}
+
+	remove, err := cd.Remove(ctx, request)
+	assert.Error(t, err)
+	assert.Equal(t, errorx.NotFound("user not found"), err)
+	assert.Nil(t, remove)
+}
+
 func TestRemoveLambdaNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	mockLambRepo := repo.NewMockLambda(ctrl)
-
+	mockOAuthRepo := repo.NewMockOAuth(ctrl)
 	ctx := new(gin.Context)
+	ctx.Set(constant.ClaimSub.Str(), "account_name")
 	request := &dto.ReqURILambda{
 		Lambda: "file1",
 	}
+	accountID := uint64(123)
 
-	mockLambRepo.EXPECT().FindByNameOrARN(ctx, "file1").Times(1).
+	mockOAuthRepo.EXPECT().FindUserByAcn(ctx, "account_name").Times(1).
+		Return(&dto.RespUser{ID: accountID}, nil)
+
+	mockLambRepo.EXPECT().LambdaInfo(ctx, accountID, "file1").Times(1).
 		Return(nil, errorx.NotFound("lambda not found"))
 
 	cd := &service{
 		lambdaRepo: mockLambRepo,
+		oauthRepo:  mockOAuthRepo,
 	}
 
 	remove, err := cd.Remove(ctx, request)
@@ -1062,14 +1160,19 @@ func TestRemoveLambdaError(t *testing.T) {
 
 	mockLambRepo := repo.NewMockLambda(ctrl)
 	mockAmazon := amazonx.NewMockAmazon(ctrl)
-
+	mockOAuthRepo := repo.NewMockOAuth(ctrl)
 	ctx := new(gin.Context)
+	ctx.Set(constant.ClaimSub.Str(), "account_name")
 	request := &dto.ReqURILambda{
 		Lambda: "file1",
 	}
 	functionARN := "arn:aws:lambda:us-east-2:123456789012:function:file1"
+	accountID := uint64(123)
 
-	mockLambRepo.EXPECT().FindByNameOrARN(ctx, "file1").Times(1).
+	mockOAuthRepo.EXPECT().FindUserByAcn(ctx, "account_name").Times(1).
+		Return(&dto.RespUser{ID: accountID}, nil)
+
+	mockLambRepo.EXPECT().LambdaInfo(ctx, accountID, "file1").Times(1).
 		Return(&dto.RespInfo{
 			FunctionArn:  functionARN,
 			FunctionName: "org_name-account_name-file1",
@@ -1081,6 +1184,7 @@ func TestRemoveLambdaError(t *testing.T) {
 	cd := &service{
 		lambdaRepo: mockLambRepo,
 		amazon:     mockAmazon,
+		oauthRepo:  mockOAuthRepo,
 	}
 
 	remove, err := cd.Remove(ctx, request)
@@ -1095,14 +1199,21 @@ func TestRemoveSchedulerError(t *testing.T) {
 
 	mockLambRepo := repo.NewMockLambda(ctrl)
 	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := repo.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
+	ctx.Set(constant.ClaimSub.Str(), "account_name")
 	request := &dto.ReqURILambda{
 		Lambda: "file1",
 	}
 	functionARN := "arn:aws:lambda:us-east-2:123456789012:function:file1"
 	scheduleARN := "arn:aws:scheduler:us-east-2:123456789012:schedule/default/file1"
-	mockLambRepo.EXPECT().FindByNameOrARN(ctx, "file1").Times(1).
+	accountID := uint64(123)
+
+	mockOAuthRepo.EXPECT().FindUserByAcn(ctx, "account_name").Times(1).
+		Return(&dto.RespUser{ID: accountID}, nil)
+
+	mockLambRepo.EXPECT().LambdaInfo(ctx, accountID, "file1").Times(1).
 		Return(&dto.RespInfo{
 			FunctionArn:  functionARN,
 			FunctionName: "org_name-account_name-file1",
@@ -1127,6 +1238,7 @@ func TestRemoveSchedulerError(t *testing.T) {
 	cd := &service{
 		lambdaRepo: mockLambRepo,
 		amazon:     mockAmazon,
+		oauthRepo:  mockOAuthRepo,
 	}
 
 	remove, err := cd.Remove(ctx, request)
@@ -1141,14 +1253,20 @@ func TestRemoveDeleteLambdaTXError(t *testing.T) {
 
 	mockLambRepo := repo.NewMockLambda(ctrl)
 	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := repo.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
+	ctx.Set(constant.ClaimSub.Str(), "account_name")
 	request := &dto.ReqURILambda{
 		Lambda: "file1",
 	}
 	functionARN := "arn:aws:lambda:us-east-2:123456789012:function:file1"
+	accountID := uint64(123)
 
-	mockLambRepo.EXPECT().FindByNameOrARN(ctx, "file1").Times(1).
+	mockOAuthRepo.EXPECT().FindUserByAcn(ctx, "account_name").Times(1).
+		Return(&dto.RespUser{ID: accountID}, nil)
+
+	mockLambRepo.EXPECT().LambdaInfo(ctx, accountID, "file1").Times(1).
 		Return(&dto.RespInfo{
 			FunctionArn:  functionARN,
 			FunctionName: "org_name-account_name-file1",
@@ -1169,6 +1287,7 @@ func TestRemoveDeleteLambdaTXError(t *testing.T) {
 	cd := &service{
 		lambdaRepo: mockLambRepo,
 		amazon:     mockAmazon,
+		oauthRepo:  mockOAuthRepo,
 	}
 
 	remove, err := cd.Remove(ctx, request)

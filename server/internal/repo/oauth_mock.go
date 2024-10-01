@@ -64,21 +64,6 @@ func (mr *MockOAuthMockRecorder) DeleteTokenByAccess(c, access interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTokenByAccess", reflect.TypeOf((*MockOAuth)(nil).DeleteTokenByAccess), c, access)
 }
 
-// FindOrg mocks base method.
-func (m *MockOAuth) FindOrg(c context.Context, id uint64) (*dto.RespOrg, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindOrg", c, id)
-	ret0, _ := ret[0].(*dto.RespOrg)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindOrg indicates an expected call of FindOrg.
-func (mr *MockOAuthMockRecorder) FindOrg(c, id interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOrg", reflect.TypeOf((*MockOAuth)(nil).FindOrg), c, id)
-}
-
 // FindOrgByName mocks base method.
 func (m *MockOAuth) FindOrgByName(c context.Context, name string) (*dto.RespOrg, error) {
 	m.ctrl.T.Helper()

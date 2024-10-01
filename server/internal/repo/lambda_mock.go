@@ -71,21 +71,6 @@ func (mr *MockLambdaMockRecorder) FindByAccount(c, accountId interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByAccount", reflect.TypeOf((*MockLambda)(nil).FindByAccount), c, accountId)
 }
 
-// FindByNameOrARN mocks base method.
-func (m *MockLambda) FindByNameOrARN(c context.Context, input string) (*dto.RespInfo, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByNameOrARN", c, input)
-	ret0, _ := ret[0].(*dto.RespInfo)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindByNameOrARN indicates an expected call of FindByNameOrARN.
-func (mr *MockLambdaMockRecorder) FindByNameOrARN(c, input interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByNameOrARN", reflect.TypeOf((*MockLambda)(nil).FindByNameOrARN), c, input)
-}
-
 // LambdaInfo mocks base method.
 func (m *MockLambda) LambdaInfo(c context.Context, acnID uint64, distinguish string) (*dto.RespInfo, error) {
 	m.ctrl.T.Helper()

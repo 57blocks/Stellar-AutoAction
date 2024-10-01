@@ -6,6 +6,7 @@ import (
 
 	"github.com/57blocks/auto-action/server/internal/constant"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )

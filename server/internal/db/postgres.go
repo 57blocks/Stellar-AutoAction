@@ -109,8 +109,7 @@ func migrateDB(db *gorm.DB) error {
 		return errorx.Internal(fmt.Sprintf("new migration instance error: %s", err.Error()))
 	}
 
-	var migErr error
-	migErr = mig.Up()
+	migErr := mig.Up()
 	if migErr == nil || errors.Is(migErr, migrate.ErrNoChange) {
 		return nil
 	}

@@ -257,7 +257,14 @@ func (svc *service) persistRegisterResults(c context.Context, pairs []toBePersis
 }
 
 func (svc *service) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error) {
-	lamb, err := svc.lambdaRepo.FindByNameOrARN(c, r.Lambda)
+	jwtAccount, _ := c.(*gin.Context).Get(constant.ClaimSub.Str())
+
+	user, err := svc.oauthRepo.FindUserByAcn(c, jwtAccount.(string))
+	if err != nil {
+		return nil, err
+	}
+
+	lamb, err := svc.lambdaRepo.LambdaInfo(c, user.ID, r.Lambda)
 	if err != nil {
 		return nil, err
 	}
@@ -409,7 +416,14 @@ func (svc *service) Logs(c context.Context, req *dto.ReqURILambda, upgrader *web
 }
 
 func (svc *service) Remove(c context.Context, r *dto.ReqURILambda) (*dto.RespRemove, error) {
-	lamb, err := svc.lambdaRepo.FindByNameOrARN(c, r.Lambda)
+	jwtAccount, _ := c.(*gin.Context).Get(constant.ClaimSub.Str())
+
+	user, err := svc.oauthRepo.FindUserByAcn(c, jwtAccount.(string))
+	if err != nil {
+		return nil, err
+	}
+
+	lamb, err := svc.lambdaRepo.LambdaInfo(c, user.ID, r.Lambda)
 	if err != nil {
 		return nil, err
 	}
