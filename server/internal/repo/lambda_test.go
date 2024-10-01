@@ -15,63 +15,6 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestFindByNameOrARNSuccess(t *testing.T) {
-	sqldb, gormdb, mock := DbMock(t)
-	defer sqldb.Close()
-
-	ctx := new(gin.Context)
-	ctx.Set(constant.ClaimIss.Str(), "test-org")
-	ctx.Set(constant.ClaimSub.Str(), "test-account")
-	testFuncName := "testFunc"
-	testFuncArn := "testArn"
-	testSchedulerExpression := "0 * * * *"
-
-	lambdaRows := sqlmock.NewRows([]string{"id", "function_name", "function_arn"}).
-		AddRow(1, util.GenLambdaFuncName(ctx, testFuncName), testFuncArn)
-	mock.ExpectQuery(`SELECT \* FROM "lambda"`).
-		WillReturnRows(lambdaRows)
-
-	schedulerRows := sqlmock.NewRows([]string{"id", "lambda_id", "expression"}).
-		AddRow(1, 1, testSchedulerExpression)
-	mock.ExpectQuery(`SELECT \* FROM "lambda_scheduler"`).
-		WillReturnRows(schedulerRows)
-
-	repo := &lambda{
-		Instance: &db.Instance{DB: gormdb},
-	}
-	lambda, err := repo.FindByNameOrARN(ctx, testFuncName)
-
-	assert.NoError(t, err)
-	assert.Equal(t, util.GenLambdaFuncName(ctx, testFuncName), lambda.FunctionName)
-	assert.Equal(t, testFuncArn, lambda.FunctionArn)
-	assert.NotNil(t, lambda.Scheduler)
-	assert.Equal(t, uint64(1), lambda.Scheduler.LambdaID)
-	assert.Equal(t, testSchedulerExpression, lambda.Scheduler.Expression)
-}
-
-func TestFindByNameOrARNNotFound(t *testing.T) {
-	sqldb, gormdb, mock := DbMock(t)
-	defer sqldb.Close()
-
-	ctx := new(gin.Context)
-	ctx.Set(constant.ClaimIss.Str(), "test-org")
-	ctx.Set(constant.ClaimSub.Str(), "test-account")
-	testFuncName := "testFunc"
-
-	lambdaRows := sqlmock.NewRows([]string{"id", "function_name", "function_arn"})
-	mock.ExpectQuery(`SELECT \* FROM "lambda"`).
-		WillReturnRows(lambdaRows)
-
-	repo := &lambda{
-		Instance: &db.Instance{DB: gormdb},
-	}
-	lambda, err := repo.FindByNameOrARN(ctx, testFuncName)
-
-	assert.Error(t, err)
-	assert.Equal(t, fmt.Sprintf("none lambda found by: %s", testFuncName), err.Error())
-	assert.Nil(t, lambda)
-}
-
 func TestLambdaInfoSuccess(t *testing.T) {
 	sqldb, gormdb, mock := DbMock(t)
 	defer sqldb.Close()

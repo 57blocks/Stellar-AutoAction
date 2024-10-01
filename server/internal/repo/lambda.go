@@ -19,7 +19,6 @@ import (
 //go:generate mockgen -destination ./lambda_mock.go -package repo -source lambda.go Lambda
 type (
 	Lambda interface {
-		FindByNameOrARN(c context.Context, input string) (*dto.RespInfo, error)
 		LambdaInfo(c context.Context, acnID uint64, distinguish string) (*dto.RespInfo, error)
 		PersistRegResult(c context.Context, fc func(tx *gorm.DB) error, opts ...*sql.TxOptions) error
 		FindByAccount(c context.Context, accountId uint64) ([]*dto.RespInfo, error)
@@ -38,26 +37,6 @@ func NewLambda() {
 			Instance: db.Inst,
 		}
 	}
-}
-
-func (l *lambda) FindByNameOrARN(c context.Context, input string) (*dto.RespInfo, error) {
-	lamb := new(dto.RespInfo)
-
-	if err := l.Instance.Conn(c).Table(model.TabNameLambda()).
-		Preload("Scheduler", func(db *gorm.DB) *gorm.DB {
-			return db.Table(model.TabNameLambdaSch())
-		}).
-		Where("function_arn = ?", input).
-		Or("function_name = ?", util.GenLambdaFuncName(c, input)).
-		First(lamb).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errorx.NotFound(fmt.Sprintf("none lambda found by: %s", input))
-		}
-
-		return nil, errorx.Internal(fmt.Sprintf("failed to query lambda: %s, err: %s", input, err.Error()))
-	}
-
-	return lamb, nil
 }
 
 func (l *lambda) LambdaInfo(c context.Context, acnID uint64, distinguish string) (*dto.RespInfo, error) {
