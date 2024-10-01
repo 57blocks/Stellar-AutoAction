@@ -27,6 +27,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+//go:generate mockgen -destination=./service_mock.go -package=oauth -source=service.go Service
 type (
 	Service interface {
 		Signup(c context.Context, req dto.ReqSignup) error
@@ -43,6 +44,8 @@ type (
 		csService svcCS.Service
 	}
 )
+
+var ServiceImpl Service
 
 func NewOAuthService() {
 	if ServiceImpl == nil {

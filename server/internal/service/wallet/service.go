@@ -21,6 +21,7 @@ import (
 	"github.com/stellar/go/clients/horizonclient"
 )
 
+//go:generate mockgen -destination=./service_mock.go -package=wallet -source=service.go Service
 type (
 	Service interface {
 		Create(c context.Context) (*dto.RespCreateWallet, error)
@@ -36,6 +37,8 @@ type (
 		stellar   stellarx.Stellar
 	}
 )
+
+var ServiceImpl Service
 
 func NewWalletService() {
 	if ServiceImpl == nil {

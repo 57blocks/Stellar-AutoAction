@@ -7,11 +7,15 @@ import (
 	"github.com/57blocks/auto-action/server/internal/service/wallet"
 )
 
+// resource should init after service
 func Setup() error {
 	cs.NewCubeSignerService()
 	lambda.NewLambdaService()
+	lambda.NewLambdaResource()
 	oauth.NewOAuthService()
+	oauth.NewOAuthResource()
 	wallet.NewWalletService()
+	wallet.NewWalletResource()
 
 	return nil
 }

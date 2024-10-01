@@ -29,9 +29,9 @@ func main() {
 			return logx.Setup(config.GlobalConfig)
 		}),
 		boot.Wrap(db.Setup),
-		boot.Wrap(api.Setup),
 		boot.Wrap(thirdParty.Setup),
 		boot.Wrap(service.Setup),
+		boot.Wrap(api.Setup),
 	); err != nil {
 		log.Panicf("boots components occurred error: %s", err.Error())
 	}
