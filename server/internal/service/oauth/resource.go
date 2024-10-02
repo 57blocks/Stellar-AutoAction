@@ -18,7 +18,7 @@ type (
 		Refresh(c *gin.Context)
 	}
 	resource struct {
-		service Service
+		service OAuthService
 	}
 )
 
@@ -27,7 +27,7 @@ var ResourceImpl Resource
 func NewOAuthResource() {
 	if ResourceImpl == nil {
 		ResourceImpl = &resource{
-			service: ServiceImpl,
+			service: OAuthServiceImpl,
 		}
 	}
 }

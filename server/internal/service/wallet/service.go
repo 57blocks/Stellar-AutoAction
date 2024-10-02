@@ -21,9 +21,9 @@ import (
 	"github.com/stellar/go/clients/horizonclient"
 )
 
-//go:generate mockgen -destination=./service_mock.go -package=wallet -source=service.go Service
+//go:generate mockgen -destination ../../testdata/wallet_service_mock.go -package testdata -source service.go Service
 type (
-	Service interface {
+	WalletService interface {
 		Create(c context.Context) (*dto.RespCreateWallet, error)
 		Remove(c context.Context, r *dto.ReqRemoveWallet) error
 		List(c context.Context) (*dto.RespListWallets, error)
@@ -33,23 +33,23 @@ type (
 		oauthRepo repo.OAuth
 		csRepo    repo.CubeSigner
 		resty     restyx.Resty
-		csService svcCS.Service
+		csService svcCS.CSservice
 		stellar   stellarx.Stellar
 	}
 )
 
-var ServiceImpl Service
+var WalletServiceImpl WalletService
 
 func NewWalletService() {
-	if ServiceImpl == nil {
+	if WalletServiceImpl == nil {
 		repo.NewOAuth()
 		repo.NewCubeSigner()
 
-		ServiceImpl = &service{
+		WalletServiceImpl = &service{
 			oauthRepo: repo.OAuthRepo,
 			csRepo:    repo.CubeSignerRepo,
 			resty:     restyx.Conductor,
-			csService: svcCS.ServiceImpl,
+			csService: svcCS.CSserviceImpl,
 			stellar:   stellarx.Conductor,
 		}
 	}

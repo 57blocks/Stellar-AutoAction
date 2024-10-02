@@ -27,9 +27,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-//go:generate mockgen -destination=./service_mock.go -package=oauth -source=service.go Service
+//go:generate mockgen -destination ../../testdata/oauth_service_mock.go -package testdata -source service.go Service
 type (
-	Service interface {
+	OAuthService interface {
 		Signup(c context.Context, req dto.ReqSignup) error
 		Login(c context.Context, req dto.ReqLogin) (*dto.RespCredential, error)
 		Refresh(c context.Context, raw string) (*dto.RespCredential, error)
@@ -41,23 +41,23 @@ type (
 		oauthRepo repo.OAuth
 		amazon    amazonx.Amazon
 		resty     restyx.Resty
-		csService svcCS.Service
+		csService svcCS.CSservice
 	}
 )
 
-var ServiceImpl Service
+var OAuthServiceImpl OAuthService
 
 func NewOAuthService() {
-	if ServiceImpl == nil {
+	if OAuthServiceImpl == nil {
 		repo.NewOAuth()
 
-		ServiceImpl = &service{
+		OAuthServiceImpl = &service{
 			jwtx:      jwtx.RS256,
 			decrypter: decrypt.RSADecrypter,
 			oauthRepo: repo.OAuthRepo,
 			amazon:    amazonx.Conductor,
 			resty:     restyx.Conductor,
-			csService: svcCS.ServiceImpl,
+			csService: svcCS.CSserviceImpl,
 		}
 	}
 }

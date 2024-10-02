@@ -10,6 +10,8 @@ import (
 
 	"github.com/57blocks/auto-action/server/internal/constant"
 	"github.com/57blocks/auto-action/server/internal/dto"
+	"github.com/57blocks/auto-action/server/internal/testdata"
+
 	"github.com/gin-gonic/gin"
 	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -27,7 +29,7 @@ func TestResourceSignupSuccess(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockOAuthService(ctrl)
 
 	mockService.EXPECT().Signup(ctx, gomock.Any()).Return(nil)
 
@@ -53,7 +55,7 @@ func TestResourceSignupBindJSONError(t *testing.T) {
 	ctx.Request = req
 
 	cd := &resource{
-		service: NewMockService(ctrl),
+		service: testdata.NewMockOAuthService(ctrl),
 	}
 
 	cd.Signup(ctx)
@@ -75,7 +77,7 @@ func TestResourceSignupServiceError(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockOAuthService(ctrl)
 	mockService.EXPECT().Signup(ctx, gomock.Any()).Return(errors.New("service error"))
 
 	cd := &resource{
@@ -100,7 +102,7 @@ func TestResourceLoginSuccess(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockOAuthService(ctrl)
 
 	expectedResp := &dto.RespCredential{
 		Account:      "test-account",
@@ -135,7 +137,7 @@ func TestResourceLoginBindJSONError(t *testing.T) {
 	ctx.Request = req
 
 	cd := &resource{
-		service: NewMockService(ctrl),
+		service: testdata.NewMockOAuthService(ctrl),
 	}
 
 	cd.Login(ctx)
@@ -157,7 +159,7 @@ func TestResourceLoginServiceError(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockOAuthService(ctrl)
 	mockService.EXPECT().Login(ctx, gomock.Any()).Return(nil, errors.New("service error"))
 
 	cd := &resource{
@@ -182,7 +184,7 @@ func TestResourceLogoutSuccess(t *testing.T) {
 	ctx.Set(constant.ClaimRaw.Str(), "test-raw")
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockOAuthService(ctrl)
 
 	expectedResp := &dto.RespLogout{}
 	mockService.EXPECT().Logout(ctx, gomock.Any()).Return(expectedResp, nil)
@@ -214,7 +216,7 @@ func TestResourceLogoutUnauthorized(t *testing.T) {
 	ctx.Request = req
 
 	cd := &resource{
-		service: NewMockService(ctrl),
+		service: testdata.NewMockOAuthService(ctrl),
 	}
 
 	cd.Logout(ctx)
@@ -236,7 +238,7 @@ func TestResourceLogoutRawNotString(t *testing.T) {
 	ctx.Request = req
 
 	cd := &resource{
-		service: NewMockService(ctrl),
+		service: testdata.NewMockOAuthService(ctrl),
 	}
 
 	cd.Logout(ctx)
@@ -257,7 +259,7 @@ func TestResourceLogoutServiceError(t *testing.T) {
 	ctx.Set(constant.ClaimRaw.Str(), "test-raw")
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockOAuthService(ctrl)
 	mockService.EXPECT().Logout(ctx, gomock.Any()).Return(nil, errors.New("service error"))
 
 	cd := &resource{
@@ -282,7 +284,7 @@ func TestResourceRefreshSuccess(t *testing.T) {
 	ctx.Set(constant.ClaimRaw.Str(), "test-raw")
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockOAuthService(ctrl)
 
 	expectedResp := &dto.RespCredential{}
 	mockService.EXPECT().Refresh(ctx, gomock.Any()).Return(expectedResp, nil)
@@ -314,7 +316,7 @@ func TestResourceRefreshUnauthorized(t *testing.T) {
 	ctx.Request = req
 
 	cd := &resource{
-		service: NewMockService(ctrl),
+		service: testdata.NewMockOAuthService(ctrl),
 	}
 
 	cd.Refresh(ctx)
@@ -336,7 +338,7 @@ func TestResourceRefreshRawNotString(t *testing.T) {
 	ctx.Request = req
 
 	cd := &resource{
-		service: NewMockService(ctrl),
+		service: testdata.NewMockOAuthService(ctrl),
 	}
 
 	cd.Refresh(ctx)
@@ -357,7 +359,7 @@ func TestResourceRefreshServiceError(t *testing.T) {
 	ctx.Set(constant.ClaimRaw.Str(), "test-raw")
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockOAuthService(ctrl)
 	mockService.EXPECT().Refresh(ctx, gomock.Any()).Return(nil, errors.New("service error"))
 
 	cd := &resource{

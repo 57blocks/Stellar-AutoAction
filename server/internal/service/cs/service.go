@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 )
 
-//go:generate mockgen -destination ./service_mock.go -package cs -source service.go Service
+//go:generate mockgen -destination ../../testdata/cs_service_mock.go -package testdata -source service.go Service
 type (
-	Service interface {
+	CSservice interface {
 		CubeSignerToken(c context.Context) (string, error)
 		GetSecRole(c context.Context, secret string) (string, error)
 	}
@@ -26,12 +26,14 @@ type (
 	}
 )
 
+var CSserviceImpl CSservice
+
 func NewCubeSignerService() {
-	if ServiceImpl == nil {
+	if CSserviceImpl == nil {
 		repo.NewCubeSigner()
 		repo.NewOAuth()
 
-		ServiceImpl = &service{
+		CSserviceImpl = &service{
 			csRepo:    repo.CubeSignerRepo,
 			oauthRepo: repo.OAuthRepo,
 			amazon:    amazonx.Conductor,

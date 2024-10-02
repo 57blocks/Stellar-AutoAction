@@ -11,13 +11,9 @@ import (
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/model"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	"github.com/57blocks/auto-action/server/internal/repo"
-	svcCS "github.com/57blocks/auto-action/server/internal/service/cs"
-	"github.com/57blocks/auto-action/server/internal/third-party/amazonx"
-	"github.com/57blocks/auto-action/server/internal/third-party/decrypt"
+	"github.com/57blocks/auto-action/server/internal/testdata"
 	"github.com/57blocks/auto-action/server/internal/third-party/jwtx"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
-	"github.com/57blocks/auto-action/server/internal/third-party/restyx"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -53,7 +49,7 @@ func TestLogoutSuccess(t *testing.T) {
 
 	ctx := new(gin.Context)
 	expectedRaw := "test-token"
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 	mockOAuthRepo.EXPECT().DeleteTokenByAccess(ctx, expectedRaw).
 		Return(nil)
 
@@ -72,7 +68,7 @@ func TestLogoutFailed(t *testing.T) {
 
 	ctx := new(gin.Context)
 	expectedRaw := "test-token"
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 	mockOAuthRepo.EXPECT().DeleteTokenByAccess(ctx, expectedRaw).
 		Return(errors.New("failed to delete token"))
 
@@ -90,8 +86,8 @@ func TestRefreshSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockJWT := jwtx.NewMockJWT(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockJWT := testdata.NewMockJWT(ctrl)
 
 	raw := "test-token"
 	jwtClaimId := "test-id"
@@ -154,7 +150,7 @@ func TestRefreshJWTParseFailed(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockJWT := jwtx.NewMockJWT(ctrl)
+	mockJWT := testdata.NewMockJWT(ctrl)
 
 	raw := "test-token"
 	mockJWT.EXPECT().Parse(raw).Return(nil, errors.New("failed to parse JWT"))
@@ -174,7 +170,7 @@ func TestRefreshJWTParseClaimsFailed(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockJWT := jwtx.NewMockJWT(ctrl)
+	mockJWT := testdata.NewMockJWT(ctrl)
 
 	raw := "test-token"
 	mockJWT.EXPECT().Parse(raw).Return(&jwt.StandardClaims{
@@ -196,8 +192,8 @@ func TestRefreshFindTokenError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockJWT := jwtx.NewMockJWT(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockJWT := testdata.NewMockJWT(ctrl)
 
 	raw := "test-token"
 	jwtClaimId := "test-id"
@@ -227,8 +223,8 @@ func TestRefreshAssignJWTError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockJWT := jwtx.NewMockJWT(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockJWT := testdata.NewMockJWT(ctrl)
 
 	raw := "test-token"
 	jwtClaimId := "test-id"
@@ -267,8 +263,8 @@ func TestRefreshSyncTokenError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockJWT := jwtx.NewMockJWT(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockJWT := testdata.NewMockJWT(ctrl)
 
 	raw := "test-token"
 	jwtClaimId := "test-id"
@@ -320,9 +316,9 @@ func TestLoginSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockDecrypter := decrypt.NewMockDecrypter(ctrl)
-	mockJWT := jwtx.NewMockJWT(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockDecrypter := testdata.NewMockDecrypter(ctrl)
+	mockJWT := testdata.NewMockJWT(ctrl)
 
 	rawPassword := []byte("raw_password")
 	hashedPassword, _ := bcrypt.GenerateFromPassword(rawPassword, bcrypt.DefaultCost)
@@ -398,7 +394,7 @@ func TestLoginFindUserByOrgAcnError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	request := dto.ReqLogin{
 		Organization: "org_name",
@@ -422,8 +418,8 @@ func TestLoginDecryptError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockDecrypter := decrypt.NewMockDecrypter(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockDecrypter := testdata.NewMockDecrypter(ctrl)
 
 	request := dto.ReqLogin{
 		Organization: "org_name",
@@ -456,8 +452,8 @@ func TestLoginComparePasswordError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockDecrypter := decrypt.NewMockDecrypter(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockDecrypter := testdata.NewMockDecrypter(ctrl)
 
 	request := dto.ReqLogin{
 		Organization: "org_name",
@@ -493,9 +489,9 @@ func TestLoginAssignJWTError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockDecrypter := decrypt.NewMockDecrypter(ctrl)
-	mockJWT := jwtx.NewMockJWT(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockDecrypter := testdata.NewMockDecrypter(ctrl)
+	mockJWT := testdata.NewMockJWT(ctrl)
 
 	rawPassword := []byte("raw_password")
 	hashedPassword, _ := bcrypt.GenerateFromPassword(rawPassword, bcrypt.DefaultCost)
@@ -550,9 +546,9 @@ func TestLoginSyncTokenError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockDecrypter := decrypt.NewMockDecrypter(ctrl)
-	mockJWT := jwtx.NewMockJWT(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockDecrypter := testdata.NewMockDecrypter(ctrl)
+	mockJWT := testdata.NewMockJWT(ctrl)
 
 	rawPassword := []byte("raw_password")
 	hashedPassword, _ := bcrypt.GenerateFromPassword(rawPassword, bcrypt.DefaultCost)
@@ -617,12 +613,12 @@ func TestSignupSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockDecrypter := decrypt.NewMockDecrypter(ctrl)
-	mockJWT := jwtx.NewMockJWT(ctrl)
-	mockResty := restyx.NewMockResty(ctrl)
-	mockCsService := svcCS.NewMockService(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockDecrypter := testdata.NewMockDecrypter(ctrl)
+	mockJWT := testdata.NewMockJWT(ctrl)
+	mockResty := testdata.NewMockResty(ctrl)
+	mockCsService := testdata.NewMockCSservice(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 
 	orgName := "org_name"
 	accountName := "account_name"
@@ -731,7 +727,7 @@ func TestSignupFindOrgByNameError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	request := dto.ReqSignup{
 		Organization: "org_name",
@@ -754,7 +750,7 @@ func TestSignupFindUserByAcnError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	request := dto.ReqSignup{
 		Organization: "org_name",
@@ -783,7 +779,7 @@ func TestSignupUserExists(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	request := dto.ReqSignup{
 		Organization: "org_name",
@@ -814,8 +810,8 @@ func TestSignupGetCSTokenError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCsService := svcCS.NewMockService(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCsService := testdata.NewMockCSservice(ctrl)
 
 	accountName := "account_name"
 	request := dto.ReqSignup{
@@ -852,9 +848,9 @@ func TestSignupAddCSRoleError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCsService := svcCS.NewMockService(ctrl)
-	mockResty := restyx.NewMockResty(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCsService := testdata.NewMockCSservice(ctrl)
+	mockResty := testdata.NewMockResty(ctrl)
 
 	orgName := "org_name"
 	accountName := "account_name"
@@ -900,10 +896,10 @@ func TestSignupAddAwsRoleError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockResty := restyx.NewMockResty(ctrl)
-	mockCsService := svcCS.NewMockService(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockResty := testdata.NewMockResty(ctrl)
+	mockCsService := testdata.NewMockCSservice(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 
 	orgName := "org_name"
 	accountName := "account_name"
@@ -964,10 +960,10 @@ func TestSignupPutRolePolicyError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockResty := restyx.NewMockResty(ctrl)
-	mockCsService := svcCS.NewMockService(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockResty := testdata.NewMockResty(ctrl)
+	mockCsService := testdata.NewMockCSservice(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 
 	orgName := "org_name"
 	accountName := "account_name"
@@ -1040,12 +1036,12 @@ func TestSignupCreateSecretError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockDecrypter := decrypt.NewMockDecrypter(ctrl)
-	mockJWT := jwtx.NewMockJWT(ctrl)
-	mockResty := restyx.NewMockResty(ctrl)
-	mockCsService := svcCS.NewMockService(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockDecrypter := testdata.NewMockDecrypter(ctrl)
+	mockJWT := testdata.NewMockJWT(ctrl)
+	mockResty := testdata.NewMockResty(ctrl)
+	mockCsService := testdata.NewMockCSservice(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 
 	orgName := "org_name"
 	accountName := "account_name"
@@ -1127,12 +1123,12 @@ func TestSignupPutResourcePolicyError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockDecrypter := decrypt.NewMockDecrypter(ctrl)
-	mockJWT := jwtx.NewMockJWT(ctrl)
-	mockResty := restyx.NewMockResty(ctrl)
-	mockCsService := svcCS.NewMockService(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockDecrypter := testdata.NewMockDecrypter(ctrl)
+	mockJWT := testdata.NewMockJWT(ctrl)
+	mockResty := testdata.NewMockResty(ctrl)
+	mockCsService := testdata.NewMockCSservice(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 
 	orgName := "org_name"
 	accountName := "account_name"
@@ -1222,12 +1218,12 @@ func TestSignupDecryptPwdError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockDecrypter := decrypt.NewMockDecrypter(ctrl)
-	mockJWT := jwtx.NewMockJWT(ctrl)
-	mockResty := restyx.NewMockResty(ctrl)
-	mockCsService := svcCS.NewMockService(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockDecrypter := testdata.NewMockDecrypter(ctrl)
+	mockJWT := testdata.NewMockJWT(ctrl)
+	mockResty := testdata.NewMockResty(ctrl)
+	mockCsService := testdata.NewMockCSservice(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 
 	orgName := "org_name"
 	accountName := "account_name"
@@ -1326,12 +1322,12 @@ func TestSignupCreateUserError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockDecrypter := decrypt.NewMockDecrypter(ctrl)
-	mockJWT := jwtx.NewMockJWT(ctrl)
-	mockResty := restyx.NewMockResty(ctrl)
-	mockCsService := svcCS.NewMockService(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockDecrypter := testdata.NewMockDecrypter(ctrl)
+	mockJWT := testdata.NewMockJWT(ctrl)
+	mockResty := testdata.NewMockResty(ctrl)
+	mockCsService := testdata.NewMockCSservice(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 
 	orgName := "org_name"
 	accountName := "account_name"
