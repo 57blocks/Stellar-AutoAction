@@ -50,3 +50,41 @@ func (mr *MockStellarMockRecorder) AccountDetail(c, req interface{}) *gomock.Cal
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccountDetail", reflect.TypeOf((*MockStellar)(nil).AccountDetail), c, req)
 }
+
+// MockHorizonClient is a mock of HorizonClient interface.
+type MockHorizonClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockHorizonClientMockRecorder
+}
+
+// MockHorizonClientMockRecorder is the mock recorder for MockHorizonClient.
+type MockHorizonClientMockRecorder struct {
+	mock *MockHorizonClient
+}
+
+// NewMockHorizonClient creates a new mock instance.
+func NewMockHorizonClient(ctrl *gomock.Controller) *MockHorizonClient {
+	mock := &MockHorizonClient{ctrl: ctrl}
+	mock.recorder = &MockHorizonClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockHorizonClient) EXPECT() *MockHorizonClientMockRecorder {
+	return m.recorder
+}
+
+// AccountDetail mocks base method.
+func (m *MockHorizonClient) AccountDetail(req horizonclient.AccountRequest) (horizon.Account, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AccountDetail", req)
+	ret0, _ := ret[0].(horizon.Account)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AccountDetail indicates an expected call of AccountDetail.
+func (mr *MockHorizonClientMockRecorder) AccountDetail(req interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AccountDetail", reflect.TypeOf((*MockHorizonClient)(nil).AccountDetail), req)
+}

@@ -13,8 +13,12 @@ type (
 		AccountDetail(c context.Context, req horizonclient.AccountRequest) (horizon.Account, error)
 	}
 
+	HorizonClient interface {
+		AccountDetail(req horizonclient.AccountRequest) (horizon.Account, error)
+	}
+
 	stellar struct {
-		client *horizonclient.Client
+		client HorizonClient
 	}
 )
 
