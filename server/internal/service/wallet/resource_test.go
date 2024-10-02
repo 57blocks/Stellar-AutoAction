@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/57blocks/auto-action/server/internal/dto"
+	"github.com/57blocks/auto-action/server/internal/testdata"
+
 	"github.com/gin-gonic/gin"
 	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -24,7 +26,7 @@ func TestResourceCreateSuccess(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockWalletService(ctrl)
 
 	mockResp := &dto.RespCreateWallet{
 		Address: "test",
@@ -57,7 +59,7 @@ func TestResourceCreateServiceError(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockWalletService(ctrl)
 
 	mockService.EXPECT().Create(ctx).Return(nil, errors.New("error"))
 
@@ -82,7 +84,7 @@ func TestResourceRemoveSuccess(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockWalletService(ctrl)
 
 	mockService.EXPECT().Remove(ctx, gomock.Any()).Return(nil)
 
@@ -107,7 +109,7 @@ func TestResourceRemoveServiceError(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockWalletService(ctrl)
 
 	mockService.EXPECT().Remove(ctx, gomock.Any()).Return(errors.New("error"))
 
@@ -132,7 +134,7 @@ func TestResourceListSuccess(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockWalletService(ctrl)
 
 	mockResp := &dto.RespListWallets{
 		Data: []dto.RespListWallet{
@@ -169,7 +171,7 @@ func TestResourceListServiceError(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockWalletService(ctrl)
 
 	mockService.EXPECT().List(ctx).Return(nil, errors.New("error"))
 
@@ -194,7 +196,7 @@ func TestResourceVerifySuccess(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockWalletService(ctrl)
 
 	mockService.EXPECT().Verify(ctx, gomock.Any()).Return(nil, nil)
 
@@ -219,7 +221,7 @@ func TestResourceVerifyServiceError(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockWalletService(ctrl)
 
 	mockService.EXPECT().Verify(ctx, gomock.Any()).Return(nil, errors.New("error"))
 

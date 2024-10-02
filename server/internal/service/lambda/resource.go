@@ -23,7 +23,7 @@ type (
 		Remove(c *gin.Context)
 	}
 	resource struct {
-		service Service
+		service LambdaService
 	}
 )
 
@@ -32,7 +32,7 @@ var ResourceImpl Resource
 func NewLambdaResource() {
 	if ResourceImpl == nil {
 		ResourceImpl = &resource{
-			service: ServiceImpl,
+			service: LambdaServiceImpl,
 		}
 	}
 }

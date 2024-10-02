@@ -13,7 +13,7 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-//go:generate mockgen -destination ./resty_mock.go -package restyx -source resty.go Resty
+//go:generate mockgen -destination ../../testdata/resty_mock.go -package testdata -source resty.go Resty
 type (
 	Resty interface {
 		AddCSRole(c context.Context, csToken string, orgName string, account string) (*dto.RespAddCsRole, error)

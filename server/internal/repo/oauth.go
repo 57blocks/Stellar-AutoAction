@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-//go:generate mockgen -destination ./oauth_mock.go -package repo -source oauth.go OAuth
+//go:generate mockgen -destination ../testdata/oauth_mock.go -package testdata -source oauth.go OAuth
 type (
 	OAuth interface {
 		FindUserByAcn(c context.Context, acn string) (*dto.RespUser, error)

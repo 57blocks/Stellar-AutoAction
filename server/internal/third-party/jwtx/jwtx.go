@@ -11,7 +11,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-//go:generate mockgen -destination ./jwtx_mock.go -package jwtx -source jwtx.go JWT
+//go:generate mockgen -destination ../../testdata/jwtx_mock.go -package testdata -source jwtx.go JWT
 type (
 	JWT interface {
 		Assigner

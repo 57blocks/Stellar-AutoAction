@@ -16,7 +16,7 @@ import (
 	"gorm.io/gorm"
 )
 
-//go:generate mockgen -destination ./lambda_mock.go -package repo -source lambda.go Lambda
+//go:generate mockgen -destination ../testdata/lambda_mock.go -package testdata -source lambda.go Lambda
 type (
 	Lambda interface {
 		LambdaInfo(c context.Context, acnID uint64, distinguish string) (*dto.RespInfo, error)

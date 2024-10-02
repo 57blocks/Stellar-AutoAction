@@ -31,9 +31,9 @@ import (
 	"gorm.io/gorm"
 )
 
-//go:generate mockgen -destination=./service_mock.go -package=lambda -source=service.go Service
+//go:generate mockgen -destination ../../testdata/lambda_service_mock.go -package testdata -source service.go Service
 type (
-	Service interface {
+	LambdaService interface {
 		Register(c context.Context, r *dto.ReqRegister) ([]*dto.RespRegister, error)
 		Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error)
 		List(c context.Context, isFull bool) (interface{}, error)
@@ -48,13 +48,13 @@ type (
 	}
 )
 
-var ServiceImpl Service
+var LambdaServiceImpl LambdaService
 
 func NewLambdaService() {
-	if ServiceImpl == nil {
+	if LambdaServiceImpl == nil {
 		repo.NewLambda()
 
-		ServiceImpl = &service{
+		LambdaServiceImpl = &service{
 			lambdaRepo: repo.LambdaRepo,
 			amazon:     amazonx.Conductor,
 			oauthRepo:  repo.OAuthRepo,

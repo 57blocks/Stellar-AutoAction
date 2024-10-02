@@ -7,7 +7,7 @@ import (
 	"github.com/stellar/go/protocols/horizon"
 )
 
-//go:generate mockgen -destination ./stellar_mock.go -package stellarx -source stellar.go Stellar
+//go:generate mockgen -destination ../../testdata/stellar_mock.go -package testdata -source stellar.go Stellar
 type (
 	Stellar interface {
 		AccountDetail(c context.Context, req horizonclient.AccountRequest) (horizon.Account, error)

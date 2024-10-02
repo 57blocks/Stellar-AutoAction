@@ -14,8 +14,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/constant"
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
-	"github.com/57blocks/auto-action/server/internal/repo"
-	"github.com/57blocks/auto-action/server/internal/third-party/amazonx"
+	"github.com/57blocks/auto-action/server/internal/testdata"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -53,8 +52,8 @@ func TestInfoSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -104,7 +103,7 @@ func TestInfoUserNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -126,8 +125,8 @@ func TestInfoLambdaNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -155,9 +154,9 @@ func TestInvokeSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -209,7 +208,7 @@ func TestInvokeUserNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -234,8 +233,8 @@ func TestInvokeLambdaNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -265,8 +264,8 @@ func TestInvokePayloadInvalid(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
 	ctx.Set(constant.ClaimIss.Str(), "org_name")
@@ -299,9 +298,9 @@ func TestInvokeLambdaError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -348,9 +347,9 @@ func TestInvokeDecodeLogResultError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -399,9 +398,9 @@ func TestInvokeDecodePayloadError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
 	ctx.Set(constant.ClaimIss.Str(), "org_name")
@@ -451,8 +450,8 @@ func TestListSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -491,8 +490,8 @@ func TestListFullSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -525,7 +524,7 @@ func TestListUserNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -547,8 +546,8 @@ func TestListLambdaError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -575,9 +574,9 @@ func TestRegisterSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -687,7 +686,7 @@ func TestRegisterUserNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -722,8 +721,8 @@ func TestRegisterMaxLimit(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockLambRepo := repo.NewMockLambda(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
 	ctx.Set(constant.ClaimIss.Str(), "org_name")
@@ -771,9 +770,9 @@ func TestRegisterGetRoleError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -820,9 +819,9 @@ func TestRegisterRegisterLambdaError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -877,9 +876,9 @@ func TestRegisterRegisterSchedulerError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -949,9 +948,9 @@ func TestRegisterPersistRegisterResultsError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -1027,9 +1026,9 @@ func TestRemoveSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -1103,7 +1102,7 @@ func TestRemoveUserNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -1128,8 +1127,8 @@ func TestRemoveLambdaNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
 	request := &dto.ReqURILambda{
@@ -1158,9 +1157,9 @@ func TestRemoveLambdaError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
 	request := &dto.ReqURILambda{
@@ -1197,9 +1196,9 @@ func TestRemoveSchedulerError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -1251,9 +1250,9 @@ func TestRemoveDeleteLambdaTXError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockLambRepo := repo.NewMockLambda(ctrl)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockLambRepo := testdata.NewMockLambda(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	ctx := new(gin.Context)
 	ctx.Set(constant.ClaimSub.Str(), "account_name")
@@ -1301,7 +1300,7 @@ func TestLogSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	expectedMessage := `{"timestamp":1714857600000,"message":"log-message"}`
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 
 	mockAmazon.EXPECT().DescribeLogStreams(gomock.Any(), gomock.Any()).AnyTimes().Return(&cloudwatchlogs.DescribeLogStreamsOutput{
 		LogStreams: []types.LogStream{
@@ -1397,7 +1396,7 @@ func TestLogsDescribeLogStreamsError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 
 	mockAmazon.EXPECT().DescribeLogStreams(gomock.Any(), gomock.Any()).AnyTimes().
 		Return(nil, errorx.Internal("failed to describe log streams"))
@@ -1429,7 +1428,7 @@ func TestLogsGetLogEventsError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 
 	mockAmazon.EXPECT().DescribeLogStreams(gomock.Any(), gomock.Any()).AnyTimes().Return(&cloudwatchlogs.DescribeLogStreamsOutput{
 		LogStreams: []types.LogStream{
@@ -1469,7 +1468,7 @@ func TestLogsLogStreamNotFound(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 
 	mockAmazon.EXPECT().DescribeLogStreams(gomock.Any(), gomock.Any()).AnyTimes().Return(&cloudwatchlogs.DescribeLogStreamsOutput{
 		LogStreams: []types.LogStream{},

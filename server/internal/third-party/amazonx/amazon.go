@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 )
 
-//go:generate mockgen -destination ./amazon_mock.go -package amazonx -source amazon.go Amazon
+//go:generate mockgen -destination ../../testdata/amazon_mock.go -package testdata -source amazon.go Amazon
 type (
 	Amazon interface {
 		RegisterLambda(

@@ -10,11 +10,8 @@ import (
 	"github.com/57blocks/auto-action/server/internal/constant"
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/model"
-	"github.com/57blocks/auto-action/server/internal/repo"
-	svcCS "github.com/57blocks/auto-action/server/internal/service/cs"
+	"github.com/57blocks/auto-action/server/internal/testdata"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
-	"github.com/57blocks/auto-action/server/internal/third-party/restyx"
-	"github.com/57blocks/auto-action/server/internal/third-party/stellarx"
 	"github.com/stellar/go/clients/horizonclient"
 	"github.com/stellar/go/protocols/horizon"
 
@@ -53,10 +50,10 @@ func TestCreateSuccess(t *testing.T) {
 	testRole := "test-role"
 	testCSKey := "Key#Stellar_test-key"
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
-	mockResty := restyx.NewMockResty(ctrl)
-	mockCS := svcCS.NewMockService(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
+	mockResty := testdata.NewMockResty(ctrl)
+	mockCS := testdata.NewMockCSservice(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		DoAndReturn(func(c context.Context, req *dto.ReqOrgAcn) (*dto.RespUser, error) {
@@ -107,7 +104,7 @@ func TestCreateFindUserError(t *testing.T) {
 	ctx.Set(constant.ClaimIss.Str(), testOrg)
 	ctx.Set(constant.ClaimSub.Str(), testAccount)
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(nil, errors.New("user not found"))
@@ -132,8 +129,8 @@ func TestCreateMaxWalletError(t *testing.T) {
 	ctx.Set(constant.ClaimIss.Str(), testOrg)
 	ctx.Set(constant.ClaimSub.Str(), testAccount)
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
@@ -168,9 +165,9 @@ func TestCreateCubeSignerTokenError(t *testing.T) {
 	ctx.Set(constant.ClaimIss.Str(), testOrg)
 	ctx.Set(constant.ClaimSub.Str(), testAccount)
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
-	mockCS := svcCS.NewMockService(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
+	mockCS := testdata.NewMockCSservice(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
@@ -206,9 +203,9 @@ func TestCreateGetSecRoleError(t *testing.T) {
 	ctx.Set(constant.ClaimSub.Str(), testAccount)
 	csToken := "cs-token"
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
-	mockCS := svcCS.NewMockService(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
+	mockCS := testdata.NewMockCSservice(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
@@ -247,10 +244,10 @@ func TestCreateAddCSKeyError(t *testing.T) {
 	ctx.Set(constant.ClaimSub.Str(), testAccount)
 	csToken := "cs-token"
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
-	mockCS := svcCS.NewMockService(ctrl)
-	mockResty := restyx.NewMockResty(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
+	mockCS := testdata.NewMockCSservice(ctrl)
+	mockResty := testdata.NewMockResty(ctrl)
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
 			ID: 1,
@@ -294,10 +291,10 @@ func TestCreateAddCSKeyToRoleError(t *testing.T) {
 	testKey := "test-key"
 	testRole := "test-role"
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
-	mockCS := svcCS.NewMockService(ctrl)
-	mockResty := restyx.NewMockResty(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
+	mockCS := testdata.NewMockCSservice(ctrl)
+	mockResty := testdata.NewMockResty(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
@@ -345,10 +342,10 @@ func TestCreateSyncCSKeyError(t *testing.T) {
 	testKey := "test-key"
 	testRole := "test-role"
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
-	mockCS := svcCS.NewMockService(ctrl)
-	mockResty := restyx.NewMockResty(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
+	mockCS := testdata.NewMockCSservice(ctrl)
+	mockResty := testdata.NewMockResty(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
@@ -403,10 +400,10 @@ func TestRemoveSuccess(t *testing.T) {
 		Address: "test-key",
 	}
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
-	mockCS := svcCS.NewMockService(ctrl)
-	mockResty := restyx.NewMockResty(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
+	mockCS := testdata.NewMockCSservice(ctrl)
+	mockResty := testdata.NewMockResty(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
@@ -457,7 +454,7 @@ func TestRemoveFindUserError(t *testing.T) {
 		Address: "test-key",
 	}
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(nil, errors.New("user not found"))
@@ -484,8 +481,8 @@ func TestRemoveFindCSKeyError(t *testing.T) {
 		Address: "test-key",
 	}
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
@@ -518,9 +515,9 @@ func TestRemoveCubeSignerTokenError(t *testing.T) {
 		Address: "test-key",
 	}
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
-	mockCS := svcCS.NewMockService(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
+	mockCS := testdata.NewMockCSservice(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
@@ -560,9 +557,9 @@ func TestRemoveGetSecRoleError(t *testing.T) {
 		Address: "test-key",
 	}
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
-	mockCS := svcCS.NewMockService(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
+	mockCS := testdata.NewMockCSservice(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
@@ -607,10 +604,10 @@ func TestRemoveDeleteCSKeyFromRoleError(t *testing.T) {
 		Address: "test-key",
 	}
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
-	mockCS := svcCS.NewMockService(ctrl)
-	mockResty := restyx.NewMockResty(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
+	mockCS := testdata.NewMockCSservice(ctrl)
+	mockResty := testdata.NewMockResty(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
@@ -659,10 +656,10 @@ func TestRemoveDeleteCSKeyError(t *testing.T) {
 		Address: "test-key",
 	}
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
-	mockCS := svcCS.NewMockService(ctrl)
-	mockResty := restyx.NewMockResty(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
+	mockCS := testdata.NewMockCSservice(ctrl)
+	mockResty := testdata.NewMockResty(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
@@ -714,10 +711,10 @@ func TestRemoveDeleteRepoCSKeyError(t *testing.T) {
 		Address: "test-key",
 	}
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
-	mockCS := svcCS.NewMockService(ctrl)
-	mockResty := restyx.NewMockResty(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
+	mockCS := testdata.NewMockCSservice(ctrl)
+	mockResty := testdata.NewMockResty(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
@@ -767,8 +764,8 @@ func TestListSuccess(t *testing.T) {
 	ctx.Set(constant.ClaimSub.Str(), testAccount)
 	testKeyId := "Key#Stellar_test-key"
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
@@ -808,7 +805,7 @@ func TestListFindUserError(t *testing.T) {
 	ctx.Set(constant.ClaimIss.Str(), testOrg)
 	ctx.Set(constant.ClaimSub.Str(), testAccount)
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(nil, errors.New("user not found"))
@@ -833,8 +830,8 @@ func TestListFindCSKeysError(t *testing.T) {
 	ctx.Set(constant.ClaimIss.Str(), testOrg)
 	ctx.Set(constant.ClaimSub.Str(), testAccount)
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
@@ -870,9 +867,9 @@ func TestVerifySuccess(t *testing.T) {
 		Address: testAddress,
 	}
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
-	mockStellar := stellarx.NewMockStellar(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
+	mockStellar := testdata.NewMockStellar(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
@@ -915,7 +912,7 @@ func TestVerifyFindUserError(t *testing.T) {
 		Address: testAddress,
 	}
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(nil, errors.New("user not found"))
@@ -945,8 +942,8 @@ func TestVerifyFindCSKeyError(t *testing.T) {
 		Address: testAddress,
 	}
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{
@@ -982,9 +979,9 @@ func TestVerifyAccountDetailError(t *testing.T) {
 		Address: testAddress,
 	}
 
-	mockOAuthRepo := repo.NewMockOAuth(ctrl)
-	mockCSRepo := repo.NewMockCubeSigner(ctrl)
-	mockStellar := stellarx.NewMockStellar(ctrl)
+	mockOAuthRepo := testdata.NewMockOAuth(ctrl)
+	mockCSRepo := testdata.NewMockCubeSigner(ctrl)
+	mockStellar := testdata.NewMockStellar(ctrl)
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
 		Return(&dto.RespUser{

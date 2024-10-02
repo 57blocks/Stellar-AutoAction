@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/57blocks/auto-action/server/internal/config"
-	"github.com/57blocks/auto-action/server/internal/third-party/amazonx"
+	"github.com/57blocks/auto-action/server/internal/testdata"
 	"github.com/57blocks/auto-action/server/internal/third-party/logx"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -34,7 +34,7 @@ func TestCubeSignerTokenSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 	mockAmazon.EXPECT().GetSecretValue(gomock.Any(), gomock.Any()).
 		Return(&secretsmanager.GetSecretValueOutput{
 			SecretString: aws.String(`{"token": "test-token"}`),
@@ -54,7 +54,7 @@ func TestCubeSignerTokenInternalError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 	mockAmazon.EXPECT().GetSecretValue(gomock.Any(), gomock.Any()).
 		Return(nil, errors.New("get secret value error"))
 
@@ -71,7 +71,7 @@ func TestCubeSignerTokenJsonError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 	mockAmazon.EXPECT().GetSecretValue(gomock.Any(), gomock.Any()).
 		Return(&secretsmanager.GetSecretValueOutput{
 			SecretString: aws.String(`"unmarshal error"`),
@@ -90,7 +90,7 @@ func TestGetSecRoleSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 	mockAmazon.EXPECT().GetSecretValue(gomock.Any(), gomock.Any()).
 		Return(&secretsmanager.GetSecretValueOutput{
 			SecretString: aws.String(`{"cs_role": "Role#1234"}`),
@@ -110,7 +110,7 @@ func TestGetSecRoleInternalError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 	mockAmazon.EXPECT().GetSecretValue(gomock.Any(), gomock.Any()).
 		Return(nil, errors.New("get secret value error"))
 
@@ -128,7 +128,7 @@ func TestGetSecRoleJsonError(t *testing.T) {
 	defer ctrl.Finish()
 
 	ctx := new(gin.Context)
-	mockAmazon := amazonx.NewMockAmazon(ctrl)
+	mockAmazon := testdata.NewMockAmazon(ctrl)
 	mockAmazon.EXPECT().GetSecretValue(gomock.Any(), gomock.Any()).
 		Return(&secretsmanager.GetSecretValueOutput{
 			SecretString: aws.String(`"unmarshal error"`),

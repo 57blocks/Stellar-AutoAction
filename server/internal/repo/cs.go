@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-//go:generate mockgen -destination ./cs_mock.go -package repo -source cs.go CubeSigner
+//go:generate mockgen -destination ../testdata/cs_mock.go -package testdata -source cs.go CubeSigner
 type (
 	CubeSigner interface {
 		SyncCSKey(c context.Context, key *model.CubeSignerKey) error

@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/57blocks/auto-action/server/internal/dto"
+	"github.com/57blocks/auto-action/server/internal/testdata"
+
 	"github.com/gin-gonic/gin"
 	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -36,7 +38,7 @@ func TestResourceRegisterSuccess(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockLambdaService(ctrl)
 
 	mockRegistResp := []*dto.RespRegister{
 		{
@@ -104,7 +106,7 @@ func TestResourceRegisterServiceError(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockLambdaService(ctrl)
 
 	mockService.EXPECT().Register(ctx, gomock.Any()).
 		Return(nil, errors.New("service error"))
@@ -131,7 +133,7 @@ func TestResourceInvokeSuccess(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockLambdaService(ctrl)
 
 	mockInvokeResp := &dto.RespInvoke{
 		StatusCode: 204,
@@ -180,7 +182,7 @@ func TestResourceInvokeServiceError(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockLambdaService(ctrl)
 
 	mockService.EXPECT().Invoke(ctx, gomock.Any()).Return(nil, errors.New("service error"))
 
@@ -204,7 +206,7 @@ func TestResourceListSuccess(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockLambdaService(ctrl)
 
 	mockListResp := []*dto.RespInList{
 		{
@@ -253,7 +255,7 @@ func TestResourceListServiceError(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockLambdaService(ctrl)
 
 	mockService.EXPECT().List(ctx, gomock.Any()).Return(nil, errors.New("service error"))
 
@@ -277,7 +279,7 @@ func TestResourceInfoSuccess(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockLambdaService(ctrl)
 
 	mockInfoResp := &dto.RespInfo{
 		FunctionName: "test-func",
@@ -308,7 +310,7 @@ func TestResourceInfoServiceError(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockLambdaService(ctrl)
 
 	mockService.EXPECT().Info(ctx, gomock.Any()).Return(nil, errors.New("service error"))
 
@@ -332,7 +334,7 @@ func TestResourceLogsSuccess(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockLambdaService(ctrl)
 
 	mockService.EXPECT().Logs(ctx, gomock.Any(), gomock.Any()).Return(nil)
 
@@ -356,7 +358,7 @@ func TestResourceLogsServiceError(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockLambdaService(ctrl)
 
 	mockService.EXPECT().Logs(ctx, gomock.Any(), gomock.Any()).Return(errors.New("service error"))
 
@@ -380,7 +382,7 @@ func TestResourceRemoveSuccess(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockLambdaService(ctrl)
 
 	mockRemoveResp := &dto.RespRemove{
 		Lambdas: dto.RespLamBrief{
@@ -414,7 +416,7 @@ func TestResourceRemoveServiceError(t *testing.T) {
 	ctx, _ := gin.CreateTestContext(w)
 	ctx.Request = req
 
-	mockService := NewMockService(ctrl)
+	mockService := testdata.NewMockLambdaService(ctrl)
 
 	mockService.EXPECT().Remove(ctx, gomock.Any()).Return(nil, errors.New("service error"))
 

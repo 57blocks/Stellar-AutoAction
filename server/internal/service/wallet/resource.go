@@ -17,7 +17,7 @@ type (
 		Verify(c *gin.Context)
 	}
 	resource struct {
-		service Service
+		service WalletService
 	}
 )
 
@@ -26,7 +26,7 @@ var ResourceImpl Resource
 func NewWalletResource() {
 	if ResourceImpl == nil {
 		ResourceImpl = &resource{
-			service: ServiceImpl,
+			service: WalletServiceImpl,
 		}
 	}
 }
