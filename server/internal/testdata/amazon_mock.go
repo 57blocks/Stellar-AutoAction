@@ -258,3 +258,398 @@ func (mr *MockAmazonMockRecorder) RemoveScheduler(c, input interface{}) *gomock.
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveScheduler", reflect.TypeOf((*MockAmazon)(nil).RemoveScheduler), c, input)
 }
+
+// MockSecretManagerClient is a mock of SecretManagerClient interface.
+type MockSecretManagerClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockSecretManagerClientMockRecorder
+}
+
+// MockSecretManagerClientMockRecorder is the mock recorder for MockSecretManagerClient.
+type MockSecretManagerClientMockRecorder struct {
+	mock *MockSecretManagerClient
+}
+
+// NewMockSecretManagerClient creates a new mock instance.
+func NewMockSecretManagerClient(ctrl *gomock.Controller) *MockSecretManagerClient {
+	mock := &MockSecretManagerClient{ctrl: ctrl}
+	mock.recorder = &MockSecretManagerClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockSecretManagerClient) EXPECT() *MockSecretManagerClientMockRecorder {
+	return m.recorder
+}
+
+// CreateSecret mocks base method.
+func (m *MockSecretManagerClient) CreateSecret(ctx context.Context, params *secretsmanager.CreateSecretInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.CreateSecretOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, params}
+	for _, a := range optFns {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CreateSecret", varargs...)
+	ret0, _ := ret[0].(*secretsmanager.CreateSecretOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSecret indicates an expected call of CreateSecret.
+func (mr *MockSecretManagerClientMockRecorder) CreateSecret(ctx, params interface{}, optFns ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, params}, optFns...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSecret", reflect.TypeOf((*MockSecretManagerClient)(nil).CreateSecret), varargs...)
+}
+
+// GetSecretValue mocks base method.
+func (m *MockSecretManagerClient) GetSecretValue(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, params}
+	for _, a := range optFns {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetSecretValue", varargs...)
+	ret0, _ := ret[0].(*secretsmanager.GetSecretValueOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSecretValue indicates an expected call of GetSecretValue.
+func (mr *MockSecretManagerClientMockRecorder) GetSecretValue(ctx, params interface{}, optFns ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, params}, optFns...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSecretValue", reflect.TypeOf((*MockSecretManagerClient)(nil).GetSecretValue), varargs...)
+}
+
+// PutResourcePolicy mocks base method.
+func (m *MockSecretManagerClient) PutResourcePolicy(ctx context.Context, params *secretsmanager.PutResourcePolicyInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.PutResourcePolicyOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, params}
+	for _, a := range optFns {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "PutResourcePolicy", varargs...)
+	ret0, _ := ret[0].(*secretsmanager.PutResourcePolicyOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PutResourcePolicy indicates an expected call of PutResourcePolicy.
+func (mr *MockSecretManagerClientMockRecorder) PutResourcePolicy(ctx, params interface{}, optFns ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, params}, optFns...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutResourcePolicy", reflect.TypeOf((*MockSecretManagerClient)(nil).PutResourcePolicy), varargs...)
+}
+
+// MockLambdaClient is a mock of LambdaClient interface.
+type MockLambdaClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockLambdaClientMockRecorder
+}
+
+// MockLambdaClientMockRecorder is the mock recorder for MockLambdaClient.
+type MockLambdaClientMockRecorder struct {
+	mock *MockLambdaClient
+}
+
+// NewMockLambdaClient creates a new mock instance.
+func NewMockLambdaClient(ctrl *gomock.Controller) *MockLambdaClient {
+	mock := &MockLambdaClient{ctrl: ctrl}
+	mock.recorder = &MockLambdaClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockLambdaClient) EXPECT() *MockLambdaClientMockRecorder {
+	return m.recorder
+}
+
+// CreateFunction mocks base method.
+func (m *MockLambdaClient) CreateFunction(ctx context.Context, params *lambda.CreateFunctionInput, optFns ...func(*lambda.Options)) (*lambda.CreateFunctionOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, params}
+	for _, a := range optFns {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CreateFunction", varargs...)
+	ret0, _ := ret[0].(*lambda.CreateFunctionOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateFunction indicates an expected call of CreateFunction.
+func (mr *MockLambdaClientMockRecorder) CreateFunction(ctx, params interface{}, optFns ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, params}, optFns...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFunction", reflect.TypeOf((*MockLambdaClient)(nil).CreateFunction), varargs...)
+}
+
+// DeleteFunction mocks base method.
+func (m *MockLambdaClient) DeleteFunction(ctx context.Context, params *lambda.DeleteFunctionInput, optFns ...func(*lambda.Options)) (*lambda.DeleteFunctionOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, params}
+	for _, a := range optFns {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteFunction", varargs...)
+	ret0, _ := ret[0].(*lambda.DeleteFunctionOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteFunction indicates an expected call of DeleteFunction.
+func (mr *MockLambdaClientMockRecorder) DeleteFunction(ctx, params interface{}, optFns ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, params}, optFns...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteFunction", reflect.TypeOf((*MockLambdaClient)(nil).DeleteFunction), varargs...)
+}
+
+// Invoke mocks base method.
+func (m *MockLambdaClient) Invoke(ctx context.Context, params *lambda.InvokeInput, optFns ...func(*lambda.Options)) (*lambda.InvokeOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, params}
+	for _, a := range optFns {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Invoke", varargs...)
+	ret0, _ := ret[0].(*lambda.InvokeOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Invoke indicates an expected call of Invoke.
+func (mr *MockLambdaClientMockRecorder) Invoke(ctx, params interface{}, optFns ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, params}, optFns...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Invoke", reflect.TypeOf((*MockLambdaClient)(nil).Invoke), varargs...)
+}
+
+// MockSchedulerClient is a mock of SchedulerClient interface.
+type MockSchedulerClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockSchedulerClientMockRecorder
+}
+
+// MockSchedulerClientMockRecorder is the mock recorder for MockSchedulerClient.
+type MockSchedulerClientMockRecorder struct {
+	mock *MockSchedulerClient
+}
+
+// NewMockSchedulerClient creates a new mock instance.
+func NewMockSchedulerClient(ctrl *gomock.Controller) *MockSchedulerClient {
+	mock := &MockSchedulerClient{ctrl: ctrl}
+	mock.recorder = &MockSchedulerClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockSchedulerClient) EXPECT() *MockSchedulerClientMockRecorder {
+	return m.recorder
+}
+
+// CreateSchedule mocks base method.
+func (m *MockSchedulerClient) CreateSchedule(ctx context.Context, params *scheduler.CreateScheduleInput, optFns ...func(*scheduler.Options)) (*scheduler.CreateScheduleOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, params}
+	for _, a := range optFns {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CreateSchedule", varargs...)
+	ret0, _ := ret[0].(*scheduler.CreateScheduleOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateSchedule indicates an expected call of CreateSchedule.
+func (mr *MockSchedulerClientMockRecorder) CreateSchedule(ctx, params interface{}, optFns ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, params}, optFns...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchedule", reflect.TypeOf((*MockSchedulerClient)(nil).CreateSchedule), varargs...)
+}
+
+// DeleteSchedule mocks base method.
+func (m *MockSchedulerClient) DeleteSchedule(ctx context.Context, params *scheduler.DeleteScheduleInput, optFns ...func(*scheduler.Options)) (*scheduler.DeleteScheduleOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, params}
+	for _, a := range optFns {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteSchedule", varargs...)
+	ret0, _ := ret[0].(*scheduler.DeleteScheduleOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteSchedule indicates an expected call of DeleteSchedule.
+func (mr *MockSchedulerClientMockRecorder) DeleteSchedule(ctx, params interface{}, optFns ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, params}, optFns...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchedule", reflect.TypeOf((*MockSchedulerClient)(nil).DeleteSchedule), varargs...)
+}
+
+// GetSchedule mocks base method.
+func (m *MockSchedulerClient) GetSchedule(ctx context.Context, params *scheduler.GetScheduleInput, optFns ...func(*scheduler.Options)) (*scheduler.GetScheduleOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, params}
+	for _, a := range optFns {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetSchedule", varargs...)
+	ret0, _ := ret[0].(*scheduler.GetScheduleOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSchedule indicates an expected call of GetSchedule.
+func (mr *MockSchedulerClientMockRecorder) GetSchedule(ctx, params interface{}, optFns ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, params}, optFns...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSchedule", reflect.TypeOf((*MockSchedulerClient)(nil).GetSchedule), varargs...)
+}
+
+// MockCloudWatchLogsClient is a mock of CloudWatchLogsClient interface.
+type MockCloudWatchLogsClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockCloudWatchLogsClientMockRecorder
+}
+
+// MockCloudWatchLogsClientMockRecorder is the mock recorder for MockCloudWatchLogsClient.
+type MockCloudWatchLogsClientMockRecorder struct {
+	mock *MockCloudWatchLogsClient
+}
+
+// NewMockCloudWatchLogsClient creates a new mock instance.
+func NewMockCloudWatchLogsClient(ctrl *gomock.Controller) *MockCloudWatchLogsClient {
+	mock := &MockCloudWatchLogsClient{ctrl: ctrl}
+	mock.recorder = &MockCloudWatchLogsClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockCloudWatchLogsClient) EXPECT() *MockCloudWatchLogsClientMockRecorder {
+	return m.recorder
+}
+
+// DescribeLogStreams mocks base method.
+func (m *MockCloudWatchLogsClient) DescribeLogStreams(ctx context.Context, params *cloudwatchlogs.DescribeLogStreamsInput, optFns ...func(*cloudwatchlogs.Options)) (*cloudwatchlogs.DescribeLogStreamsOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, params}
+	for _, a := range optFns {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DescribeLogStreams", varargs...)
+	ret0, _ := ret[0].(*cloudwatchlogs.DescribeLogStreamsOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DescribeLogStreams indicates an expected call of DescribeLogStreams.
+func (mr *MockCloudWatchLogsClientMockRecorder) DescribeLogStreams(ctx, params interface{}, optFns ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, params}, optFns...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeLogStreams", reflect.TypeOf((*MockCloudWatchLogsClient)(nil).DescribeLogStreams), varargs...)
+}
+
+// GetLogEvents mocks base method.
+func (m *MockCloudWatchLogsClient) GetLogEvents(ctx context.Context, params *cloudwatchlogs.GetLogEventsInput, optFns ...func(*cloudwatchlogs.Options)) (*cloudwatchlogs.GetLogEventsOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, params}
+	for _, a := range optFns {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetLogEvents", varargs...)
+	ret0, _ := ret[0].(*cloudwatchlogs.GetLogEventsOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLogEvents indicates an expected call of GetLogEvents.
+func (mr *MockCloudWatchLogsClientMockRecorder) GetLogEvents(ctx, params interface{}, optFns ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, params}, optFns...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLogEvents", reflect.TypeOf((*MockCloudWatchLogsClient)(nil).GetLogEvents), varargs...)
+}
+
+// MockIamClient is a mock of IamClient interface.
+type MockIamClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockIamClientMockRecorder
+}
+
+// MockIamClientMockRecorder is the mock recorder for MockIamClient.
+type MockIamClientMockRecorder struct {
+	mock *MockIamClient
+}
+
+// NewMockIamClient creates a new mock instance.
+func NewMockIamClient(ctrl *gomock.Controller) *MockIamClient {
+	mock := &MockIamClient{ctrl: ctrl}
+	mock.recorder = &MockIamClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockIamClient) EXPECT() *MockIamClientMockRecorder {
+	return m.recorder
+}
+
+// CreateRole mocks base method.
+func (m *MockIamClient) CreateRole(ctx context.Context, params *iam.CreateRoleInput, optFns ...func(*iam.Options)) (*iam.CreateRoleOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, params}
+	for _, a := range optFns {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CreateRole", varargs...)
+	ret0, _ := ret[0].(*iam.CreateRoleOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateRole indicates an expected call of CreateRole.
+func (mr *MockIamClientMockRecorder) CreateRole(ctx, params interface{}, optFns ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, params}, optFns...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRole", reflect.TypeOf((*MockIamClient)(nil).CreateRole), varargs...)
+}
+
+// GetRole mocks base method.
+func (m *MockIamClient) GetRole(ctx context.Context, params *iam.GetRoleInput, optFns ...func(*iam.Options)) (*iam.GetRoleOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, params}
+	for _, a := range optFns {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetRole", varargs...)
+	ret0, _ := ret[0].(*iam.GetRoleOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRole indicates an expected call of GetRole.
+func (mr *MockIamClientMockRecorder) GetRole(ctx, params interface{}, optFns ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, params}, optFns...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRole", reflect.TypeOf((*MockIamClient)(nil).GetRole), varargs...)
+}
+
+// PutRolePolicy mocks base method.
+func (m *MockIamClient) PutRolePolicy(ctx context.Context, params *iam.PutRolePolicyInput, optFns ...func(*iam.Options)) (*iam.PutRolePolicyOutput, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, params}
+	for _, a := range optFns {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "PutRolePolicy", varargs...)
+	ret0, _ := ret[0].(*iam.PutRolePolicyOutput)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PutRolePolicy indicates an expected call of PutRolePolicy.
+func (mr *MockIamClientMockRecorder) PutRolePolicy(ctx, params interface{}, optFns ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, params}, optFns...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PutRolePolicy", reflect.TypeOf((*MockIamClient)(nil).PutRolePolicy), varargs...)
+}
