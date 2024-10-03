@@ -76,20 +76,43 @@ jobs:
           # 6: Default compression (same as GNU Gzip)
           # 9: Best compression
           compression-level: 0
-  release:
+
+  download-artifacts:
     needs: compile
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os:
+          - name: linux
+          - name: darwin
+          - name: windows
+        arch:
+          - amd64
+          - arm64
+        exclude:
+          - os:
+              name: linux
+            arch: arm64
+          - os:
+              name: windows
+            arch: arm64
 
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          name: 'autoaction-darwin-arm64'
+          name: autoaction-${{ matrix.os.name }}-${{ matrix.arch }} 
           path: ./artifacts
 
+      - run: ls -lah ./artifacts
+
+  release:
+    needs: download-artifacts
+    runs-on: ubuntu-latest
+    steps:
       - run: ls -lah ./artifacts
 
       - name: Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "./artifacts/autoaction-darwin-arm64"
+          artifacts: "./artifacts/autoaction-*"
