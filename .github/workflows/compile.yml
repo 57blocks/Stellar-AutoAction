@@ -1,4 +1,4 @@
-name: Compile Cross-Platform CLI
+name: Compile CLI And Publish
 
 on:
   push:
@@ -76,3 +76,21 @@ jobs:
           # 6: Default compression (same as GNU Gzip)
           # 9: Best compression
           compression-level: 0
+
+  release:
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Display structure of downloaded files
+        run: ls -R artifacts
+
+      - name: Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "artifacts/autoaction-*"

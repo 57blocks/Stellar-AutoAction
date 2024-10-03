@@ -56,13 +56,13 @@ func (zl *ZapLoggerWrap) ERROR(msg string, argMaps ...map[string]interface{}) {
 }
 
 // Setup initializes the logger with configuration.
-func Setup() error {
+func Setup(ctf *config.Configuration) error {
 	zapLogger, err := zap.Config{
-		Level:             constant.GetLogLevel(config.GlobalConfig.Level),
+		Level:             constant.GetLogLevel(ctf.Log.Level),
 		Development:       false,
 		DisableCaller:     false,
 		DisableStacktrace: false,
-		Encoding:          config.GlobalConfig.Encoding,
+		Encoding:          ctf.Log.Encoding,
 		EncoderConfig: zapcore.EncoderConfig{
 			TimeKey:        "ts",
 			LevelKey:       "level",
@@ -88,7 +88,7 @@ func Setup() error {
 	Logger = &ZapLoggerWrap{zapLogger}
 	Logger.DEBUG(
 		"zap logger init",
-		map[string]interface{}{"level": config.GlobalConfig.Level, "encoding": config.GlobalConfig.Encoding},
+		map[string]interface{}{"level": ctf.Log.Level, "encoding": ctf.Log.Encoding},
 	)
 
 	return nil

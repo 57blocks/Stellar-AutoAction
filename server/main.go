@@ -22,12 +22,16 @@ var server *http.Server
 
 func main() {
 	if err := boot.Boots(
-		boot.Wrap(config.Setup),
-		boot.Wrap(logx.Setup),
+		boot.Wrap(func() error {
+			return config.Setup("./internal/config/")
+		}),
+		boot.Wrap(func() error {
+			return logx.Setup(config.GlobalConfig)
+		}),
 		boot.Wrap(db.Setup),
-		boot.Wrap(api.Setup),
 		boot.Wrap(thirdParty.Setup),
 		boot.Wrap(service.Setup),
+		boot.Wrap(api.Setup),
 	); err != nil {
 		log.Panicf("boots components occurred error: %s", err.Error())
 	}

@@ -8,11 +8,36 @@ import (
 
 	"github.com/57blocks/auto-action/server/internal/dto"
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
+	"github.com/gorilla/websocket"
 
 	"github.com/gin-gonic/gin"
 )
 
-func Register(c *gin.Context) {
+type (
+	Resource interface {
+		Register(c *gin.Context)
+		Invoke(c *gin.Context)
+		List(c *gin.Context)
+		Info(c *gin.Context)
+		Logs(c *gin.Context)
+		Remove(c *gin.Context)
+	}
+	resource struct {
+		service LambdaService
+	}
+)
+
+var ResourceImpl Resource
+
+func NewLambdaResource() {
+	if ResourceImpl == nil {
+		ResourceImpl = &resource{
+			service: LambdaServiceImpl,
+		}
+	}
+}
+
+func (re *resource) Register(c *gin.Context) {
 	r := c.Request
 
 	// Parse the multipart form
@@ -56,7 +81,7 @@ func Register(c *gin.Context) {
 		})
 	}
 
-	resp, err := ServiceImpl.Register(c, &dto.ReqRegister{
+	resp, err := re.service.Register(c, &dto.ReqRegister{
 		Expression: r.Form.Get("expression"),
 		Payload:    r.Form.Get("payload"),
 		Files:      reqFiles,
@@ -70,7 +95,7 @@ func Register(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func Invoke(c *gin.Context) {
+func (re *resource) Invoke(c *gin.Context) {
 	req := new(dto.ReqInvoke)
 
 	if err := c.BindUri(req); err != nil {
@@ -85,7 +110,7 @@ func Invoke(c *gin.Context) {
 		return
 	}
 
-	resp, err := ServiceImpl.Invoke(c, req)
+	resp, err := re.service.Invoke(c, req)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
@@ -95,15 +120,15 @@ func Invoke(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func List(c *gin.Context) {
-	reqBody := new(dto.ReqList)
-	if err := c.BindQuery(reqBody); err != nil {
+func (re *resource) List(c *gin.Context) {
+	queryParams := new(dto.ReqList)
+	if err := c.BindQuery(queryParams); err != nil {
 		c.Error(errorx.BadRequest(err.Error()))
 		c.Abort()
 		return
 	}
 
-	resp, err := ServiceImpl.List(c, reqBody.Full)
+	resp, err := re.service.List(c, queryParams.Full)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
@@ -113,7 +138,7 @@ func List(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func Info(c *gin.Context) {
+func (re *resource) Info(c *gin.Context) {
 	req := new(dto.ReqURILambda)
 
 	if err := c.BindUri(req); err != nil {
@@ -122,7 +147,7 @@ func Info(c *gin.Context) {
 		return
 	}
 
-	resp, err := ServiceImpl.Info(c, req)
+	resp, err := re.service.Info(c, req)
 	if err != nil {
 		c.Error(err)
 		c.Abort()
@@ -132,7 +157,7 @@ func Info(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func Logs(c *gin.Context) {
+func (re *resource) Logs(c *gin.Context) {
 	req := new(dto.ReqURILambda)
 
 	if err := c.BindUri(req); err != nil {
@@ -141,14 +166,22 @@ func Logs(c *gin.Context) {
 		return
 	}
 
-	if err := ServiceImpl.Logs(c, req); err != nil {
+	upgrader := websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+
+	if err := re.service.Logs(c, req, &upgrader); err != nil {
 		c.Error(err)
 		c.Abort()
 		return
 	}
 }
 
-func Remove(c *gin.Context) {
+func (re *resource) Remove(c *gin.Context) {
 	req := new(dto.ReqURILambda)
 
 	if err := c.BindUri(req); err != nil {
@@ -157,7 +190,7 @@ func Remove(c *gin.Context) {
 		return
 	}
 
-	resp, err := ServiceImpl.Remove(c, req)
+	resp, err := re.service.Remove(c, req)
 	if err != nil {
 		c.Error(err)
 		c.Abort()

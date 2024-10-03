@@ -13,14 +13,13 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-//go:generate mockgen -destination ./oauth_mock.go -package repo -source oauth.go OAuth
+//go:generate mockgen -destination ../testdata/oauth_mock.go -package testdata -source oauth.go OAuth
 type (
 	OAuth interface {
 		FindUserByAcn(c context.Context, acn string) (*dto.RespUser, error)
 		FindUserByOrgAcn(c context.Context, req *dto.ReqOrgAcn) (*dto.RespUser, error)
 		CreateUser(c context.Context, user *model.User) error
 
-		FindOrg(c context.Context, id uint64) (*dto.RespOrg, error)
 		FindOrgByName(c context.Context, name string) (*dto.RespOrg, error)
 
 		FindTokenByRefreshID(c context.Context, refresh string) (*model.Token, error)
@@ -45,10 +44,8 @@ func NewOAuth() {
 
 func (o *oauth) FindUserByAcn(c context.Context, acn string) (*dto.RespUser, error) {
 	u := new(dto.RespUser)
-	if err := db.Inst.Conn(c).Table(model.TabNameUser()).
-		Where(map[string]interface{}{
-			"account": acn,
-		}).
+	if err := o.Instance.Conn(c).Table(model.TabNameUser()).
+		Where("account = ?", acn).
 		First(u).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errorx.NotFound("user/organization not found")
@@ -64,10 +61,7 @@ func (o *oauth) FindUserByOrgAcn(c context.Context, req *dto.ReqOrgAcn) (*dto.Re
 	u := new(dto.RespUser)
 	if err := o.Instance.Conn(c).Table(model.TabNameUserAbbr()).
 		Joins("LEFT JOIN organization AS o ON u.organization_id = o.id").
-		Where(map[string]interface{}{
-			"u.account": req.AcnName,
-			"o.name":    req.OrgName,
-		}).
+		Where("u.account = ? AND o.name = ?", req.AcnName, req.OrgName).
 		First(u).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errorx.NotFound("user/organization not found")
@@ -93,29 +87,10 @@ func (o *oauth) CreateUser(c context.Context, user *model.User) error {
 	return nil
 }
 
-func (o *oauth) FindOrg(c context.Context, id uint64) (*dto.RespOrg, error) {
-	org := new(dto.RespOrg)
-	if err := o.Instance.Conn(c).Table(model.TabNameOrg()).
-		Where(map[string]interface{}{
-			"id": id,
-		}).
-		First(org).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errorx.NotFound("organization not found")
-		}
-
-		return nil, errorx.Internal(err.Error())
-	}
-
-	return org, nil
-}
-
 func (o *oauth) FindOrgByName(c context.Context, name string) (*dto.RespOrg, error) {
 	org := new(dto.RespOrg)
 	if err := o.Instance.Conn(c).Table(model.TabNameOrg()).
-		Where(map[string]interface{}{
-			"name": name,
-		}).
+		Where("name = ?", name).
 		First(org).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errorx.NotFound("organization not found")
@@ -130,9 +105,7 @@ func (o *oauth) FindOrgByName(c context.Context, name string) (*dto.RespOrg, err
 func (o *oauth) FindTokenByRefreshID(c context.Context, refreshID string) (*model.Token, error) {
 	t := new(model.Token)
 	if err := o.Instance.Conn(c).Table(t.TableName()).
-		Where(map[string]interface{}{
-			"refresh_id": refreshID,
-		}).
+		Where("refresh_id = ?", refreshID).
 		First(t).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errorx.NotFound("none refresh token found")

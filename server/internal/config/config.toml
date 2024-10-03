@@ -18,9 +18,8 @@ public_key = "JWT_PUBLIC_KEY"
 
 [aws]
 region = "AWS_REGION"
-access_key_id = "AWS_ACCESS_KEY_ID"
-secret_access_key = "AWS_SECRET_ACCESS_KEY"
 ecs_task_role = "AWS_ECS_TASK_ROLE"
+secret_create_sleep_time = "AWS_SECRET_CREATE_SLEEP_TIME"
 
 [rds]
 host = "RDS_HOST"

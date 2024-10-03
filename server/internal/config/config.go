@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -53,9 +54,10 @@ type (
 	}
 
 	Amazon struct {
-		_           struct{}
-		Region      string `mapstructure:"region"`
-		EcsTaskRole string `mapstructure:"ecs_task_role"`
+		_                     struct{}
+		Region                string `mapstructure:"region"`
+		EcsTaskRole           string `mapstructure:"ecs_task_role"`
+		SecretCreateSleepTime string `mapstructure:"secret_create_sleep_time"`
 	}
 
 	RDS struct {
@@ -85,15 +87,20 @@ type (
 	}
 )
 
-func Setup() error {
+func Setup(cfgPath string) error {
 	cfgLogger := slog.Default()
 	slog.SetLogLoggerLevel(slog.LevelDebug)
+
+	// add .env file(local development)
+	if err := godotenv.Load(); err != nil {
+		cfgLogger.Warn(fmt.Sprintf("Error loading .env file: %v", err))
+	}
 
 	Vp = viper.NewWithOptions(
 		viper.WithLogger(cfgLogger),
 	)
 
-	Vp.AddConfigPath("./internal/config/")
+	Vp.AddConfigPath(cfgPath)
 	Vp.SetConfigType("toml")
 	Vp.SetConfigName("config")
 	Vp.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))

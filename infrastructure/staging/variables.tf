@@ -126,7 +126,7 @@ variable "rsa_private_key" {
 
 // CubeSigner Secrets Manager
 variable "cs_key_pairs" {
-  description = "The name of the RSA key pair"
+  description = "The name of the CubeSigner key pair"
   type        = string
   default     = ""
 }

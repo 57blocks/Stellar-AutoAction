@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
@@ -32,13 +31,14 @@ import (
 	"gorm.io/gorm"
 )
 
+//go:generate mockgen -destination ../../testdata/lambda_service_mock.go -package testdata -source service.go Service
 type (
-	Service interface {
+	LambdaService interface {
 		Register(c context.Context, r *dto.ReqRegister) ([]*dto.RespRegister, error)
 		Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error)
 		List(c context.Context, isFull bool) (interface{}, error)
 		Info(c context.Context, r *dto.ReqURILambda) (*dto.RespInfo, error)
-		Logs(c context.Context, r *dto.ReqURILambda) error
+		Logs(c context.Context, r *dto.ReqURILambda, upgrader *websocket.Upgrader) error
 		Remove(c context.Context, r *dto.ReqURILambda) (*dto.RespRemove, error)
 	}
 	service struct {
@@ -48,13 +48,13 @@ type (
 	}
 )
 
-var ServiceImpl Service
+var LambdaServiceImpl LambdaService
 
 func NewLambdaService() {
-	if ServiceImpl == nil {
+	if LambdaServiceImpl == nil {
 		repo.NewLambda()
 
-		ServiceImpl = &service{
+		LambdaServiceImpl = &service{
 			lambdaRepo: repo.LambdaRepo,
 			amazon:     amazonx.Conductor,
 			oauthRepo:  repo.OAuthRepo,
@@ -128,9 +128,9 @@ func (svc *service) Register(c context.Context, r *dto.ReqRegister) ([]*dto.Resp
 			}
 
 			respItem.Scheduler = &dto.RespSchBrief{
-				Arn:            *newLamResp.FunctionArn,
+				Arn:            *newSchResp.ScheduleArn,
 				Name:           *newLamResp.FunctionName,
-				BoundLambdaArn: *newSchResp.ScheduleArn,
+				BoundLambdaArn: *newLamResp.FunctionArn,
 			}
 
 			tpp.Scheduler = model.BuildScheduler(
@@ -220,7 +220,7 @@ func (svc *service) boundScheduler(
 		State:                      scheTypes.ScheduleStateEnabled,
 	})
 	if err != nil {
-		return nil, errorx.Internal(fmt.Sprintf("failed to bind scheduler: %s, err: %s", *lambdaFun.FunctionName, err.Error()))
+		return nil, errorx.Internal(fmt.Sprintf("failed to bound scheduler: %s, err: %s", *lambdaFun.FunctionName, err.Error()))
 	}
 
 	logx.Logger.DEBUG(fmt.Sprintf("scheduler created: %s", *newSchResp.ScheduleArn))
@@ -258,7 +258,17 @@ func (svc *service) persistRegisterResults(c context.Context, pairs []toBePersis
 }
 
 func (svc *service) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke, error) {
-	lamb, err := svc.lambdaRepo.FindByNameOrARN(c, r.Lambda)
+	jwtAccount, _ := c.(*gin.Context).Get(constant.ClaimSub.Str())
+
+	user, err := svc.oauthRepo.FindUserByAcn(c, jwtAccount.(string))
+	if err != nil {
+		return nil, err
+	}
+
+	lamb, err := svc.lambdaRepo.LambdaInfo(c, user.ID, r.Lambda)
+	if err != nil {
+		return nil, err
+	}
 
 	payload, err := util.GenEventPayload(c, r.Payload)
 	if err != nil {
@@ -277,8 +287,22 @@ func (svc *service) Invoke(c context.Context, r *dto.ReqInvoke) (*dto.RespInvoke
 		Payload:      payloadBytes,
 	})
 	if err != nil {
-		return nil, errorx.Internal(fmt.Sprintf("failed to invoke lambda: %s", lamb.FunctionName))
+		return nil, errorx.Internal(fmt.Sprintf("failed to invoke lambda: %s, error: %s", lamb.FunctionName, err.Error()))
 	}
+
+	// decode log result
+	decodedLogResult, err := util.DecodeBase64String(c, invokeOutput.LogResult)
+	if err != nil {
+		return nil, errorx.Internal(fmt.Sprintf("failed to decode log result: %s", err.Error()))
+	}
+	invokeOutput.LogResult = &decodedLogResult
+
+	// decode payload
+	decodedPayload, err := util.DecodeBase64String(c, aws.String(string(invokeOutput.Payload)))
+	if err != nil {
+		return nil, errorx.Internal(fmt.Sprintf("failed to decode payload: %s", err.Error()))
+	}
+	invokeOutput.Payload = []byte(decodedPayload)
 
 	return dto.BuildRespInvoke(dto.WithInvokeResp(invokeOutput)), nil
 }
@@ -329,19 +353,11 @@ func (svc *service) Info(c context.Context, r *dto.ReqURILambda) (*dto.RespInfo,
 	return info, nil
 }
 
-func (svc *service) Logs(c context.Context, req *dto.ReqURILambda) error {
+func (svc *service) Logs(c context.Context, req *dto.ReqURILambda, upgrader *websocket.Upgrader) error {
 	// websocket
 	ctx, ok := c.(*gin.Context)
 	if !ok {
 		return errorx.GinContextConv()
-	}
-
-	upgrader := websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-		CheckOrigin: func(r *http.Request) bool {
-			return true
-		},
 	}
 
 	wsConn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
@@ -401,7 +417,14 @@ func (svc *service) Logs(c context.Context, req *dto.ReqURILambda) error {
 }
 
 func (svc *service) Remove(c context.Context, r *dto.ReqURILambda) (*dto.RespRemove, error) {
-	lamb, err := svc.lambdaRepo.FindByNameOrARN(c, r.Lambda)
+	jwtAccount, _ := c.(*gin.Context).Get(constant.ClaimSub.Str())
+
+	user, err := svc.oauthRepo.FindUserByAcn(c, jwtAccount.(string))
+	if err != nil {
+		return nil, err
+	}
+
+	lamb, err := svc.lambdaRepo.LambdaInfo(c, user.ID, r.Lambda)
 	if err != nil {
 		return nil, err
 	}

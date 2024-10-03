@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 )
 
-//go:generate mockgen -destination ./amazon_mock.go -package amazonx -source amazon.go Amazon
+//go:generate mockgen -destination ../../testdata/amazon_mock.go -package testdata -source amazon.go Amazon
 type (
 	Amazon interface {
 		RegisterLambda(
@@ -74,13 +74,42 @@ type (
 		) (*secretsmanager.PutResourcePolicyOutput, error)
 	}
 
+	SecretManagerClient interface {
+		GetSecretValue(ctx context.Context, params *secretsmanager.GetSecretValueInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.GetSecretValueOutput, error)
+		CreateSecret(ctx context.Context, params *secretsmanager.CreateSecretInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.CreateSecretOutput, error)
+		PutResourcePolicy(ctx context.Context, params *secretsmanager.PutResourcePolicyInput, optFns ...func(*secretsmanager.Options)) (*secretsmanager.PutResourcePolicyOutput, error)
+	}
+
+	LambdaClient interface {
+		DeleteFunction(ctx context.Context, params *lambda.DeleteFunctionInput, optFns ...func(*lambda.Options)) (*lambda.DeleteFunctionOutput, error)
+		Invoke(ctx context.Context, params *lambda.InvokeInput, optFns ...func(*lambda.Options)) (*lambda.InvokeOutput, error)
+		CreateFunction(ctx context.Context, params *lambda.CreateFunctionInput, optFns ...func(*lambda.Options)) (*lambda.CreateFunctionOutput, error)
+	}
+
+	SchedulerClient interface {
+		CreateSchedule(ctx context.Context, params *scheduler.CreateScheduleInput, optFns ...func(*scheduler.Options)) (*scheduler.CreateScheduleOutput, error)
+		DeleteSchedule(ctx context.Context, params *scheduler.DeleteScheduleInput, optFns ...func(*scheduler.Options)) (*scheduler.DeleteScheduleOutput, error)
+		GetSchedule(ctx context.Context, params *scheduler.GetScheduleInput, optFns ...func(*scheduler.Options)) (*scheduler.GetScheduleOutput, error)
+	}
+
+	CloudWatchLogsClient interface {
+		DescribeLogStreams(ctx context.Context, params *cloudwatchlogs.DescribeLogStreamsInput, optFns ...func(*cloudwatchlogs.Options)) (*cloudwatchlogs.DescribeLogStreamsOutput, error)
+		GetLogEvents(ctx context.Context, params *cloudwatchlogs.GetLogEventsInput, optFns ...func(*cloudwatchlogs.Options)) (*cloudwatchlogs.GetLogEventsOutput, error)
+	}
+
+	IamClient interface {
+		GetRole(ctx context.Context, params *iam.GetRoleInput, optFns ...func(*iam.Options)) (*iam.GetRoleOutput, error)
+		CreateRole(ctx context.Context, params *iam.CreateRoleInput, optFns ...func(*iam.Options)) (*iam.CreateRoleOutput, error)
+		PutRolePolicy(ctx context.Context, params *iam.PutRolePolicyInput, optFns ...func(*iam.Options)) (*iam.PutRolePolicyOutput, error)
+	}
+
 	amazon struct {
 		amazonConfig         aws.Config
-		secretManagerClient  *secretsmanager.Client
-		lambdaClient         *lambda.Client
-		schedulerClient      *scheduler.Client
-		cloudWatchLogsClient *cloudwatchlogs.Client
-		iamClient            *iam.Client
+		secretManagerClient  SecretManagerClient
+		lambdaClient         LambdaClient
+		schedulerClient      SchedulerClient
+		cloudWatchLogsClient CloudWatchLogsClient
+		iamClient            IamClient
 	}
 	amazonOpt func(*amazon)
 )
@@ -100,31 +129,31 @@ func withConfig(cfg aws.Config) amazonOpt {
 	}
 }
 
-func withSecretManagerClient(client *secretsmanager.Client) amazonOpt {
+func withSecretManagerClient(client SecretManagerClient) amazonOpt {
 	return func(a *amazon) {
 		a.secretManagerClient = client
 	}
 }
 
-func withLambdaClient(client *lambda.Client) amazonOpt {
+func withLambdaClient(client LambdaClient) amazonOpt {
 	return func(a *amazon) {
 		a.lambdaClient = client
 	}
 }
 
-func withSchedulerClient(client *scheduler.Client) amazonOpt {
+func withSchedulerClient(client SchedulerClient) amazonOpt {
 	return func(a *amazon) {
 		a.schedulerClient = client
 	}
 }
 
-func withCloudWatchLogsClient(client *cloudwatchlogs.Client) amazonOpt {
+func withCloudWatchLogsClient(client CloudWatchLogsClient) amazonOpt {
 	return func(a *amazon) {
 		a.cloudWatchLogsClient = client
 	}
 }
 
-func withIamClient(client *iam.Client) amazonOpt {
+func withIamClient(client IamClient) amazonOpt {
 	return func(a *amazon) {
 		a.iamClient = client
 	}

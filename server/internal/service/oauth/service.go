@@ -3,7 +3,7 @@ package oauth
 import (
 	"context"
 	"fmt"
-	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,8 +27,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+//go:generate mockgen -destination ../../testdata/oauth_service_mock.go -package testdata -source service.go Service
 type (
-	Service interface {
+	OAuthService interface {
 		Signup(c context.Context, req dto.ReqSignup) error
 		Login(c context.Context, req dto.ReqLogin) (*dto.RespCredential, error)
 		Refresh(c context.Context, raw string) (*dto.RespCredential, error)
@@ -39,18 +40,24 @@ type (
 		decrypter decrypt.Decrypter
 		oauthRepo repo.OAuth
 		amazon    amazonx.Amazon
+		resty     restyx.Resty
+		csService svcCS.CSservice
 	}
 )
 
+var OAuthServiceImpl OAuthService
+
 func NewOAuthService() {
-	if ServiceImpl == nil {
+	if OAuthServiceImpl == nil {
 		repo.NewOAuth()
 
-		ServiceImpl = &service{
+		OAuthServiceImpl = &service{
 			jwtx:      jwtx.RS256,
 			decrypter: decrypt.RSADecrypter,
 			oauthRepo: repo.OAuthRepo,
 			amazon:    amazonx.Conductor,
+			resty:     restyx.Conductor,
+			csService: svcCS.CSserviceImpl,
 		}
 	}
 }
@@ -71,12 +78,12 @@ func (svc *service) Signup(c context.Context, req dto.ReqSignup) error {
 		return errorx.BadRequest("user already exists")
 	}
 
-	csToken, err := svcCS.ServiceImpl.CubeSignerToken(c)
+	csToken, err := svc.csService.CubeSignerToken(c)
 	if err != nil {
 		return err
 	}
 
-	csRole, err := svc.addCSRole(csToken, req.Organization, req.Account)
+	csRole, err := svc.resty.AddCSRole(c, csToken, req.Organization, req.Account)
 	if err != nil {
 		return err
 	}
@@ -103,12 +110,14 @@ func (svc *service) Signup(c context.Context, req dto.ReqSignup) error {
 	if req.Description != nil {
 		description = *req.Description
 	}
-	svc.oauthRepo.CreateUser(c, &model.User{
+	if err := svc.oauthRepo.CreateUser(c, &model.User{
 		OrganizationId: org.ID,
 		Account:        req.Account,
 		Password:       string(hashedPassword),
 		Description:    description,
-	})
+	}); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -263,36 +272,6 @@ func (svc *service) Logout(c context.Context, raw string) (*dto.RespLogout, erro
 	return new(dto.RespLogout), nil
 }
 
-func (svc *service) addCSRole(csToken string, orgName string, account string) (*dto.RespAddCsRole, error) {
-	URL := fmt.Sprintf(
-		"%s/v0/org/%s/roles",
-		config.GlobalConfig.CS.Endpoint,
-		url.PathEscape(config.GlobalConfig.CS.Organization),
-	)
-
-	// TODO: using member to do the request for ut
-	var roleResp dto.RespAddCsRole
-	roleName := fmt.Sprintf("%s_%s_Role", orgName, account)
-	resp, err := restyx.Client.R().
-		SetHeader("Authorization", csToken).
-		SetHeader("Content-Type", "application/json").
-		SetBody(map[string]interface{}{
-			"name": roleName,
-		}).
-		SetResult(&roleResp).
-		Post(URL)
-	if err != nil {
-		return nil, errorx.Internal(fmt.Sprintf("create cube signer role occurred error: %s", err.Error()))
-	}
-	if resp.IsError() {
-		return nil, errorx.Internal(fmt.Sprintf("create cube signer role occurred error: %d, %s", resp.StatusCode(), resp.String()))
-	}
-
-	logx.Logger.DEBUG(fmt.Sprintf("create cube signer role success: %s", roleName))
-
-	return &roleResp, nil
-}
-
 func (svc *service) addAwsRole(c context.Context, orgName string, account string) (*iam.CreateRoleOutput, error) {
 	roleName := util.GetRoleName(c, orgName, account)
 	assumeRolePolicyDocument := `{
@@ -388,8 +367,9 @@ func (svc *service) addAwsSecretKey(
 		return errorx.Internal(fmt.Sprintf("create aws secret key occurred error: %s", err.Error()))
 	}
 
-	// sleep 10 seconds to make sure the secret is created
-	time.Sleep(10 * time.Second)
+	// sleep times to make sure the secret is created, default 10 seconds
+	sleepTime, _ := strconv.Atoi(config.GlobalConfig.Amazon.SecretCreateSleepTime)
+	time.Sleep(time.Duration(sleepTime) * time.Second)
 
 	resourcePolicy := fmt.Sprintf(`{
 		"Version": "2012-10-17",

@@ -42,6 +42,16 @@ Note:
 	- At most one expression flag could be set.
 	- Expression flags: at/cron/rate would create an Event Bridge
       Scheduler to invoke lambda function, together with the payload.
+
+Example:
+	- Register a lambda will be triggered manually:
+	  $ auto-action lambda register ./handler.zip
+	- Register a lambda with an at expression:
+	  $ auto-action lambda register ./handler.zip -a 'at(2022-12-31T23:59:59)' -p '{"key": "value"}'
+	- Register a lambda with a rate expression:
+	  $ auto-action lambda register ./handler.zip -r 'rate(minutes)' -p '{"key": "value"}'
+	- Register a lambda with a cron expression:
+	  $ auto-action lambda register ./handler.zip -c 'cron(0 12 * * ? *)' -p '{"key": "value"}'
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		a := cmd.Flags().Changed(constant.FlagAt.ValStr())

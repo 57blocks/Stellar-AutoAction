@@ -12,7 +12,7 @@ import (
 	"github.com/57blocks/auto-action/server/internal/pkg/errorx"
 )
 
-//go:generate mockgen -destination ./decrypt_mock.go -package decrypt -source decrypt.go Decrypter
+//go:generate mockgen -destination ../../testdata/decrypt_mock.go -package testdata -source decrypt.go Decrypter
 type Decrypter interface {
 	Decrypt(data []byte) ([]byte, error)
 }
