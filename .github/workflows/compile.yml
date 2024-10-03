@@ -92,4 +92,4 @@ jobs:
       - name: Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "autoaction-darwin-arm64"
+          artifacts: "autoaction-*"
