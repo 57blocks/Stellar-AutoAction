@@ -86,7 +86,32 @@ jobs:
         with:
           name: 'autoaction-darwin-arm64'
           path: ./artifacts
-        - run: ls -R ./artifacts
-        - uses: ncipollo/release-action@v1
-          with:
-            artifacts: "autoaction-darwin-arm64"
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets
+        run: |
+          # get upload url and remove the {?name,label} at the end
+          upload_url="${{ steps.create_release.outputs.upload_url }}"
+          upload_url="${upload_url%\{*}"
+          
+          # iterate over all downloaded files and upload
+          for file in ./artifacts/**/*; do
+            if [ -f "$file" ]; then
+              filename=$(basename "$file")
+              echo "Uploading $filename to release..."
+              curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Content-Type: application/octet-stream" \
+                --data-binary @"$file" \
+                "${upload_url}?name=${filename}"
+            fi
+          done
