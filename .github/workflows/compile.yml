@@ -87,6 +87,8 @@ jobs:
           name: 'autoaction-darwin-arm64'
           path: ./artifacts
 
+      - run: ls -lah ./artifacts
+
       - name: Release
         uses: ncipollo/release-action@v1
         with:
