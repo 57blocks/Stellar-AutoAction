@@ -84,7 +84,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          name: 'autoaction-*'
+          name: 'autoaction-darwin-arm64'
           path: ./artifacts
 
       - name: Create Release
