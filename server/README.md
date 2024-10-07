@@ -31,11 +31,7 @@ The initial migration version `000000_init` serves the following purposes:
 
 Install ESLint for the local environment:
 
-<<<<<<< HEAD
-```
-=======
 ```bash
->>>>>>> staging
 npm install eslint globals
 ```
 
@@ -45,37 +41,6 @@ To run the AutoAction server locally, follow these steps:
 
 1. Clone the repository:
 
-<<<<<<< HEAD
-   ```
-   git clone https://github.com/57blocks/AutoAction.git
-   cd server
-   ```
-
-2. Install dependencies:
-
-   ```
-   go mod download
-   ```
-
-3. Set up environment variables:
-
-   - TODO: Add environment variable setup instructions
-
-4. Start the local PostgreSQL database (if not using a remote database):
-
-   Start the local PostgreSQL database:
-
-   ```
-   docker run -d -p 5432:5432 postgres
-   ```
-
-   Create a database with the name `autoaction`(as same as the `RDS_DATABASE` in the env variables).
-
-5. Start the server:
-   ```
-   go run main.go
-   ```
-=======
 ```bash
 git clone https://github.com/57blocks/AutoAction.git
 cd server
@@ -176,7 +141,6 @@ Create a database with the name `autoaction`(as same as the `RDS_DATABASE` in th
 ```bash
 go run main.go
 ```
->>>>>>> staging
 
 The server should now be running on `http://localhost:8080` (or the port specified in your configuration).
 
@@ -186,11 +150,7 @@ The server should now be running on `http://localhost:8080` (or the port specifi
 
 1. Login with MFA:
 
-<<<<<<< HEAD
-   ```
-=======
    ```bash
->>>>>>> staging
    cs login -s google --session-lifetime 31536000 --auth-lifetime 600 --refresh-lifetime 31536000
    ```
 
