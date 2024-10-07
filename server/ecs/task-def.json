@@ -34,7 +34,7 @@
   ],
   "family": "autotask-defs",
   "taskRoleArn": "arn:aws:iam::123340007534:role/AA-ECS-Task-Role",
-  "executionRoleArn": "arn:aws:iam::123340007534:role/ECS-Task-Execution-Role",
+  "executionRoleArn": "arn:aws:iam::123340007534:role/AA_ECS_Task_Execution_Role",
   "networkMode": "awsvpc",
   "volumes": [],
   "placementConstraints": [],
