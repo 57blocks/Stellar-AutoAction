@@ -49,7 +49,7 @@ Example:
 	- Register a lambda with an at expression:
 	  $ auto-action lambda register ./handler.zip -a 'at(2022-12-31T23:59:59)' -p '{"key": "value"}'
 	- Register a lambda with a rate expression:
-	  $ auto-action lambda register ./handler.zip -r 'rate(minutes)' -p '{"key": "value"}'
+	  $ auto-action lambda register ./handler.zip -r 'rate(1 minutes)' -p '{"key": "value"}'
 	- Register a lambda with a cron expression:
 	  $ auto-action lambda register ./handler.zip -c 'cron(0 12 * * ? *)' -p '{"key": "value"}'
 `,
