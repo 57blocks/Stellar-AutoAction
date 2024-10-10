@@ -66,7 +66,7 @@ The `autoaction` CLI includes the following main command groups:
 
 1. **auth** - User authentication related operations
 2. **wallet** - Wallet address management
-3. **lambda** - Lambda function management
+3. **action** - Action management
 4. **general** - General CLI settings
 
 Use `autoaction help` to view all available commands.

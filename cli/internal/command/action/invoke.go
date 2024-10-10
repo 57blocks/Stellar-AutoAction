@@ -1,4 +1,4 @@
-package lambda
+package action
 
 import (
 	"encoding/json"
@@ -17,14 +17,14 @@ import (
 // invoke represents the invoke command
 var invoke = &cobra.Command{
 	Use:   "invoke <name/arn> [flags]",
-	Short: "Invoke a specific lambda function with its required payload",
+	Short: "Invoke a specific action with its required payload",
 	Long: `
 Description:
-  Invoke a specific lambda function by its name/ARN, which is inputted
-  as an argument. Then the lambda will be executed instantly.
+  Invoke a specific action by its name/ARN, which is inputted
+  as an argument. Then the action will be executed instantly.
 
 Note:
-  - If the Lambda does not depend on the input in the EVENT, the 
+  - If the Action does not depend on the input in the EVENT, the 
     payload is not required.
   - If so, the payload should be a well-formed JSON string, which is
     suitable/executable/valid in your handler event to use.
@@ -35,7 +35,7 @@ Note:
 }
 
 func init() {
-	lambdaGroup.AddCommand(invoke)
+	actionGroup.AddCommand(invoke)
 
 	flagPayload := constant.FlagPayload.ValStr()
 	invoke.Flags().StringP(
@@ -79,7 +79,7 @@ func invokeFunc(_ *cobra.Command, args []string) error {
 		return errorx.Internal(err.Error())
 	}
 
-	logx.Logger.Info("invoke lambda success", "result", respData)
+	logx.Logger.Info("invoke action success", "result", respData)
 
 	return nil
 }

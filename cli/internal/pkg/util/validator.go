@@ -10,14 +10,14 @@ import (
 
 func ValidateZipFiles(paths []string) error {
 	for _, path := range paths {
-		if err := CheckJsLambdaZipFile(path); err != nil {
+		if err := CheckJsActionZipFile(path); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func CheckJsLambdaZipFile(path string) error {
+func CheckJsActionZipFile(path string) error {
 	zipFile, err := os.Open(path)
 	// check if the file exists
 	if err != nil {

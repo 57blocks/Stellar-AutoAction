@@ -1,4 +1,4 @@
-package lambda
+package action
 
 import (
 	"encoding/json"
@@ -17,14 +17,14 @@ import (
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List all handlers registered in Lambda",
+	Short: "List all actions registered in AutoAction",
 	Long: `
 Description:
-  List all handlers registered in Lambda with their details as much 
+  List all actions registered in AutoAction with their details as much 
   as possible.
 
 Note:
-  Using -f/--full flag to list with more details of Lambda itself,
+  Using -f/--full flag to list with more details of Action itself,
   together with their schedulers info.
 `,
 	Args: cobra.NoArgs,
@@ -32,7 +32,7 @@ Note:
 }
 
 func init() {
-	lambdaGroup.AddCommand(listCmd)
+	actionGroup.AddCommand(listCmd)
 
 	fFull := constant.FlagFull.ValStr()
 	listCmd.Flags().BoolP(
@@ -40,7 +40,7 @@ func init() {
 		"f",
 		config.Vp.GetBool(fFull),
 		`
-List all handlers with their details as much as possible.
+List all actions with their details as much as possible.
 `)
 }
 
@@ -77,7 +77,7 @@ func listFunc(cmd *cobra.Command, _ []string) error {
 		return errorx.Internal(err.Error())
 	}
 
-	logx.Logger.Info("lambdas", "results", respData)
+	logx.Logger.Info("actions", "results", respData)
 
 	return nil
 }

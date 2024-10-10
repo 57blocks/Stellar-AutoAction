@@ -1,8 +1,9 @@
-package lambda
+package action
 
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
@@ -13,41 +14,43 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// info represents the info command
-var info = &cobra.Command{
-	Use:   "info <name/arn>",
-	Short: "Lambda essential information",
+// removeCmd represents the action remove command
+var removeCmd = &cobra.Command{
+	Use:   "remove <name/arn>",
+	Short: "Remove a specific action by its name/ARN",
 	Long: `
 Description:
-  Query the essential information of a specific Lambda, by name/arn.
-  Which includes the VPC and Event Bridge Schedulers bound with.
+	Remove a specific action by its name/ARN, together with
+its trigger if it has one.
 
-Note:
-  - The results contains the essential info about VPC and Schedulers.
+Note: 
+  - The execution logs are still on the CloudWatch Logs.
+  - Each of the Action bound with one Scheduler to get triggered, so 
+    the remove response should contains the info of them both.
 `,
 	Args: cobra.ExactArgs(1),
-	RunE: infoFunc,
+	RunE: removeFunc,
 }
 
 func init() {
-	lambdaGroup.AddCommand(info)
+	actionGroup.AddCommand(removeCmd)
 }
 
-func infoFunc(_ *cobra.Command, args []string) error {
+func removeFunc(cmd *cobra.Command, args []string) error {
 	token, err := config.Token()
 	if err != nil {
 		return err
 	}
 
-	URL := util.ParseReqPath(fmt.Sprintf("%s/lambda/%s", config.Vp.GetString("bound_with.endpoint"), args[0]))
+	URL := util.ParseReqPath(fmt.Sprintf("%s/lambda/%s", config.Vp.GetString("bound_with.endpoint"), url.PathEscape(args[0])))
 
 	response, err := restyx.Client.R().
 		EnableTrace().
 		SetHeaders(map[string]string{
-			"Content-Type":  "multipart/form-data",
+			"Content-Type":  "application/json",
 			"Authorization": token,
 		}).
-		Get(URL)
+		Delete(URL)
 	if err != nil {
 		return errorx.RestyError(err.Error())
 	}
@@ -61,7 +64,7 @@ func infoFunc(_ *cobra.Command, args []string) error {
 		return errorx.Internal(err.Error())
 	}
 
-	logx.Logger.Info("lambda info", "result", respData)
+	logx.Logger.Info("removed successfully", "removed", respData)
 
 	return nil
 }

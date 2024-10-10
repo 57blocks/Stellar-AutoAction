@@ -1,4 +1,4 @@
-package lambda
+package action
 
 import (
 	"fmt"
@@ -21,10 +21,10 @@ import (
 // logs represents the `log` command
 var logs = &cobra.Command{
 	Use:   "log <name/arn>",
-	Short: "Tracking execution logs of the lambda function",
+	Short: "Tracking execution logs of the action",
 	Long: `
 Description:
-  Tracking execution logs of a specific Lambda, by name/arn.
+  Tracking execution logs of a specific Action, by name/arn.
   Which with a 5 seconds interval to fetch the latest events.
 
 TODO:
@@ -36,7 +36,7 @@ TODO:
 }
 
 func init() {
-	lambdaGroup.AddCommand(logs)
+	actionGroup.AddCommand(logs)
 }
 
 func logFunc(_ *cobra.Command, args []string) error {
@@ -81,7 +81,7 @@ func logFunc(_ *cobra.Command, args []string) error {
 				return
 			}
 
-			logx.Logger.Info("CloudWatch Event", "detail", fmt.Sprintf("%s", message))
+			logx.Logger.Info("CloudWatch Event", "detail", string(message))
 		}
 	}()
 
