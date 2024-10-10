@@ -1,4 +1,4 @@
-package oauth
+package auth
 
 import (
 	"encoding/json"
@@ -32,7 +32,7 @@ Note:
 }
 
 func init() {
-	oauthGroup.AddCommand(refreshCmd)
+	authGroup.AddCommand(refreshCmd)
 }
 
 type ReqRefresh struct {

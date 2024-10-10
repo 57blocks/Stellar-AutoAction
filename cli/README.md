@@ -64,7 +64,7 @@ There are two configuration items that need manual setup:
 
 The `autoaction` CLI includes the following main command groups:
 
-1. **oauth** - User authentication related operations
+1. **auth** - User authentication related operations
 2. **wallet** - Wallet address management
 3. **lambda** - Lambda function management
 4. **general** - General CLI settings

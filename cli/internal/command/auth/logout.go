@@ -1,4 +1,4 @@
-package oauth
+package auth
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ Note:
 }
 
 func init() {
-	oauthGroup.AddCommand(logout)
+	authGroup.AddCommand(logout)
 }
 
 type ReqLogout struct {

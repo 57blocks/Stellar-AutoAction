@@ -1,4 +1,4 @@
-package oauth
+package auth
 
 import (
 	"encoding/json"
@@ -36,7 +36,7 @@ Note:
 }
 
 func init() {
-	oauthGroup.AddCommand(login)
+	authGroup.AddCommand(login)
 
 	flagCred := constant.FlagCredential.ValStr()
 	login.Flags().StringP(
