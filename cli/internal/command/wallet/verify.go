@@ -54,11 +54,13 @@ func verifyFunc(_ *cobra.Command, args []string) error {
 	if err := json.Unmarshal(resp.Body(), &wallet); err != nil {
 		return errorx.Internal(fmt.Sprintf("unmarshaling json response error: %s", err.Error()))
 	}
-	isValid := "INVALID"
-	if wallet["is_valid"] == true {
-		isValid = "VALID"
+	message := fmt.Sprintf("The wallet address %s is VALID", walletAddress)
+	if !wallet["is_valid"].(bool) {
+		message = fmt.Sprintf(`The wallet address %s is INVALID. 
+It might be because the wallet needs at least 1 XML to activate, 
+or the Stellar has cleared the address(Testnet only).`, walletAddress)
 	}
-	logx.Logger.Info(fmt.Sprintf("The wallet adderss %s is %s", walletAddress, isValid))
+	logx.Logger.Info(message)
 
 	return nil
 }
