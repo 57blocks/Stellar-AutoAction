@@ -43,18 +43,8 @@ func init() {
 		flagCred,
 		"c",
 		config.Vp.GetString(flagCred),
-		`
-The credential file for the command about to be bound.
+		`The credential file for the command about to be bound.
 If it's the first time, or ignored, the default path will be used.`)
-
-	flagEnv := constant.FlagEnvironment.ValStr()
-	login.Flags().StringP(
-		flagEnv,
-		"e",
-		config.Vp.GetString(flagEnv),
-		`
-The execution environment about to be bound.
-If ignored, the default environment: Horizon-Testnet will be used.`)
 
 	flagAcc := constant.FlagAccount.ValStr()
 	login.Flags().StringP(
@@ -81,7 +71,6 @@ type ReqLogin struct {
 	Account      string `json:"account"`
 	Organization string `json:"organization"`
 	Password     string `json:"password"`
-	Environment  string `json:"environment"`
 }
 
 func loginFunc(cmd *cobra.Command, args []string) error {
@@ -124,7 +113,6 @@ func supplierLogin(pwdHash string) (*resty.Response, error) {
 			Account:      config.Vp.GetString(constant.FlagAccount.ValStr()),
 			Organization: config.Vp.GetString(constant.FlagOrganization.ValStr()),
 			Password:     pwdHash,
-			Environment:  config.Vp.GetString(constant.FlagEnvironment.ValStr()),
 		}).
 		Post(URL)
 	if err != nil {

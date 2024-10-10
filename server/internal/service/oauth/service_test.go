@@ -137,7 +137,6 @@ func TestRefreshSuccess(t *testing.T) {
 	assert.Equal(t, &dto.RespCredential{
 		Account:      jwtClaimSubject,
 		Organization: jwtClaimIssuer,
-		Environment:  "Horizon-Testnet",
 		TokenPair: jwtx.TokenPair{
 			Access:  newAccessToken,
 			Refresh: raw,
@@ -325,14 +324,12 @@ func TestLoginSuccess(t *testing.T) {
 	accessID := "1"
 	accountName := "account_name"
 	orgName := "org_name"
-	environment := "Horizon-Testnet"
 	accessToken := "access_token"
 
 	request := dto.ReqLogin{
 		Organization: orgName,
 		Account:      accountName,
 		Password:     "password",
-		Environment:  environment,
 	}
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
@@ -381,7 +378,6 @@ func TestLoginSuccess(t *testing.T) {
 	assert.Equal(t, &dto.RespCredential{
 		Account:      accountName,
 		Organization: orgName,
-		Environment:  environment,
 		TokenPair: jwtx.TokenPair{
 			Access:  accessToken,
 			Refresh: accessToken,
@@ -498,13 +494,11 @@ func TestLoginAssignJWTError(t *testing.T) {
 	accessID := "1"
 	accountName := "account_name"
 	orgName := "org_name"
-	environment := "Horizon-Testnet"
 
 	request := dto.ReqLogin{
 		Organization: orgName,
 		Account:      accountName,
 		Password:     "password",
-		Environment:  environment,
 	}
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).
@@ -555,14 +549,12 @@ func TestLoginSyncTokenError(t *testing.T) {
 	accessID := "1"
 	accountName := "account_name"
 	orgName := "org_name"
-	environment := "Horizon-Testnet"
 	accessToken := "access_token"
 
 	request := dto.ReqLogin{
 		Organization: orgName,
 		Account:      accountName,
 		Password:     "password",
-		Environment:  environment,
 	}
 
 	mockOAuthRepo.EXPECT().FindUserByOrgAcn(ctx, gomock.Any()).Times(1).

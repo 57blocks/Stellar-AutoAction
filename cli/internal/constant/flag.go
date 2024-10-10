@@ -18,7 +18,6 @@ const (
 // Flags for the login command
 const (
 	FlagAccount      FlagName = "account"
-	FlagEnvironment  FlagName = "environment"
 	FlagOrganization FlagName = "organization"
 )
 

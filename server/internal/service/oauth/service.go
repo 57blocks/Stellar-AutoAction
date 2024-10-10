@@ -196,7 +196,6 @@ func (svc *service) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredent
 	resp := dto.BuildRespCred(
 		dto.WithAccount(req.Account),
 		dto.WithOrganization(req.Organization),
-		dto.WithEnvironment(req.Environment),
 		dto.WithTokenPair(jwtx.TokenPair{
 			Access:  access,
 			Refresh: refresh,
@@ -254,7 +253,6 @@ func (svc *service) Refresh(c context.Context, raw string) (*dto.RespCredential,
 	resp := dto.BuildRespCred(
 		dto.WithAccount(aaClaims.StdJWTClaims.Subject),
 		dto.WithOrganization(aaClaims.StdJWTClaims.Issuer),
-		dto.WithEnvironment(config.GlobalConfig.Name),
 		dto.WithTokenPair(jwtx.TokenPair{
 			Access:  access,
 			Refresh: raw,
