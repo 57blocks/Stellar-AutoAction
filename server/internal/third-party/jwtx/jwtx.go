@@ -60,7 +60,7 @@ func (aac *AAClaims) Valid() error {
 	}
 
 	// TODO: confirm with that using Name or EndPoint when the terraform is ready
-	if aac.StdJWTClaims.Audience != config.GlobalConfig.EndPoint {
+	if aac.StdJWTClaims.Audience != config.GlobalConfig.Bound.EndPoint {
 		return errorx.UnauthorizedWithMsg("invalid audience")
 	}
 
@@ -80,7 +80,7 @@ func (rs *rs256) Assign(claim jwt.Claims) (string, error) {
 		return "", errorx.Internal("parse private key failed")
 	}
 
-	token := jwt.NewWithClaims(jwt.GetSigningMethod(config.GlobalConfig.Protocol), claim)
+	token := jwt.NewWithClaims(jwt.GetSigningMethod(config.GlobalConfig.JWT.Protocol), claim)
 
 	signed, err := token.SignedString(privateKey)
 	if err != nil {

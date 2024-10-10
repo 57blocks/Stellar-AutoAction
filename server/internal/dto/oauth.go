@@ -39,6 +39,7 @@ type (
 		_              struct{}
 		Account        string `json:"account" toml:"account"`
 		Organization   string `json:"organization" toml:"organization"`
+		Network        string `json:"network" toml:"network"`
 		jwtx.TokenPair `json:"tokens" toml:"tokens"`
 	}
 	RespCredOpt func(cred *RespCredential)
@@ -64,6 +65,12 @@ func WithAccount(account string) RespCredOpt {
 func WithOrganization(organization string) RespCredOpt {
 	return func(resp *RespCredential) {
 		resp.Organization = organization
+	}
+}
+
+func WithNetwork(network string) RespCredOpt {
+	return func(resp *RespCredential) {
+		resp.Network = network
 	}
 }
 

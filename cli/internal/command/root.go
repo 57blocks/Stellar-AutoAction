@@ -21,8 +21,6 @@ quickly, together with tracking the execution logs.
 Also, it provides a way to create wallet through the CubeSigner and sign
 the transactions.
 `,
-		Args:          cobra.OnlyValidArgs,
-		ValidArgs:     []string{"configure", "login", "logout"}, // TODO: upgrade in-needed
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		CompletionOptions: cobra.CompletionOptions{

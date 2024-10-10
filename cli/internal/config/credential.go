@@ -14,6 +14,7 @@ type (
 		_            struct{}
 		Account      string `toml:"account" json:"account"`
 		Organization string `toml:"organization" json:"organization"`
+		Network      string `toml:"network" json:"network"`
 		*Tokens      `toml:"tokens" json:"tokens"`
 	}
 	CredOpt func(cred *Credential)
@@ -45,6 +46,12 @@ func WithAccount(account string) CredOpt {
 func WithOrganization(organization string) CredOpt {
 	return func(cred *Credential) {
 		cred.Organization = organization
+	}
+}
+
+func WithNetwork(network string) CredOpt {
+	return func(cred *Credential) {
+		cred.Network = network
 	}
 }
 

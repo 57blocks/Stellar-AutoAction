@@ -149,7 +149,7 @@ func (svc *service) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredent
 
 	access, err := svc.jwtx.Assign(&jwtx.AAClaims{
 		StdJWTClaims: jwt.StandardClaims{
-			Audience:  config.GlobalConfig.EndPoint,
+			Audience:  config.GlobalConfig.Bound.EndPoint,
 			ExpiresAt: accessExp.Unix(),
 			Id:        accessID,
 			IssuedAt:  now.Unix(),
@@ -164,7 +164,7 @@ func (svc *service) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredent
 
 	refresh, err := svc.jwtx.Assign(&jwtx.AAClaims{
 		StdJWTClaims: jwt.StandardClaims{
-			Audience:  config.GlobalConfig.EndPoint,
+			Audience:  config.GlobalConfig.Bound.EndPoint,
 			ExpiresAt: refreshExp.Unix(),
 			Id:        refreshID,
 			IssuedAt:  now.Unix(),
@@ -196,6 +196,7 @@ func (svc *service) Login(c context.Context, req dto.ReqLogin) (*dto.RespCredent
 	resp := dto.BuildRespCred(
 		dto.WithAccount(req.Account),
 		dto.WithOrganization(req.Organization),
+		dto.WithNetwork(config.GlobalConfig.Bound.Name),
 		dto.WithTokenPair(jwtx.TokenPair{
 			Access:  access,
 			Refresh: refresh,
@@ -227,7 +228,7 @@ func (svc *service) Refresh(c context.Context, raw string) (*dto.RespCredential,
 
 	access, err := svc.jwtx.Assign(&jwtx.AAClaims{
 		StdJWTClaims: jwt.StandardClaims{
-			Audience:  config.GlobalConfig.EndPoint,
+			Audience:  config.GlobalConfig.Bound.EndPoint,
 			ExpiresAt: accessExp.Unix(),
 			Id:        accessID,
 			IssuedAt:  now.Unix(),
@@ -253,6 +254,7 @@ func (svc *service) Refresh(c context.Context, raw string) (*dto.RespCredential,
 	resp := dto.BuildRespCred(
 		dto.WithAccount(aaClaims.StdJWTClaims.Subject),
 		dto.WithOrganization(aaClaims.StdJWTClaims.Issuer),
+		dto.WithNetwork(config.GlobalConfig.Bound.Name),
 		dto.WithTokenPair(jwtx.TokenPair{
 			Access:  access,
 			Refresh: raw,

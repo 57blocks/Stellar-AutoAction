@@ -153,13 +153,17 @@ func SyncConfigByFlags() error {
 	return WriteConfig(cfg)
 }
 
-func ResetConfigCredential() error {
+func ResetConfigCredential(credPath ...string) error {
 	cfg, err := ReadConfig()
 	if err != nil {
 		return errorx.Internal(fmt.Sprintf("read config error: %s", err.Error()))
 	}
 
-	cfg.Credential = ""
+	if len(credPath) > 0 {
+		cfg.Credential = credPath[0]
+	} else {
+		cfg.Credential = ""
+	}
 
 	return WriteConfig(cfg)
 }

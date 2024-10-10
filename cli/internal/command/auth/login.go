@@ -140,5 +140,9 @@ func syncLogin(resp *resty.Response) error {
 		return err
 	}
 
+	if err := config.ResetConfigCredential(credPath); err != nil {
+		return err
+	}
+
 	return config.SyncConfigByFlags()
 }
