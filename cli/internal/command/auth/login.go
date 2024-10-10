@@ -85,7 +85,7 @@ type ReqLogin struct {
 }
 
 func loginFunc(cmd *cobra.Command, args []string) error {
-	fmt.Println("Input password: ")
+	fmt.Println("Password: ")
 
 	pwdBytes, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
@@ -93,7 +93,7 @@ func loginFunc(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(pwdBytes) == 0 {
-		return errorx.BadRequest("empty password error")
+		return errorx.BadRequest("empty cryptPwd error")
 	}
 
 	key, err := util.LoadPublicKey(config.Vp.GetString("general.public_key"))

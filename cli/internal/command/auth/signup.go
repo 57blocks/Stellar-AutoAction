@@ -70,7 +70,7 @@ type ReqSignup struct {
 }
 
 func signupFunc(cmd *cobra.Command, args []string) error {
-	fmt.Println("Input password: ")
+	fmt.Println("Password: ")
 
 	pwdBytes, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
