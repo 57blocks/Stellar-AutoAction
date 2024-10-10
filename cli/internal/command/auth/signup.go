@@ -17,16 +17,32 @@ import (
 
 var signup = &cobra.Command{
 	Use:   "signup",
-	Short: "Signup to the Stellar auto-action.",
+	Short: "Create a new account for Stellar AutoAction",
 	Long: `
 Description:
-  To signup for the Stellar Auto-Action system, 
-  you need to provide the organization name, username, and password during signup. 
-  After successful signup, you can log in using the login command.
+  The signup command allows you to create a new account for the Stellar AutoAction system.
+  You will need to provide your organization name, desired username, and a password.
 
-Note:
-  - An error will occur if the organization name does not exist.
-  - Duplicate usernames are not allowed within the same organization.
+Required Information:
+  - Organization name
+  - Username
+  - Password
+
+Process:
+  1. Enter the required information when prompted.
+  2. The system will validate your input and create your account.
+  3. Upon successful signup, you can use the 'login' command to authenticate.
+
+Notes:
+  - The organization name must already exist in the system. An error will occur if it doesn't.
+  - Usernames must be unique within an organization. Duplicate usernames are not allowed.
+  - Ensure your password meets the system's security requirements.
+
+Examples:
+  autoaction auth signup -o "MyOrg" -a "john.doe" -d "Developer account"
+
+Related Commands:
+  autoaction auth login - Authenticate with your new account after signup
 `,
 	Args: cobra.NoArgs,
 	RunE: signupFunc,
@@ -40,19 +56,24 @@ func init() {
 		flagAcc,
 		"a",
 		"",
-		"name of the account")
+		`Username for the new account.
+Must be unique within the organization.
+Required for signup.`)
 
 	flagOrg := constant.FlagOrganization.ValStr()
 	signup.Flags().StringP(flagOrg,
 		"o",
 		"",
-		"name of the organization")
+		`Name of the organization to join.
+Must be an existing organization in the system.
+Required for signup.`)
 
 	flagDesc := constant.FlagDescription.ValStr()
 	signup.Flags().StringP(flagDesc,
 		"d",
 		"",
-		"description of the user")
+		`Optional description for the user account.
+Can be used to provide additional information about the user or their role.`)
 
 	if err := signup.MarkFlagRequired(flagAcc); err != nil {
 		return

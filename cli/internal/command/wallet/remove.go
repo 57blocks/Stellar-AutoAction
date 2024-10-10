@@ -14,17 +14,36 @@ import (
 
 var remove = &cobra.Command{
 	Use:   "remove [wallet-address]",
-	Short: "Delete a wallet",
+	Short: "Delete a Stellar wallet from your account",
 	Long: `
-Description:	
-  Delete a Stellar wallet address under a user.
-  After the wallet address is deleted,
-  it will no longer be able to sign third-party transactions,
-  but the wallet address will still exist on the Stellar blockchain.
+Description:
+  The remove command allows you to delete a specific Stellar wallet address associated with your user account.
+  This action removes the wallet from the AutoAction system, but does not affect the wallet's existence on the
+  Stellar blockchain.
 
-Note:
-  - If the wallet address does not exist, the delete command will return an error.
-  - You can only delete wallet addresses under your own user account.
+Arguments:
+  [wallet-address]    The Stellar public key of the wallet you wish to remove
+
+Effects of Removal:
+  1. The wallet will be disassociated from your AutoAction account.
+  2. The wallet will no longer be able to sign third-party transactions through AutoAction.
+  3. The wallet and its funds will continue to exist on the Stellar blockchain.
+
+Important Notes:
+  - You can only remove wallet addresses associated with your own AutoAction account.
+  - If the specified wallet address does not exist in your account, the command will return an error.
+  - This action cannot be undone. Make sure you want to remove the wallet before proceeding.
+
+Example:
+  autoaction wallet remove GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+Caution:
+  Removing a wallet from AutoAction does not delete it from the Stellar network. Ensure you have
+  access to the wallet's secret key if you intend to use it outside of AutoAction in the future.
+
+Related Commands:
+  autoaction wallet list - View all wallets in your account
+  autoaction wallet create - Add a new wallet to your account
 `,
 	Args: cobra.ExactArgs(1),
 	RunE: removeFunc,

@@ -20,12 +20,25 @@ var listCmd = &cobra.Command{
 	Short: "List all actions registered in AutoAction",
 	Long: `
 Description:
-  List all actions registered in AutoAction with their details as much 
-  as possible.
+  The list command displays all actions currently registered in AutoAction.
+  It provides an overview of each action's basic details.
+
+Examples:
+  autoaction action list
+  autoaction action list -f
+
+Output:
+  By default, the command output includes the function name, ARN, and creation date.
+
+When using the --full flag, additional details are displayed:
+  - Action configuration (e.g., handler, runtime, role)
+  - Code information (SHA256, revision)
+  - Scheduler details (if applicable)
+  - Timestamps and version
 
 Note:
-  Using -f/--full flag to list with more details of Action itself,
-  together with their schedulers info.
+  Use the -f or --full flag to retrieve more comprehensive information about
+  each action, including detailed configurations and associated schedulers.
 `,
 	Args: cobra.NoArgs,
 	RunE: listFunc,
@@ -39,14 +52,18 @@ func init() {
 		fFull,
 		"f",
 		config.Vp.GetBool(fFull),
-		`
-List all actions with their details as much as possible.
-`)
+		`Display comprehensive details for all actions.
+When enabled, this flag provides:
+- Detailed action configurations
+- Associated scheduler information
+- Code details and timestamps
+Use this for a more in-depth view of your actions.`)
 }
 
 func listFunc(cmd *cobra.Command, _ []string) error {
 	token, err := config.Token()
 	if err != nil {
+		logx.Logger.Error("PS: Should login first.")
 		return err
 	}
 

@@ -13,13 +13,27 @@ import (
 var (
 	Root = &cobra.Command{
 		Use:   "autoaction",
-		Short: "The CLI toll for auto-action: autoaction",
+		Short: "CLI tool for managing and executing actions on AutoAction",
 		Long: `
-A CLI tool: autoaction, which helps users to run their handler on AutoAction 
-quickly, together with tracking the execution logs.
+AutoAction: A Comprehensive CLI Tool for Action Management and Execution
 
-Also, it provides a way to create wallet through the CubeSigner and sign
-the transactions.
+Description:
+  AutoAction is a powerful command-line interface (CLI) tool designed to streamline 
+  the process of managing and executing actions within the AutoAction ecosystem. 
+  It offers a range of functionalities to enhance your workflow and productivity.
+
+Key Features:
+  1. Action Execution: Quickly run your handlers on AutoAction.
+  2. Log Tracking: Monitor and track execution logs for your actions.
+  3. Wallet Management: Create and manage wallets using CubeSigner integration.
+  4. Transaction Signing: Securely sign transactions for blockchain operations.
+
+For more information about a specific command, use:
+  autoaction [command] --help
+
+Note:
+  Ensure you have the necessary permissions and are authenticated 
+  before performing sensitive operations.
 `,
 		SilenceUsage:  true,
 		SilenceErrors: true,

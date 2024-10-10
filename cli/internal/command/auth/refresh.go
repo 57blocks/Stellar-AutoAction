@@ -17,15 +17,28 @@ import (
 // refreshCmd represents the refresh command
 var refreshCmd = &cobra.Command{
 	Use:   "refresh",
-	Short: "Refresh expired access token.",
+	Short: "Renew the expired access token",
 	Long: `
 Description:
-  Using the refresh token which stores in the credential file to refresh.
+  The refresh command renews an expired access token using the refresh token 
+  stored in the credential file.
 
-Note:
-  - Refresh do not update the refresh token, so the expiration of it
-    is still the same.
-  - When the refresh token is expired, you need to login again.
+Behavior:
+  - This command uses the stored refresh token to obtain a new access token.
+  - The refresh token itself is not updated or changed during this process.
+
+Notes:
+  - The expiration time of the refresh token remains unchanged after this operation.
+  - If the refresh token has expired, you will need to perform a full login again 
+    using the 'autoaction auth login' command.
+  - Regular use of this command can help maintain continuous access without 
+    frequent full logins.
+
+Example:
+  autoaction auth refresh
+
+Related Commands:
+  autoaction auth login - Perform a full login when the refresh token expires
 `,
 	Args: cobra.NoArgs,
 	RunE: refreshFunc,
@@ -45,30 +58,7 @@ func refreshFunc(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if cfg.Credential == "" {
-		logx.Logger.Info("you've already logged out", "status", "out")
-
-		return nil
-	}
-
-	// credential does not exist
-	if !util.IsExists(cfg.Credential) {
-		logx.Logger.Info(
-			"credential not found, reset config directly.",
-			"config",
-			config.Vp.ConfigFileUsed(),
-		)
-
-		return config.ResetConfigCredential()
-	}
-
-	// refresh
-	credential, err := config.ReadCredential(cfg.Credential)
-	if err != nil {
-		return err
-	}
-
-	response, err := supplierRefresh(credential.Refresh)
+	response, err := supplierRefresh()
 	if err != nil {
 		return err
 	}
@@ -76,7 +66,13 @@ func refreshFunc(_ *cobra.Command, _ []string) error {
 	return syncRefresh(cfg, response)
 }
 
-func supplierRefresh(refresh string) (*resty.Response, error) {
+func supplierRefresh() (*resty.Response, error) {
+	refresh, err := config.RefreshToken()
+	if err != nil {
+		logx.Logger.Error("PS: Should login first.")
+		return nil, err
+	}
+
 	URL := util.ParseReqPath(fmt.Sprintf("%s/oauth/refresh", config.Vp.GetString("bound_with.endpoint")))
 
 	response, err := restyx.Client.R().

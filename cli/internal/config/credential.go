@@ -113,3 +113,14 @@ func Token() (string, error) {
 
 	return credential.Access, nil
 }
+
+func RefreshToken() (string, error) {
+	cfg, _ := ReadConfig()
+
+	credential, err := ReadCredential(cfg.Credential)
+	if err != nil {
+		return "", err
+	}
+
+	return credential.Refresh, nil
+}

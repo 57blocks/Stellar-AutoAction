@@ -12,17 +12,31 @@ import (
 // status represents the status command
 var status = &cobra.Command{
 	Use:   "status",
-	Short: "Display the login status of auto-action.",
+	Short: "Show the current authentication status",
 	Long: `
 Description:
-  Display the current login status of auto-action.
+  The status command displays the current authentication status for AutoAction.
+  It provides a quick overview of your login state and associated details.
 
-This command will show the following information:
-  - Currently logged-in account
-  - Associated organization
-  - Stellar Network in use
+Output Information:
+  - Currently authenticated account username
+  - Associated organization name
+  - Active Stellar Network
 
-If you are not logged in, this command will prompt you to log in first.
+Behavior:
+  - If you are logged in, the command will display the above information.
+  - If you are not logged in, you will be prompted to authenticate first.
+
+Example output:
+  Account: johndoe, Organization: MyCompany, Network: Stellar Testnet
+
+Related Commands:
+  autoaction auth login  - Authenticate if not already logged in
+  autoaction auth logout - End the current session
+
+Note:
+  This command is useful for verifying your current authentication state
+  and ensuring you're operating in the correct context (account, organization, and network).
 `,
 	Args: cobra.NoArgs,
 	RunE: statusFunc,

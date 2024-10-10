@@ -16,17 +16,32 @@ import (
 
 var create = &cobra.Command{
 	Use:   "create",
-	Short: "Create a wallet",
+	Short: "Generate a new Stellar wallet address",
 	Long: `
-Description:	
-  Create a new Stellar wallet address that can be used on
-  both the mainnet and testnet of Stellar.
-  However, before using the wallet,
-  at least 1 XML must be transferred to this wallet address.
+Description:
+  The create command generates a new Stellar wallet address that is compatible
+  with both the Stellar mainnet and testnet. This wallet can be used for various
+  Stellar network operations once activated.
 
-Note:
-  - There is a limit to the number of wallet addresses that can be created. Currently, each user can only create 10 wallet addresses.
-  - After creating the wallet address, you need to transfer at least 1 XML to this wallet address for it to function properly.
+Wallet Activation:
+  To activate and use the newly created wallet, you must transfer at least 1 XLM
+  (Stellar Lumens) to the generated address.
+
+Important Notes:
+  1. Wallet Limit: Each user is currently restricted to creating a maximum of 10 wallet addresses.
+  2. Activation Requirement: The wallet will not be functional until it receives a minimum transfer of 1 XLM.
+  3. Network Compatibility: The created address works on both Stellar mainnet and testnet.
+
+Output:
+  Upon successful creation, the command will display the new wallet address.
+
+Example:
+  autoaction wallet create
+
+Next Steps:
+  1. Securely store the generated wallet address.
+  2. Transfer at least 1 XLM to the new address to activate it.
+  3. Once activated, the wallet is ready for use on the Stellar network.
 `,
 	RunE: createFunc,
 }

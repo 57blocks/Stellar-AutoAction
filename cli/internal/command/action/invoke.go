@@ -17,18 +17,26 @@ import (
 // invoke represents the invoke command
 var invoke = &cobra.Command{
 	Use:   "invoke <name/arn> [flags]",
-	Short: "Invoke a specific action with its required payload",
+	Short: "Execute a specific action with an optional payload",
 	Long: `
 Description:
-  Invoke a specific action by its name/ARN, which is inputted
-  as an argument. Then the action will be executed instantly.
+  The invoke command allows you to execute a specific action immediately by providing
+  its name or ARN (Amazon Resource Name). This command is useful for testing actions
+  or triggering them manually.
 
-Note:
-  - If the Action does not depend on the input in the EVENT, the 
-    payload is not required.
-  - If so, the payload should be a well-formed JSON string, which is
-    suitable/executable/valid in your handler event to use.
-    For example: -p '{"key": "value"}'
+Arguments:
+  <name/arn>    The name or ARN of the action to invoke
+
+Examples:
+  autoaction action invoke my-action
+  autoaction action invoke arn:aws:lambda:us-west-2:123456789012:function:my-action
+  autoaction action invoke my-action -p '{"key": "value"}'
+
+Notes:
+  - If the action does not require input data, the payload flag can be omitted.
+  - When provided, the payload must be a valid JSON string that matches the
+    expected input format of your action's handler.
+  - Ensure you have the necessary permissions to invoke the action.
 `,
 	Args: cobra.ExactArgs(1),
 	RunE: invokeFunc,
@@ -42,15 +50,16 @@ func init() {
 		flagPayload,
 		"p",
 		config.Vp.GetString(flagPayload),
-		`
-A well-formed JSON string. And should be suitable/executable/valid in
-your handler to use. Example: '{"key": "value"}'
+		`A well-formed JSON string representing the payload for the action. 
+This payload should be compatible with your action's handler. 
+Example: '{"key": "value"}'
 `)
 }
 
 func invokeFunc(_ *cobra.Command, args []string) error {
 	token, err := config.Token()
 	if err != nil {
+		logx.Logger.Error("PS: Should login first.")
 		return err
 	}
 

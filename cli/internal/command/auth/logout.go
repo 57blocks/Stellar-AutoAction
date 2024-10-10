@@ -16,15 +16,27 @@ import (
 // logout represents the logout command
 var logout = &cobra.Command{
 	Use:   "logout",
-	Short: "Logout the current session",
+	Short: "End the current authenticated session",
 	Long: `
 Description:
-  Logout the current session by the path of credential in the config.
+  The logout command terminates the current authenticated session using the credential 
+  path specified in the configuration file.
 
-Note:
-  - For other credentials, they are still alive. It's recommended that
-    switching session by using **configure** command to set other 
-    credentials.
+Behavior:
+  - This command will invalidate the current session token.
+  - The credential file associated with the current session will be cleared.
+
+Notes:
+  - This action only affects the currently active credential.
+  - Other stored credentials remain valid and can be accessed using the 'configure' command.
+  - To switch to a different authenticated session, use the 'configure' command to select 
+    another credential instead of logging out and back in.
+
+Examples:
+  autoaction auth logout
+
+Related Commands:
+  autoaction auth configure - Manage multiple credentials and switch between sessions
 `,
 	Args: cobra.NoArgs,
 	RunE: logoutFunc,
@@ -44,38 +56,16 @@ func logoutFunc(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if cfg.Credential == "" {
-		logx.Logger.Info("you've already logged out", "status", "out")
-
-		return nil
-	}
-
-	// credential does not exist
-	if !util.IsExists(cfg.Credential) {
-		logx.Logger.Info(
-			"credential not found, reset config directly.",
-			"config",
-			config.Vp.ConfigFileUsed(),
-		)
-		return config.ResetConfigCredential()
-	}
-
-	// logout
-	credential, err := config.ReadCredential(cfg.Credential)
-	if err != nil {
-		return err
-	}
-
-	if _, err := supplierLogout(credential.Access); err != nil {
-		logx.Logger.Warn(fmt.Sprintf("reported waring while logging out: %s", err.Error()))
+	if _, err := supplierLogout(); err != nil {
+		return errorx.Internal(fmt.Sprintf("logging out error: %s", err.Error()))
 	}
 
 	if err := config.RemoveCredential(cfg.Credential); err != nil {
-		logx.Logger.Warn(fmt.Sprintf("reported waring while cleaning up: %s", err.Error()))
+		return errorx.Internal(fmt.Sprintf("cleaning up error: %s", err.Error()))
 	}
 
 	if err := config.ResetConfigCredential(); err != nil {
-		return err
+		return errorx.Internal(fmt.Sprintf("resetting config error: %s", err.Error()))
 	}
 
 	logx.Logger.Info("you've logged out")
@@ -83,14 +73,20 @@ func logoutFunc(_ *cobra.Command, _ []string) error {
 	return nil
 }
 
-func supplierLogout(access string) (*resty.Response, error) {
+func supplierLogout() (*resty.Response, error) {
+	token, err := config.Token()
+	if err != nil {
+		logx.Logger.Error("PS: Should login first.")
+		return nil, err
+	}
+
 	URL := util.ParseReqPath(fmt.Sprintf("%s/oauth/logout", config.Vp.GetString("bound_with.endpoint")))
 
 	response, err := restyx.Client.R().
 		EnableTrace().
 		SetHeaders(map[string]string{
 			"Content-Type":  "application/json",
-			"Authorization": access,
+			"Authorization": token,
 		}).
 		Delete(URL)
 	if err != nil {

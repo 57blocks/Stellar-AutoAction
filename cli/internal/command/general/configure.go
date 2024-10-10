@@ -14,24 +14,33 @@ import (
 // configure represents the configure command
 var configure = &cobra.Command{
 	Use:   "configure",
-	Short: "Configure the configuration file",
+	Short: "Modify the AutoAction configuration settings",
 	Long: `
 Description:
-  Configure the configuration file under the default path.
+  The configure command allows you to modify various settings in the AutoAction 
+  configuration file. This file is located at the default path and contains important 
+  parameters that control the behavior of the AutoAction tool.
 
-Note:
-  - When specifying other credentials, please confirm with that the
-    credential is matched with the bound endpoint and not expired.
-  - When specifying the log level, here are the options below:
-    - Debug
-    - Warn
-    - Error
-    - Info
-    If none matched, using **Info** as default.
-  - When specifying the tracking source, here are the options below:
-    - ON
-    - OFF
-    If none matched, using **OFF** as default.
+Configurable Settings:
+  - Credentials: Specify alternative authentication credentials
+  - Log Level: Set the verbosity of logging output
+  - Tracking Source: Enable or disable action tracking
+
+Notes:
+  1. Credentials:
+     - Ensure that any specified credential matches the bound endpoint and is not expired.
+     - Use the full path to the credential file when specifying an alternative.
+
+  2. Log Level:
+     - Available options: Debug, Warn, Error, Info
+     - If an invalid option is provided, the default level "Info" will be used.
+
+  3. Tracking Source:
+     - Available options: ON, OFF
+     - If an invalid option is provided, the default "OFF" will be used.
+
+Examples:
+  autoaction configure --credential /path/to/cred.json --log Debug --source ON
 `,
 	Args: cobra.NoArgs,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -55,28 +64,32 @@ func init() {
 		fCred,
 		"",
 		config.Vp.GetString(fCred),
-		"configure the credential file path")
+		`Path to the credential file for authentication.
+Use this to specify an alternative credential file.`)
 
 	fEndPoint := constant.FlagEndPoint.ValStr()
 	configure.Flags().StringP(
 		fEndPoint,
 		"",
 		config.Vp.GetString(fEndPoint),
-		"configure the endpoint of the service")
+		`URL of the AutoAction service endpoint.
+Specify the server address to connect to.`)
 
 	fLogLevel := constant.FlagLog.ValStr()
 	configure.Flags().StringP(
 		fLogLevel,
 		"",
 		config.Vp.GetString(fLogLevel),
-		"configure the logx level")
+		`Set the logging level (Debug, Warn, Error, Info).
+Controls the verbosity of log output. Default is Info.`)
 
 	fSource := constant.FlagSource.ValStr()
 	configure.Flags().StringP(
 		fSource,
 		"s",
 		config.Vp.GetString(fSource),
-		"configure the tracking source or not")
+		`Enable or disable action tracking (ON, OFF).
+Determines if actions are tracked. Default is OFF.`)
 }
 
 func configureFunc(_ *cobra.Command, _ []string) error {

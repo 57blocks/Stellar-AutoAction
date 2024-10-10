@@ -16,12 +16,23 @@ import (
 
 var list = &cobra.Command{
 	Use:   "list",
-	Short: "List wallets",
+	Short: "Display all wallet addresses for the current user",
 	Long: `
-Description:	
-  Display all wallet addresses under the user.
-  The result will be a list that shows the information of each wallet address.
-  The result will be in JSON format.
+Description:
+  The list command retrieves and displays all wallet addresses associated with the current user's account.
+  This command provides a comprehensive overview of your Stellar wallets within the AutoAction system.
+
+Output:
+  The command returns a JSON-formatted list containing information about each wallet address.
+  This may include details such as:
+    - Wallet address (public key)
+
+Note:
+  - The list includes all wallets, regardless of their balance or activity status.
+  - Ensure you are authenticated before running this command.
+
+Related Commands:
+  autoaction wallet create - Create a new wallet address
 `,
 	RunE: listFunc,
 }
