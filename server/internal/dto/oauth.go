@@ -33,14 +33,12 @@ type (
 		Account      string `json:"account"`
 		Organization string `json:"organization"`
 		Password     string `json:"password"`
-		Environment  string `json:"environment"`
 	}
 
 	RespCredential struct {
 		_              struct{}
 		Account        string `json:"account" toml:"account"`
 		Organization   string `json:"organization" toml:"organization"`
-		Environment    string `json:"environment" toml:"environment"`
 		jwtx.TokenPair `json:"tokens" toml:"tokens"`
 	}
 	RespCredOpt func(cred *RespCredential)
@@ -66,12 +64,6 @@ func WithAccount(account string) RespCredOpt {
 func WithOrganization(organization string) RespCredOpt {
 	return func(resp *RespCredential) {
 		resp.Organization = organization
-	}
-}
-
-func WithEnvironment(environment string) RespCredOpt {
-	return func(resp *RespCredential) {
-		resp.Environment = environment
 	}
 }
 
