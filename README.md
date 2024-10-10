@@ -1,12 +1,12 @@
 # AutoAction
 
-AutoAction is a comprehensive solution for managing OAuth, wallets, and tasks through a command-line interface (CLI) and a server endpoint.
+AutoAction is a comprehensive solution for managing Auth, wallets, and tasks through a command-line interface (CLI) and a server endpoint.
 
 ## Command Line Interface (CLI)
 
 ### Goals
 
-1. Provide a user-friendly CLI for AutoAction's OAuth, wallet, and task management functionalities.
+1. Provide a user-friendly CLI for AutoAction's Auth, wallet, and task management functionalities.
 2. Enhance the ease of creating and executing handler functions.
 
 ### Key Technologies
@@ -31,7 +31,7 @@ The server component of AutoAction is built with a robust tech stack to ensure s
    - Lambda for serverless compute
    - ECS (Elastic Container Service) for container orchestration
    - EventBridge Scheduler for event-driven architecture
-4. **Authentication**: Implements OAuth-based authentication for secure access control.
+4. **Authentication**: Implements JWT-based authentication for secure access control.
 5. **Cryptography**: Integrates CubeSigner for robust cryptographic operations, ensuring the highest level of security for sensitive data.
 
 ## Getting Started

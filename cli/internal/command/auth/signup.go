@@ -1,4 +1,4 @@
-package oauth
+package auth
 
 import (
 	"fmt"
@@ -33,7 +33,7 @@ Note:
 }
 
 func init() {
-	oauthGroup.AddCommand(signup)
+	authGroup.AddCommand(signup)
 
 	flagAcc := constant.FlagAccount.ValStr()
 	signup.Flags().StringP(
