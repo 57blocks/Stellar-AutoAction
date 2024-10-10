@@ -137,6 +137,7 @@ func TestRefreshSuccess(t *testing.T) {
 	assert.Equal(t, &dto.RespCredential{
 		Account:      jwtClaimSubject,
 		Organization: jwtClaimIssuer,
+		Network:      "Horizon-Testnet",
 		TokenPair: jwtx.TokenPair{
 			Access:  newAccessToken,
 			Refresh: raw,
@@ -378,6 +379,7 @@ func TestLoginSuccess(t *testing.T) {
 	assert.Equal(t, &dto.RespCredential{
 		Account:      accountName,
 		Organization: orgName,
+		Network:      "Horizon-Testnet",
 		TokenPair: jwtx.TokenPair{
 			Access:  accessToken,
 			Refresh: accessToken,
