@@ -20,16 +20,26 @@ import (
 // login represents the login command
 var login = &cobra.Command{
 	Use:   "login",
-	Short: "Login to the Stellar auto-action.",
+	Short: "Authenticate with Stellar AutoAction",
 	Long: `
 Description:
-  Login the Stellar auto-action based on credential path in the config.
-  Or, by the --credential/-c flag, to specify the credential path.
-  And will create a new credential under the path you just
-  claimed and set it to config, when it's the first time.
+  The login command authenticates you with the Stellar AutoAction system. It uses the credential 
+  path specified in the configuration file by default. Alternatively, you can specify a custom 
+  credential path using the --credential/-c flag.
 
-Note:
-  - You could specify other credentials by **configure** command.
+Examples:
+  autoaction auth login -a myaccount -o myorg
+  autoaction auth login -c /path/to/custom/credential -a myaccount -o myorg
+
+Behavior:
+  - If it's your first time logging in or you're using a new credential path, the command will 
+    create a new credential file at the specified location and update the configuration accordingly.
+  - For subsequent logins, it will use the existing credential file.
+
+Notes:
+  - The account and organization flags are required for authentication.
+  - You can manage multiple credentials using the 'configure' command.
+  - Ensure you have the necessary permissions to create and modify credential files.
 `,
 	Args: cobra.NoArgs,
 	RunE: loginFunc,
@@ -43,21 +53,24 @@ func init() {
 		flagCred,
 		"c",
 		config.Vp.GetString(flagCred),
-		`The credential file for the command about to be bound.
-If it's the first time, or ignored, the default path will be used.`)
+		`Path to the credential file for authentication.
+If omitted or first-time use, the default path will be used.
+The command will create a new file if it doesn't exist.`)
 
 	flagAcc := constant.FlagAccount.ValStr()
 	login.Flags().StringP(
 		flagAcc,
 		"a",
 		"",
-		"name of the account")
+		`Name of the account to authenticate.
+This flag is required for login.`)
 
 	flagOrg := constant.FlagOrganization.ValStr()
 	login.Flags().StringP(flagOrg,
 		"o",
 		"",
-		"name of the organization")
+		`Name of the organization associated with the account.
+This flag is required for login.`)
 
 	if err := login.MarkFlagRequired(flagAcc); err != nil {
 		return

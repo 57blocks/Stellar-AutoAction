@@ -19,39 +19,28 @@ import (
 // register represents the register command
 var register = &cobra.Command{
 	Use:   "register [zips/packages]",
-	Short: "Action register of local handler",
+	Short: "Register local handlers as actions",
 	Long: `
 Description:
-  Register the local handler/handlers to AutoAction, with the
-  recurring/scheduled rule. 
-	
-Note:
-  - The name of the Action is based on the file name, make it unique.
-  - The name of the handler must be: **handler**. 
-  - Manually, if no flags puts in, which means the handler/handlers 
-	will be triggered by invoke command manually.
-  - Payload, using -p/--payload to set the payload, if it's required.
-    The payload is a well-formed JSON string, and also, be valid/usable
-    in the handler/handlers.
-  - Trigger:
-	- By cron.
-	- By rate, only three units supported: minutes, hours, days.
-      For example: rate(1 minutes).
-	- By at, one-time execution, under a specific time in the future.
-      For example: at(yyyy-mm-ddThh:mm:ss).
-	- At most one expression flag could be set.
-	- Expression flags: at/cron/rate would create an Event Bridge
-      Scheduler to invoke action, together with the payload.
+  Register local handler(s) to AutoAction, optionally with recurring or scheduled execution rules.
 
-Example:
-	- Register an action will be triggered manually:
-	  $ auto-action action register ./handler.zip
-	- Register an action with an at expression:
-	  $ auto-action action register ./handler.zip -a 'at(2022-12-31T23:59:59)' -p '{"key": "value"}'
-	- Register an action with a rate expression:
-	  $ auto-action action register ./handler.zip -r 'rate(1 minutes)' -p '{"key": "value"}'
-	- Register an action with a cron expression:
-	  $ auto-action action register ./handler.zip -c 'cron(0 12 * * ? *)' -p '{"key": "value"}'
+Notes:
+  - Action name is derived from the file name; ensure it's unique.
+  - The handler function must be named "handler".
+  - Without flags, the action will be triggered manually via the invoke command.
+  - Payload must be a valid JSON string, usable by the handler(s).
+  - Only one scheduling expression (cron/rate/at) can be set per action.
+
+Scheduling Options:
+  - Cron: Standard cron expression
+  - Rate: Supports minutes, hours, days. E.g., rate(1 minutes)
+  - At: One-time execution. Format: at(yyyy-mm-ddThh:mm:ss)
+
+Examples:
+  autoaction action register ./handler.zip
+  autoaction action register ./handler.zip -a 'at(2022-12-31T23:59:59)' -p '{"key": "value"}'
+  autoaction action register ./handler.zip -r 'rate(1 minutes)' -p '{"key": "value"}'
+  autoaction action register ./handler.zip -c 'cron(0 12 * * ? *)' -p '{"key": "value"}'
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		a := cmd.Flags().Changed(constant.FlagAt.ValStr())
@@ -76,8 +65,10 @@ func init() {
 		fCron,
 		"c",
 		config.Vp.GetString(fCron),
-		`The cron execution expression for the Event Bridge Scheduler.
-For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#cron-based
+		`Cron expression for scheduled execution.
+Format: cron(Minutes Hours Day-of-month Month Day-of-week Year)
+Example: cron(0 12 * * ? *) for daily at 12:00 PM UTC
+More info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#cron-based
 `)
 
 	fRate := constant.FlagRate.ValStr()
@@ -85,8 +76,11 @@ For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-t
 		fRate,
 		"r",
 		config.Vp.GetString(fRate),
-		`The rate execution expression for the Event Bridge Scheduler.
-For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#rate-based
+		`Rate expression for recurring execution.
+Format: rate(value unit)
+Supported units: minutes, hours, days
+Example: rate(5 minutes) for every 5 minutes
+More info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#rate-based
 `)
 
 	fAt := constant.FlagAt.ValStr()
@@ -94,8 +88,10 @@ For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-t
 		fAt,
 		"a",
 		config.Vp.GetString(fAt),
-		`The one-time execution expression for the Event Bridge Scheduler.
-For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#one-time
+		`One-time execution at a specific future time.
+Format: at(yyyy-mm-ddThh:mm:ss)
+Example: at(2023-12-31T23:59:59) for Dec 31, 2023 at 23:59:59 UTC
+More info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-types.html#one-time
 `)
 
 	fPayload := constant.FlagPayload.ValStr()
@@ -103,7 +99,9 @@ For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-t
 		fPayload,
 		"p",
 		config.Vp.GetString(fPayload),
-		`The payload for the action execution.
+		`JSON payload for the action execution.
+Must be a valid JSON string.
+Example: '{"key": "value"}'
 `)
 }
 
@@ -131,6 +129,7 @@ func registerFunc(_ *cobra.Command, args []string) error {
 func supplierRegister(args []string) (*resty.Response, error) {
 	token, err := config.Token()
 	if err != nil {
+		logx.Logger.Error("PS: Should login first.")
 		return nil, err
 	}
 

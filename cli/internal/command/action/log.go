@@ -21,15 +21,25 @@ import (
 // logs represents the `log` command
 var logs = &cobra.Command{
 	Use:   "log <name/arn>",
-	Short: "Tracking execution logs of the action",
+	Short: "Track execution logs of an action",
 	Long: `
 Description:
-  Tracking execution logs of a specific Action, by name/arn.
-  Which with a 5 seconds interval to fetch the latest events.
+  The log command allows you to track execution logs of a specific action in real-time.
+  You can identify the action by its name or ARN (Amazon Resource Name).
 
-TODO:
-  - Add time range filer
-  - Add error events filer
+Arguments:
+  <name/arn>    The name or ARN of the action to track
+
+Features:
+  - Fetches the latest log events every 5 seconds
+  - Displays logs in real-time as they are generated
+
+Examples:
+  autoaction action log my-action
+  autoaction action log arn:aws:lambda:us-west-2:123456789012:function:my-action
+
+Note:
+  Use Ctrl+C to stop the log tracking.
 `,
 	Args: cobra.ExactArgs(1),
 	RunE: logFunc,
@@ -42,6 +52,7 @@ func init() {
 func logFunc(_ *cobra.Command, args []string) error {
 	token, err := config.Token()
 	if err != nil {
+		logx.Logger.Error("PS: Should login first.")
 		return err
 	}
 

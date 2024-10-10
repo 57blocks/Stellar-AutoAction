@@ -16,14 +16,26 @@ import (
 // info represents the info command
 var info = &cobra.Command{
 	Use:   "info <name/arn>",
-	Short: "Action essential information",
+	Short: "Display essential information about an action",
 	Long: `
 Description:
-  Query the essential information of a specific Action, by name/arn.
-  Which includes the VPC and Event Bridge Schedulers bound with.
+  The info command retrieves and displays essential information about a specific action,
+  identified by its name or ARN (Amazon Resource Name).
+
+This command provides details including:
+  - Basic action configuration
+  - Bound Event Bridge Schedulers
+
+Arguments:
+  <name/arn>    The name or ARN of the action to query
+
+Examples:
+  autoaction action info my-action
+  autoaction action info arn:aws:lambda:us-west-2:123456789012:function:my-action
 
 Note:
-  - The results contains the essential info about VPC and Schedulers.
+  - The output includes key information about the associated Schedulers.
+  - Ensure you have the necessary permissions to view the action details.
 `,
 	Args: cobra.ExactArgs(1),
 	RunE: infoFunc,
@@ -36,6 +48,7 @@ func init() {
 func infoFunc(_ *cobra.Command, args []string) error {
 	token, err := config.Token()
 	if err != nil {
+		logx.Logger.Error("PS: Should login first.")
 		return err
 	}
 

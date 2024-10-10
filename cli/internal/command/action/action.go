@@ -9,7 +9,19 @@ import (
 // actionGroup represents the action command
 var actionGroup = &cobra.Command{
 	Use:   "action",
-	Short: "Action management",
+	Short: "Manage actions in AutoAction",
+	Long: `
+Description:
+  The action command provides tools for managing actions within AutoAction.
+
+This command group allows you to:
+  - List existing actions
+  - Create new actions
+  - Update action configurations
+  - Delete actions
+  - Execute actions
+  - View action execution history
+`,
 }
 
 func init() {

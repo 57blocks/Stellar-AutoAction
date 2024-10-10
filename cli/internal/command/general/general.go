@@ -9,7 +9,17 @@ import (
 // generalGroup represents the general command
 var generalGroup = &cobra.Command{
 	Use:   "general",
-	Short: "CLI general settings",
+	Short: "Manage general settings for AutoAction CLI",
+	Long: `
+Description:
+  The general command group provides tools to configure and manage various
+  settings for the AutoAction CLI. These settings affect the overall behavior
+  and functionality of the CLI.
+
+Notes:
+  - Changes made using these commands will affect all future operations of the CLI.
+  - It's recommended to review your settings periodically to ensure optimal performance.
+`,
 }
 
 func init() {

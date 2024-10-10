@@ -17,16 +17,26 @@ import (
 // removeCmd represents the action remove command
 var removeCmd = &cobra.Command{
 	Use:   "remove <name/arn>",
-	Short: "Remove a specific action by its name/ARN",
+	Short: "Remove a specific action and its associated trigger",
 	Long: `
 Description:
-	Remove a specific action by its name/ARN, together with
-its trigger if it has one.
+  The remove command deletes a specific action from AutoAction, identified by its name or ARN 
+  (Amazon Resource Name). If the action has an associated trigger (scheduler), it will also be removed.
 
-Note: 
-  - The execution logs are still on the CloudWatch Logs.
-  - Each of the Action bound with one Scheduler to get triggered, so 
-    the remove response should contains the info of them both.
+Arguments:
+  <name/arn>    The name or ARN of the action to remove
+
+Examples:
+  autoaction action remove my-action
+  autoaction action remove arn:aws:lambda:us-west-2:123456789012:function:my-action
+
+Notes:
+  - This command removes both the action and its associated EventBridge Scheduler (if any).
+  - Execution logs for the action will remain in CloudWatch Logs and are not deleted by this command.
+  - The removal response will include information about both the action and its associated scheduler.
+
+Caution:
+  This operation is irreversible. Make sure you want to permanently remove the action before proceeding.
 `,
 	Args: cobra.ExactArgs(1),
 	RunE: removeFunc,
@@ -39,6 +49,7 @@ func init() {
 func removeFunc(cmd *cobra.Command, args []string) error {
 	token, err := config.Token()
 	if err != nil {
+		logx.Logger.Error("PS: Should login first.")
 		return err
 	}
 
