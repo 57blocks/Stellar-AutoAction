@@ -15,8 +15,8 @@ var (
 		Use:   "autoaction",
 		Short: "The CLI toll for auto-action: autoaction",
 		Long: `
-A CLI tool: autoaction, which helps users to run their handler on Amazon
-Lambda quickly, together with tracking the execution logs.
+A CLI tool: autoaction, which helps users to run their handler on AutoAction 
+quickly, together with tracking the execution logs.
 
 Also, it provides a way to create wallet through the CubeSigner and sign
 the transactions.

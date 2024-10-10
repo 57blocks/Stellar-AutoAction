@@ -22,14 +22,14 @@ const (
 	FlagOrganization FlagName = "organization"
 )
 
-// Flags for Lambda register command
+// Flags for Action register command
 const (
 	FlagAt   FlagName = "at"
 	FlagCron FlagName = "cron"
 	FlagRate FlagName = "rate"
 )
 
-// FlagPayload Flags for Lambda invoke command
+// FlagPayload Flags for Action invoke command
 const (
 	FlagPayload FlagName = "payload"
 )

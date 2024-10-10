@@ -1,9 +1,8 @@
-package lambda
+package action
 
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
 
 	"github.com/57blocks/auto-action/cli/internal/config"
 	"github.com/57blocks/auto-action/cli/internal/pkg/errorx"
@@ -14,43 +13,41 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// removeCmd represents the lambda remove command
-var removeCmd = &cobra.Command{
-	Use:   "remove <name/arn>",
-	Short: "Remove a specific lambda function by its name/ARN",
+// info represents the info command
+var info = &cobra.Command{
+	Use:   "info <name/arn>",
+	Short: "Action essential information",
 	Long: `
 Description:
-	Remove a specific lambda function by its name/ARN, together with
-its trigger if it has one.
+  Query the essential information of a specific Action, by name/arn.
+  Which includes the VPC and Event Bridge Schedulers bound with.
 
-Note: 
-  - The execution logs are still on the CloudWatch Logs.
-  - Each of the Lambda bound with one Scheduler to get triggered, so 
-    the remove response should contains the info of them both.
+Note:
+  - The results contains the essential info about VPC and Schedulers.
 `,
 	Args: cobra.ExactArgs(1),
-	RunE: removeFunc,
+	RunE: infoFunc,
 }
 
 func init() {
-	lambdaGroup.AddCommand(removeCmd)
+	actionGroup.AddCommand(info)
 }
 
-func removeFunc(cmd *cobra.Command, args []string) error {
+func infoFunc(_ *cobra.Command, args []string) error {
 	token, err := config.Token()
 	if err != nil {
 		return err
 	}
 
-	URL := util.ParseReqPath(fmt.Sprintf("%s/lambda/%s", config.Vp.GetString("bound_with.endpoint"), url.PathEscape(args[0])))
+	URL := util.ParseReqPath(fmt.Sprintf("%s/lambda/%s", config.Vp.GetString("bound_with.endpoint"), args[0]))
 
 	response, err := restyx.Client.R().
 		EnableTrace().
 		SetHeaders(map[string]string{
-			"Content-Type":  "application/json",
+			"Content-Type":  "multipart/form-data",
 			"Authorization": token,
 		}).
-		Delete(URL)
+		Get(URL)
 	if err != nil {
 		return errorx.RestyError(err.Error())
 	}
@@ -64,7 +61,7 @@ func removeFunc(cmd *cobra.Command, args []string) error {
 		return errorx.Internal(err.Error())
 	}
 
-	logx.Logger.Info("removed successfully", "removed", respData)
+	logx.Logger.Info("action info", "result", respData)
 
 	return nil
 }

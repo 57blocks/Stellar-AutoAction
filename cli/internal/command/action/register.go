@@ -1,4 +1,4 @@
-package lambda
+package action
 
 import (
 	"encoding/json"
@@ -19,14 +19,14 @@ import (
 // register represents the register command
 var register = &cobra.Command{
 	Use:   "register [zips/packages]",
-	Short: "Lambda register of local handler",
+	Short: "Action register of local handler",
 	Long: `
 Description:
-  Register the local handler/handlers to Amazon Lambda, with the
+  Register the local handler/handlers to AutoAction, with the
   recurring/scheduled rule. 
 	
 Note:
-  - The name of the Lambda is based on the file name, make it unique.
+  - The name of the Action is based on the file name, make it unique.
   - The name of the handler must be: **handler**. 
   - Manually, if no flags puts in, which means the handler/handlers 
 	will be triggered by invoke command manually.
@@ -41,17 +41,17 @@ Note:
       For example: at(yyyy-mm-ddThh:mm:ss).
 	- At most one expression flag could be set.
 	- Expression flags: at/cron/rate would create an Event Bridge
-      Scheduler to invoke lambda function, together with the payload.
+      Scheduler to invoke action, together with the payload.
 
 Example:
-	- Register a lambda will be triggered manually:
-	  $ auto-action lambda register ./handler.zip
-	- Register a lambda with an at expression:
-	  $ auto-action lambda register ./handler.zip -a 'at(2022-12-31T23:59:59)' -p '{"key": "value"}'
-	- Register a lambda with a rate expression:
-	  $ auto-action lambda register ./handler.zip -r 'rate(1 minutes)' -p '{"key": "value"}'
-	- Register a lambda with a cron expression:
-	  $ auto-action lambda register ./handler.zip -c 'cron(0 12 * * ? *)' -p '{"key": "value"}'
+	- Register an action will be triggered manually:
+	  $ auto-action action register ./handler.zip
+	- Register an action with an at expression:
+	  $ auto-action action register ./handler.zip -a 'at(2022-12-31T23:59:59)' -p '{"key": "value"}'
+	- Register an action with a rate expression:
+	  $ auto-action action register ./handler.zip -r 'rate(1 minutes)' -p '{"key": "value"}'
+	- Register an action with a cron expression:
+	  $ auto-action action register ./handler.zip -c 'cron(0 12 * * ? *)' -p '{"key": "value"}'
 `,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		a := cmd.Flags().Changed(constant.FlagAt.ValStr())
@@ -69,7 +69,7 @@ Example:
 }
 
 func init() {
-	lambdaGroup.AddCommand(register)
+	actionGroup.AddCommand(register)
 
 	fCron := constant.FlagCron.ValStr()
 	register.Flags().StringP(
@@ -103,7 +103,7 @@ For more info: https://docs.aws.amazon.com/scheduler/latest/UserGuide/schedule-t
 		fPayload,
 		"p",
 		config.Vp.GetString(fPayload),
-		`The payload for the lambda function execution.
+		`The payload for the action execution.
 `)
 }
 
@@ -123,7 +123,7 @@ func registerFunc(_ *cobra.Command, args []string) error {
 		return errorx.Internal(err.Error())
 	}
 
-	logx.Logger.Info("lambda info", "result", respData)
+	logx.Logger.Info("action info", "result", respData)
 
 	return nil
 }
@@ -155,13 +155,13 @@ func supplierRegister(args []string) (*resty.Response, error) {
 	for _, key := range fKeys {
 		if expVal := strings.TrimSpace(config.Vp.GetString(key)); expVal != "" {
 			fMap["expression"] = expVal
-			logx.Logger.Info("register lambda", "invoke expression", expVal)
+			logx.Logger.Info("register action", "invoke expression", expVal)
 			break
 		}
 	}
 
 	if len(fMap) == 0 {
-		logx.Logger.Info("register lambda", "invoke expression", "manually")
+		logx.Logger.Info("register action", "invoke expression", "manually")
 	}
 
 	if pldVal := strings.TrimSpace(config.Vp.GetString(constant.FlagPayload.ValStr())); pldVal != "" {
@@ -172,7 +172,7 @@ func supplierRegister(args []string) (*resty.Response, error) {
 
 		fMap["payload"] = pldVal
 	}
-	logx.Logger.Info("register lambda", "invoke payload", "none")
+	logx.Logger.Info("register action", "invoke payload", "none")
 
 	request = request.SetFormData(fMap)
 
