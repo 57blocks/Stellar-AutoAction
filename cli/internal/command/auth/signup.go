@@ -78,7 +78,21 @@ func signupFunc(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(pwdBytes) == 0 {
-		return errorx.BadRequest("empty cryptPwd error")
+		return errorx.BadRequest("empty password error")
+	}
+
+	fmt.Println("Confirm password: ")
+	confirmPwdBytes, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+	if err != nil {
+		return errorx.Internal(fmt.Sprintf("reading confirm password error: %s", err.Error()))
+	}
+
+	if len(confirmPwdBytes) == 0 {
+		return errorx.BadRequest("empty confirm password error")
+	}
+
+	if string(pwdBytes) != string(confirmPwdBytes) {
+		return errorx.BadRequest("password and confirm password not match")
 	}
 
 	key, err := util.LoadPublicKey(config.Vp.GetString("general.public_key"))
