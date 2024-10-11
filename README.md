@@ -1,38 +1,46 @@
 # Stellar AutoAction
 
-Stellar AutoAction is a comprehensive solution for managing Auth, wallets, and tasks through a command-line interface (CLI) and a server endpoint.
+Stellar AutoAction is a comprehensive solution for automating and managing blockchain operations through a command-line interface (CLI) and a server endpoint.
 
-## Command Line Interface (CLI)
+## Key Features
 
-### Goals
+### Automated Actions
 
-1. Provide a user-friendly CLI for Stellar AutoAction's Auth, wallet, and task management functionalities.
-2. Enhance the ease of creating and executing handler functions.
+- React to on-chain events in real-time
+- Execute custom logic based on predefined triggers
+- Automate smart contract operations
+- Integrate with external APIs and services
 
-### Key Technologies
+### Flexible Triggers
 
-The CLI is developed using the following Go packages:
+- Manual: Run actions manually through the CLI
+- Schedule: Run actions at specified intervals or using cron expressions
 
-- `golang.org/x/crypto`: For cryptographic operations
-- `github.com/spf13/cobra`: For building powerful modern CLI applications
-- `github.com/spf13/viper`: For configuration solution
-- `github.com/spf13/pflag`: For flag parsing
-- `github.com/go-resty/resty/v2`: For HTTP and REST client operations
+### Secure Environment
 
-## Server Endpoint
+- Isolated execution environment for each action
+- Secure secret management for storing sensitive information
+- Integration with relayers for secure transaction signing and sending
 
-The server component of Stellar AutoAction is built with a robust tech stack to ensure scalability, security, and performance.
+### Data Persistence
 
-### Key Features and Technologies
+- Key-value store for persisting data across action runs
+- Share data between different actions securely
 
-1. **Database**: Utilizes [PostgreSQL](https://www.postgresql.org/) for reliable data storage and management.
-2. **API Framework**: Implements RESTful APIs using the [Gin](https://github.com/gin-gonic/gin) web framework, known for its performance and productivity.
-3. **Cloud Services**: Leverages AWS services, including:
-   - Lambda for serverless compute
-   - ECS (Elastic Container Service) for container orchestration
-   - EventBridge Scheduler for event-driven architecture
-4. **Authentication**: Implements JWT-based authentication for secure access control.
-5. **Cryptography**: Integrates CubeSigner for robust cryptographic operations, ensuring the highest level of security for sensitive data.
+### Monitoring and Analytics
+
+- Track action execution logs
+- Analyze smart contract data and user interactions
+- Set up early failure detection and alerting
+
+## Use Cases
+
+- Automate DeFi operations (yield farming, liquidity management)
+- Build custom oracles for retrieving off-chain data
+- Implement advanced DAO governance features
+- Create bots for arbitrage or automated trading
+- Enhance security with automated threat response
+- Streamline NFT minting and distribution processes
 
 ## Getting Started
 
