@@ -1,10 +1,10 @@
-# AutoAction CLI
+# Stellar AutoAction CLI
 
-AutoAction CLI Tool: `autoaction`
+Stellar AutoAction CLI Tool: `autoaction`
 
 ## Introduction
 
-`autoaction` is the command-line interface (CLI) tool for AutoAction tasks, used to manage and execute various operations related to AutoAction.
+`autoaction` is the command-line interface (CLI) tool for Stellar AutoAction tasks, used to manage and execute various operations related to Stellar AutoAction.
 
 ## Installation
 
@@ -16,11 +16,11 @@ Build the client:
 
 ```bash
 # Clone the repository
-git clone https://github.com/57blocks/AutoAction.git
-cd AutoAction
+git clone https://github.com/57blocks/Stellar-AutoAction.git
+cd Stellar-AutoAction
 
 # Install client dependencies
-cd AutoAction/cli
+cd Stellar-AutoAction/cli
 go mod download
 
 # Build the client
@@ -36,7 +36,7 @@ PS: It is recommended to move the file to a directory in your system’s PATH, s
 Run the client:
 
 ```bash
-cd AutoAction/cli
+cd Stellar-AutoAction/cli
 go run main.go
 ```
 

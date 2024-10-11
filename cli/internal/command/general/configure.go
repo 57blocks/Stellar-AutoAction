@@ -14,12 +14,12 @@ import (
 // configure represents the configure command
 var configure = &cobra.Command{
 	Use:   "configure",
-	Short: "Modify the AutoAction configuration settings",
+	Short: "Modify the Stellar AutoAction configuration settings",
 	Long: `
 Description:
-  The configure command allows you to modify various settings in the AutoAction 
+  The configure command allows you to modify various settings in the Stellar AutoAction 
   configuration file. This file is located at the default path and contains important 
-  parameters that control the behavior of the AutoAction tool.
+  parameters that control the behavior of the Stellar AutoAction tool.
 
 Configurable Settings:
   - Credentials: Specify alternative authentication credentials
@@ -72,7 +72,7 @@ Use this to specify an alternative credential file.`)
 		fEndPoint,
 		"",
 		config.Vp.GetString(fEndPoint),
-		`URL of the AutoAction service endpoint.
+		`URL of the Stellar AutoAction service endpoint.
 Specify the server address to connect to.`)
 
 	fLogLevel := constant.FlagLog.ValStr()

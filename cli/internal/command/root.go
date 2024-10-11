@@ -13,17 +13,17 @@ import (
 var (
 	Root = &cobra.Command{
 		Use:   "autoaction",
-		Short: "CLI tool for managing and executing actions on AutoAction",
+		Short: "CLI tool for managing and executing actions on Stellar AutoAction",
 		Long: `
-AutoAction: A Comprehensive CLI Tool for Action Management and Execution
+Stellar AutoAction: A Comprehensive CLI Tool for Action Management and Execution
 
 Description:
-  AutoAction is a powerful command-line interface (CLI) tool designed to streamline 
-  the process of managing and executing actions within the AutoAction ecosystem. 
+  Stellar AutoAction is a powerful command-line interface (CLI) tool designed to streamline 
+  the process of managing and executing actions within the Stellar AutoAction ecosystem. 
   It offers a range of functionalities to enhance your workflow and productivity.
 
 Key Features:
-  1. Action Execution: Quickly run your handlers on AutoAction.
+  1. Action Execution: Quickly run your handlers on Stellar AutoAction.
   2. Log Tracking: Monitor and track execution logs for your actions.
   3. Wallet Management: Create and manage wallets using CubeSigner integration.
   4. Transaction Signing: Securely sign transactions for blockchain operations.

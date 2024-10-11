@@ -13,7 +13,7 @@ var authGroup = &cobra.Command{
 	Long: `
 Description:
   The auth command group provides various subcommands for managing user authentication 
-  in the AutoAction system.
+  in the Stellar AutoAction system.
 `,
 }
 

@@ -1,12 +1,12 @@
-# AutoAction
+# Stellar AutoAction
 
-AutoAction is a comprehensive solution for managing Auth, wallets, and tasks through a command-line interface (CLI) and a server endpoint.
+Stellar AutoAction is a comprehensive solution for managing Auth, wallets, and tasks through a command-line interface (CLI) and a server endpoint.
 
 ## Command Line Interface (CLI)
 
 ### Goals
 
-1. Provide a user-friendly CLI for AutoAction's Auth, wallet, and task management functionalities.
+1. Provide a user-friendly CLI for Stellar AutoAction's Auth, wallet, and task management functionalities.
 2. Enhance the ease of creating and executing handler functions.
 
 ### Key Technologies
@@ -21,7 +21,7 @@ The CLI is developed using the following Go packages:
 
 ## Server Endpoint
 
-The server component of AutoAction is built with a robust tech stack to ensure scalability, security, and performance.
+The server component of Stellar AutoAction is built with a robust tech stack to ensure scalability, security, and performance.
 
 ### Key Features and Technologies
 
@@ -36,7 +36,7 @@ The server component of AutoAction is built with a robust tech stack to ensure s
 
 ## Getting Started
 
-For detailed instructions on setting up and using AutoAction, please refer to the following documentation:
+For detailed instructions on setting up and using Stellar AutoAction, please refer to the following documentation:
 
 - [Init AWS environment](infrastructure/README.md)
 - [CLI Setup and Usage Guide](cli/README.md)
@@ -44,8 +44,8 @@ For detailed instructions on setting up and using AutoAction, please refer to th
 
 ## Contributing
 
-We welcome contributions to AutoAction! Please read our [Contributing Guidelines](CONTRIBUTING.md) for more information on how to get started.
+We welcome contributions to Stellar AutoAction! Please read our [Contributing Guidelines](CONTRIBUTING.md) for more information on how to get started.
 
 ## License
 
-AutoAction is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for more details.
+Stellar AutoAction is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for more details.

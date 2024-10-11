@@ -17,10 +17,10 @@ import (
 // listCmd represents the list command
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List all actions registered in AutoAction",
+	Short: "List all actions registered in Stellar AutoAction",
 	Long: `
 Description:
-  The list command displays all actions currently registered in AutoAction.
+  The list command displays all actions currently registered in Stellar AutoAction.
   It provides an overview of each action's basic details.
 
 Examples:
