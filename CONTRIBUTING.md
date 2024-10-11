@@ -1,6 +1,6 @@
-# Contributing to AutoAction
+# Contributing to Stellar AutoAction
 
-We're thrilled that you're interested in contributing to AutoAction! This document provides guidelines for contributing to the project. By participating in this project, you agree to abide by its terms.
+We're thrilled that you're interested in contributing to Stellar AutoAction! This document provides guidelines for contributing to the project. By participating in this project, you agree to abide by its terms.
 
 ## Table of Contents
 
@@ -60,9 +60,9 @@ We're thrilled that you're interested in contributing to AutoAction! This docume
 ## Suggesting Enhancements
 
 - Provide a clear and detailed explanation of the feature you want to see
-- Explain why this enhancement would be useful to most AutoAction users
+- Explain why this enhancement would be useful to most Stellar AutoAction users
 - List some other projects where this enhancement exists, if applicable
 
 ## License
 
-By contributing to AutoAction, you agree that your contributions will be licensed under its Apache License 2.0.
+By contributing to Stellar AutoAction, you agree that your contributions will be licensed under its Apache License 2.0.

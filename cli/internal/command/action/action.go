@@ -9,10 +9,10 @@ import (
 // actionGroup represents the action command
 var actionGroup = &cobra.Command{
 	Use:   "action",
-	Short: "Manage actions in AutoAction",
+	Short: "Manage actions in Stellar AutoAction",
 	Long: `
 Description:
-  The action command provides tools for managing actions within AutoAction.
+  The action command provides tools for managing actions within Stellar AutoAction.
 
 This command group allows you to:
   - List existing actions

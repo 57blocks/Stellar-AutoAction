@@ -293,7 +293,7 @@ func (svc *service) addAwsRole(c context.Context, orgName string, account string
 	createRoleInput := &iam.CreateRoleInput{
 		RoleName:                 aws.String(roleName),
 		AssumeRolePolicyDocument: aws.String(assumeRolePolicyDocument),
-		Description:              aws.String(fmt.Sprintf("Role for AutoAction User %s-%s", orgName, account)),
+		Description:              aws.String(fmt.Sprintf("Role for Stellar AutoAction User %s-%s", orgName, account)),
 	}
 	role, err := svc.amazon.CreateRole(c, createRoleInput)
 	if err != nil {

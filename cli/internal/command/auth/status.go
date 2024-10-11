@@ -15,7 +15,7 @@ var status = &cobra.Command{
 	Short: "Show the current authentication status",
 	Long: `
 Description:
-  The status command displays the current authentication status for AutoAction.
+  The status command displays the current authentication status for Stellar AutoAction.
   It provides a quick overview of your login state and associated details.
 
 Output Information:

@@ -22,7 +22,7 @@ var register = &cobra.Command{
 	Short: "Register local handlers as actions",
 	Long: `
 Description:
-  Register local handler(s) to AutoAction, optionally with recurring or scheduled execution rules.
+  Register local handler(s) to Stellar AutoAction, optionally with recurring or scheduled execution rules.
 
 Notes:
   - Action name is derived from the file name; ensure it's unique.

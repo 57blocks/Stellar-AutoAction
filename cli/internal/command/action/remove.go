@@ -20,7 +20,7 @@ var removeCmd = &cobra.Command{
 	Short: "Remove a specific action and its associated trigger",
 	Long: `
 Description:
-  The remove command deletes a specific action from AutoAction, identified by its name or ARN 
+  The remove command deletes a specific action from Stellar AutoAction, identified by its name or ARN 
   (Amazon Resource Name). If the action has an associated trigger (scheduler), it will also be removed.
 
 Arguments:

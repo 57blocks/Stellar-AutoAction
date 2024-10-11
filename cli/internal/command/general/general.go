@@ -9,11 +9,11 @@ import (
 // generalGroup represents the general command
 var generalGroup = &cobra.Command{
 	Use:   "general",
-	Short: "Manage general settings for AutoAction CLI",
+	Short: "Manage general settings for Stellar AutoAction CLI",
 	Long: `
 Description:
   The general command group provides tools to configure and manage various
-  settings for the AutoAction CLI. These settings affect the overall behavior
+  settings for the Stellar AutoAction CLI. These settings affect the overall behavior
   and functionality of the CLI.
 
 Notes:

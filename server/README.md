@@ -1,4 +1,4 @@
-# AutoAction Server
+# Stellar AutoAction Server
 
 ## AWS Infrastructure Preparation
 
@@ -37,12 +37,12 @@ npm install eslint globals
 
 ## Local Development Setup
 
-To run the AutoAction server locally, follow these steps:
+To run the Stellar AutoAction server locally, follow these steps:
 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/57blocks/AutoAction.git
+git clone https://github.com/57blocks/Stellar-AutoAction.git
 cd server
 ```
 

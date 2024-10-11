@@ -20,7 +20,7 @@ var list = &cobra.Command{
 	Long: `
 Description:
   The list command retrieves and displays all wallet addresses associated with the current user's account.
-  This command provides a comprehensive overview of your Stellar wallets within the AutoAction system.
+  This command provides a comprehensive overview of your Stellar wallets within the Stellar AutoAction system.
 
 Output:
   The command returns a JSON-formatted list containing information about each wallet address.

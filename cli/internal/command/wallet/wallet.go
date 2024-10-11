@@ -11,7 +11,7 @@ var wallet = &cobra.Command{
 	Short: "Manage Stellar wallet addresses",
 	Long: `
 Description:
-  The wallet command group provides tools for managing Stellar wallet addresses within the AutoAction system.
+  The wallet command group provides tools for managing Stellar wallet addresses within the Stellar AutoAction system.
   It allows you to perform various operations related to your Stellar wallets.
 
 Notes:
