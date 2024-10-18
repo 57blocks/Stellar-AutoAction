@@ -81,7 +81,7 @@ func verifyFunc(_ *cobra.Command, args []string) error {
 	message := fmt.Sprintf("The wallet address %s is VALID", walletAddress)
 	if !wallet["is_valid"].(bool) {
 		message = fmt.Sprintf(`The wallet address %s is INVALID. 
-It might be because the wallet needs at least 1 XML to activate, 
+It might be because the wallet needs at least 1 XLM to activate,
 or the Stellar has cleared the address(Testnet only).`, walletAddress)
 	}
 	logx.Logger.Info(message)
