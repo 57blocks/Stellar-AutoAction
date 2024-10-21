@@ -315,6 +315,7 @@ func (svc *service) addAwsRole(c context.Context, orgName string, account string
 			"Effect": "Allow",
 			"Action": [
 				"secretsmanager:GetSecretValue",
+				"secretsmanager:PutSecretValue",
 				"secretsmanager:DescribeSecret"
 			],
 			"Resource": "*"
@@ -379,13 +380,21 @@ func (svc *service) addAwsSecretKey(
 				"Principal": {
 					"AWS": [ "%s", "%s" ]
 				},
-				"Action": [ "secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret" ],
+				"Action": [
+					"secretsmanager:GetSecretValue",
+					"secretsmanager:PutSecretValue",
+					"secretsmanager:DescribeSecret"
+				],
 				"Resource": "%s"
 			},
 			{
 				"Effect": "Deny",
 				"Principal" : "*",
-				"Action" : "secretsmanager:GetSecretValue",
+				"Action" : [
+					"secretsmanager:GetSecretValue",
+					"secretsmanager:PutSecretValue",
+					"secretsmanager:DescribeSecret"
+				],
 				"Resource" : "%s",
 				"Condition": {
 					"StringNotEquals": {
