@@ -53,7 +53,3 @@ For detailed instructions on setting up and using Stellar AutoAction, please ref
 ## Contributing
 
 We welcome contributions to Stellar AutoAction! Please read our [Contributing Guidelines](CONTRIBUTING.md) for more information on how to get started.
-
-## License
-
-Stellar AutoAction is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for more details.
